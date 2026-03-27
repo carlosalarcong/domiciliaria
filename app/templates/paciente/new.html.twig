@@ -1,0 +1,50 @@
+{% extends 'base.html.twig' %}
+{% block title %}Nuevo Paciente{% endblock %}
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{{ path('app_paciente_index') }}">Pacientes</a></li><li class="breadcrumb-item active">Nuevo</li></ol></nav>
+    <h4 class="mb-0 fw-bold">Registrar nuevo paciente</h4>
+</div>
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        {{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
+        <h6 class="fw-semibold text-primary mb-3"><i class="bi bi-person me-2"></i>Datos personales</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-5"><label class="form-label fw-semibold">Nombres</label>{{ form_widget(form.nombres) }}{{ form_errors(form.nombres) }}</div>
+            <div class="col-md-5"><label class="form-label fw-semibold">Apellidos</label>{{ form_widget(form.apellidos) }}{{ form_errors(form.apellidos) }}</div>
+            <div class="col-md-2"><label class="form-label fw-semibold">RUT</label>{{ form_widget(form.rut) }}{{ form_errors(form.rut) }}</div>
+            <div class="col-md-3"><label class="form-label fw-semibold">Fecha de nacimiento</label>{{ form_widget(form.fechaNacimiento) }}{{ form_errors(form.fechaNacimiento) }}</div>
+            <div class="col-md-3"><label class="form-label fw-semibold">Teléfono</label>{{ form_widget(form.telefono) }}{{ form_errors(form.telefono) }}</div>
+            <div class="col-md-3"><label class="form-label fw-semibold">Teléfono emergencia</label>{{ form_widget(form.telefonoEmergencia) }}{{ form_errors(form.telefonoEmergencia) }}</div>
+        </div>
+        <h6 class="fw-semibold text-primary mb-3"><i class="bi bi-geo-alt me-2"></i>Domicilio</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-6"><label class="form-label fw-semibold">Dirección</label>{{ form_widget(form.direccion) }}{{ form_errors(form.direccion) }}</div>
+            <div class="col-md-3"><label class="form-label fw-semibold">Comuna</label>{{ form_widget(form.comuna) }}{{ form_errors(form.comuna) }}</div>
+            <div class="col-md-3"><label class="form-label fw-semibold">Región</label>{{ form_widget(form.region) }}{{ form_errors(form.region) }}</div>
+        </div>
+        <h6 class="fw-semibold text-primary mb-3"><i class="bi bi-briefcase-medical me-2"></i>Servicio</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-4"><label class="form-label fw-semibold">Mandante</label>{{ form_widget(form.mandante) }}{{ form_errors(form.mandante) }}</div>
+            <div class="col-md-3"><label class="form-label fw-semibold">Tipo de servicio</label>{{ form_widget(form.tipoServicio) }}{{ form_errors(form.tipoServicio) }}</div>
+            <div class="col-md-2"><label class="form-label fw-semibold">Estado</label>{{ form_widget(form.estado) }}{{ form_errors(form.estado) }}</div>
+            <div class="col-md-2"><label class="form-label fw-semibold">Fecha ingreso</label>{{ form_widget(form.fechaIngreso) }}{{ form_errors(form.fechaIngreso) }}</div>
+        </div>
+        <h6 class="fw-semibold text-primary mb-3"><i class="bi bi-people me-2"></i>Tutor / Responsable</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-md-5"><label class="form-label fw-semibold">Nombre del tutor</label>{{ form_widget(form.tutorNombre) }}{{ form_errors(form.tutorNombre) }}</div>
+            <div class="col-md-3"><label class="form-label fw-semibold">Teléfono</label>{{ form_widget(form.tutorTelefono) }}{{ form_errors(form.tutorTelefono) }}</div>
+            <div class="col-md-4"><label class="form-label fw-semibold">Relación</label>{{ form_widget(form.tutorRelacion) }}{{ form_errors(form.tutorRelacion) }}</div>
+        </div>
+        <h6 class="fw-semibold text-primary mb-3"><i class="bi bi-chat-text me-2"></i>Observaciones</h6>
+        <div class="row g-3 mb-4">
+            <div class="col-12">{{ form_widget(form.observaciones) }}{{ form_errors(form.observaciones) }}</div>
+        </div>
+        <div class="d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-person-plus me-2"></i>Registrar paciente</button>
+            <a href="{{ path('app_paciente_index') }}" class="btn btn-outline-secondary">Cancelar</a>
+        </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}

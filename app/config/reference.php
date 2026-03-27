@@ -1410,6 +1410,16 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     convert_exception?: bool|Param, // Default: false
  *     remove_first_page_param?: bool|Param, // Default: false
  * }
+ * @psalm-type TurboConfig = array{
+ *     broadcast?: bool|array{
+ *         enabled?: bool|Param, // Default: true
+ *         entity_template_prefixes?: list<scalar|Param|null>,
+ *         doctrine_orm?: bool|array{ // Enable the Doctrine ORM integration
+ *             enabled?: bool|Param, // Default: true
+ *         },
+ *     },
+ *     default_transport?: scalar|Param|null, // Default: "default"
+ * }
  * @psalm-type MakerConfig = array{
  *     root_namespace?: scalar|Param|null, // Default: "App"
  *     generate_final_classes?: bool|Param, // Default: true
@@ -1427,6 +1437,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     doctrine_migrations?: DoctrineMigrationsConfig,
  *     stof_doctrine_extensions?: StofDoctrineExtensionsConfig,
  *     knp_paginator?: KnpPaginatorConfig,
+ *     turbo?: TurboConfig,
  *     "when@dev"?: array{
  *         imports?: ImportsConfig,
  *         parameters?: ParametersConfig,
@@ -1439,6 +1450,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         doctrine_migrations?: DoctrineMigrationsConfig,
  *         stof_doctrine_extensions?: StofDoctrineExtensionsConfig,
  *         knp_paginator?: KnpPaginatorConfig,
+ *         turbo?: TurboConfig,
  *         maker?: MakerConfig,
  *     },
  *     "when@prod"?: array{
@@ -1453,6 +1465,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         doctrine_migrations?: DoctrineMigrationsConfig,
  *         stof_doctrine_extensions?: StofDoctrineExtensionsConfig,
  *         knp_paginator?: KnpPaginatorConfig,
+ *         turbo?: TurboConfig,
  *     },
  *     "when@test"?: array{
  *         imports?: ImportsConfig,
@@ -1466,6 +1479,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         doctrine_migrations?: DoctrineMigrationsConfig,
  *         stof_doctrine_extensions?: StofDoctrineExtensionsConfig,
  *         knp_paginator?: KnpPaginatorConfig,
+ *         turbo?: TurboConfig,
  *     },
  *     ...<string, ExtensionType|array{ // extra keys must follow the when@%env% pattern or match an extension alias
  *         imports?: ImportsConfig,

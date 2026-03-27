@@ -1,0 +1,62 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ mandante.nombre }}{% endblock %}
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{{ path('app_mandante_index') }}">Mandantes</a></li><li class="breadcrumb-item active">{{ mandante.nombre }}</li></ol></nav>
+</div>
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm p-4 text-center">
+            <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center mx-auto mb-3" style="width:72px;height:72px">
+                <i class="bi bi-building text-primary fs-2"></i>
+            </div>
+            <h5 class="fw-bold mb-1">{{ mandante.nombre }}</h5>
+            <p class="text-muted font-monospace mb-2">{{ mandante.rut }}</p>
+            {% if mandante.activo %}<span class="badge bg-success">Activo</span>{% else %}<span class="badge bg-danger">Inactivo</span>{% endif %}
+            {% if is_granted('ROLE_ADMIN') %}
+            <hr>
+            <div class="d-grid gap-2">
+                <a href="{{ path('app_mandante_edit', {id: mandante.id}) }}" class="btn btn-primary btn-sm"><i class="bi bi-pencil me-2"></i>Editar</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 pt-3"><h6 class="mb-0 fw-semibold">Información de contacto</h6></div>
+            <div class="card-body">
+                <dl class="row mb-0">
+                    <dt class="col-sm-4 text-muted">Contacto</dt><dd class="col-sm-8">{{ mandante.contacto ?? '—' }}</dd>
+                    <dt class="col-sm-4 text-muted">Email</dt><dd class="col-sm-8">{{ mandante.email ?? '—' }}</dd>
+                    <dt class="col-sm-4 text-muted">Teléfono</dt><dd class="col-sm-8">{{ mandante.telefono ?? '—' }}</dd>
+                </dl>
+            </div>
+        </div>
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-semibold">Pacientes asociados</h6>
+                <span class="badge bg-primary">{{ mandante.pacientes|length }}</span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light"><tr><th class="ps-4">Paciente</th><th>RUT</th><th>Estado</th><th class="pe-4 text-end">Ver</th></tr></thead>
+                        <tbody>
+                        {% for paciente in mandante.pacientes %}
+                        <tr>
+                            <td class="ps-4 fw-semibold">{{ paciente.nombreCompleto }}</td>
+                            <td class="font-monospace text-muted">{{ paciente.rut }}</td>
+                            <td><span class="badge {{ paciente.estado.badgeClass }}">{{ paciente.estado.etiqueta }}</span></td>
+                            <td class="pe-4 text-end"><a href="{{ path('app_paciente_show', {id: paciente.id}) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a></td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="4" class="text-center text-muted py-3">Sin pacientes asociados.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

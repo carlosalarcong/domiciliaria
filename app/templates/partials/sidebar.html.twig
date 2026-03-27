@@ -10,8 +10,11 @@
         </a>
 
         <div class="sidebar-section mt-2">Operaciones</div>
-        <a href="#" class="sidebar-link">
+        <a href="{{ path('app_paciente_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_paciente' ? 'active' : '' }}">
             <i class="bi bi-people-fill"></i> Pacientes
+        </a>
+        <a href="{{ path('app_mandante_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_mandante' ? 'active' : '' }}">
+            <i class="bi bi-building"></i> Mandantes
         </a>
         <a href="#" class="sidebar-link">
             <i class="bi bi-calendar3"></i> Turnos

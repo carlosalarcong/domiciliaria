@@ -1,0 +1,105 @@
+{% extends 'base.html.twig' %}
+{% block title %}Pacientes{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Pacientes</h4>
+        <small class="text-muted">Registro y seguimiento operativo</small>
+    </div>
+    {% if is_granted('PACIENTE_CREAR') %}
+    <a href="{{ path('app_paciente_new') }}" class="btn btn-primary"><i class="bi bi-person-plus me-2"></i>Nuevo paciente</a>
+    {% endif %}
+</div>
+
+{# Filtros #}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted">Estado</label>
+                <select name="estado" class="form-select form-select-sm">
+                    <option value="">Todos los estados</option>
+                    {% for e in estados %}
+                    <option value="{{ e.value }}" {{ filtros.estado == e.value ? 'selected' : '' }}>{{ e.etiqueta }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted">Mandante</label>
+                <select name="mandante" class="form-select form-select-sm">
+                    <option value="">Todos los mandantes</option>
+                    {% for m in mandantes %}
+                    <option value="{{ m.id }}" {{ filtros.mandanteId == m.id|string ? 'selected' : '' }}>{{ m.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small fw-semibold text-muted">Tipo de servicio</label>
+                <select name="tipo" class="form-select form-select-sm">
+                    <option value="">Todos los tipos</option>
+                    <option value="TURNO_12H" {{ filtros.tipoServicio == 'TURNO_12H' ? 'selected' : '' }}>Turno 12 horas</option>
+                    <option value="TURNO_24H" {{ filtros.tipoServicio == 'TURNO_24H' ? 'selected' : '' }}>Turno 24 horas</option>
+                    <option value="VISITA" {{ filtros.tipoServicio == 'VISITA' ? 'selected' : '' }}>Visita</option>
+                </select>
+            </div>
+            <div class="col-md-3 d-flex gap-2">
+                <button type="submit" class="btn btn-primary btn-sm"><i class="bi bi-funnel me-1"></i>Filtrar</button>
+                <a href="{{ path('app_paciente_index') }}" class="btn btn-outline-secondary btn-sm">Limpiar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Paciente</th>
+                        <th>RUT</th>
+                        <th>Mandante</th>
+                        <th>Tipo servicio</th>
+                        <th>Estado</th>
+                        <th>Ingreso</th>
+                        <th class="pe-4 text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for paciente in pacientes %}
+                <tr>
+                    <td class="ps-4">
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="rounded-circle bg-secondary bg-opacity-10 d-flex align-items-center justify-content-center flex-shrink-0" style="width:36px;height:36px;font-size:0.8rem">
+                                {{ paciente.nombres|first|upper }}{{ paciente.apellidos|first|upper }}
+                            </div>
+                            <div>
+                                <div class="fw-semibold">{{ paciente.nombreCompleto }}</div>
+                                {% if paciente.edad %}<small class="text-muted">{{ paciente.edad }} años</small>{% endif %}
+                            </div>
+                        </div>
+                    </td>
+                    <td class="font-monospace text-muted">{{ paciente.rut }}</td>
+                    <td>{{ paciente.mandante ? paciente.mandante.nombre : '—' }}</td>
+                    <td><span class="badge bg-info-subtle text-info border border-info-subtle">{{ paciente.tipoServicio.etiqueta }}</span></td>
+                    <td><span class="badge {{ paciente.estado.badgeClass }}">{{ paciente.estado.etiqueta }}</span></td>
+                    <td class="text-muted small">{{ paciente.fechaIngreso ? paciente.fechaIngreso|date('d/m/Y') : '—' }}</td>
+                    <td class="pe-4 text-end">
+                        <a href="{{ path('app_paciente_show', {id: paciente.id}) }}" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
+                        {% if is_granted('PACIENTE_EDITAR') %}
+                        <a href="{{ path('app_paciente_edit', {id: paciente.id}) }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="7" class="text-center text-muted py-5"><i class="bi bi-people fs-1 opacity-25 d-block mb-2"></i>No se encontraron pacientes.</td></tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if pacientes.pageCount > 1 %}
+    <div class="card-footer bg-white border-0 d-flex justify-content-center">{{ knp_pagination_render(pacientes) }}</div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+<turbo-frame id="bitacora-frame">
+<div class="row g-4">
+    <div class="col-md-4">
+        <div class="card border-0 bg-light">
+            <div class="card-body">
+                <h6 class="fw-semibold mb-3"><i class="bi bi-plus-circle me-2 text-primary"></i>Nueva entrada</h6>
+                {{ form_start(bitacoraForm) }}
+                <div class="mb-2">
+                    <label class="form-label fw-semibold small">Tipo</label>
+                    {{ form_widget(bitacoraForm.tipo) }}
+                    {{ form_errors(bitacoraForm.tipo) }}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-semibold small">Descripción</label>
+                    {{ form_widget(bitacoraForm.descripcion) }}
+                    {{ form_errors(bitacoraForm.descripcion) }}
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm w-100"><i class="bi bi-journal-plus me-2"></i>Registrar</button>
+                {{ form_end(bitacoraForm) }}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-8">
+        <h6 class="fw-semibold mb-3 text-muted">Registro de bitácora</h6>
+        {% if paciente.bitacoras is empty %}
+            <div class="text-center text-muted py-4"><i class="bi bi-journal fs-1 opacity-25 d-block mb-2"></i>Sin entradas registradas.</div>
+        {% else %}
+            <div class="timeline">
+            {% for entrada in paciente.bitacoras %}
+            <div class="d-flex gap-3 mb-3">
+                <div class="flex-shrink-0">
+                    <span class="badge {{ entrada.tipo.badgeClass }} rounded-pill px-2 py-1" style="font-size:.7rem">{{ entrada.tipo.etiqueta }}</span>
+                </div>
+                <div class="flex-grow-1 border-bottom pb-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <p class="mb-1">{{ entrada.descripcion }}</p>
+                        <small class="text-muted text-nowrap ms-2">{{ entrada.fecha ? entrada.fecha|date('d/m/Y H:i') : '' }}</small>
+                    </div>
+                    <small class="text-muted"><i class="bi bi-person me-1"></i>{{ entrada.creadoPor ? entrada.creadoPor.nombreCompleto : 'Sistema' }}</small>
+                </div>
+            </div>
+            {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+</div>
+</turbo-frame>

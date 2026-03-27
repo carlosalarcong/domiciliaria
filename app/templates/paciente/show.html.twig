@@ -1,0 +1,205 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ paciente.nombreCompleto }}{% endblock %}
+{% block stylesheets %}
+<script src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8.0.12/dist/turbo.es2017.esm.js" type="module"></script>
+{% endblock %}
+{% block content %}
+<div class="mb-3">
+    <nav aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="{{ path('app_paciente_index') }}">Pacientes</a></li><li class="breadcrumb-item active">{{ paciente.nombreCompleto }}</li></ol></nav>
+</div>
+
+{# Header de la ficha #}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body p-4">
+        <div class="row align-items-center">
+            <div class="col-auto">
+                <div class="rounded-circle bg-primary bg-opacity-10 d-flex align-items-center justify-content-center" style="width:64px;height:64px;font-size:1.5rem">
+                    {{ paciente.nombres|first|upper }}{{ paciente.apellidos|first|upper }}
+                </div>
+            </div>
+            <div class="col">
+                <h4 class="fw-bold mb-1">{{ paciente.nombreCompleto }}</h4>
+                <div class="d-flex flex-wrap gap-2 align-items-center">
+                    <span class="font-monospace text-muted">{{ paciente.rut }}</span>
+                    {% if paciente.edad %}<span class="text-muted">· {{ paciente.edad }} años</span>{% endif %}
+                    <span class="badge {{ paciente.estado.badgeClass }}">{{ paciente.estado.etiqueta }}</span>
+                    <span class="badge bg-info-subtle text-info border border-info-subtle">{{ paciente.tipoServicio.etiqueta }}</span>
+                    {% if paciente.mandante %}<span class="badge bg-secondary-subtle text-secondary border border-secondary-subtle"><i class="bi bi-building me-1"></i>{{ paciente.mandante.nombre }}</span>{% endif %}
+                </div>
+            </div>
+            <div class="col-auto d-flex gap-2">
+                {% if puedeEditar %}
+                <a href="{{ path('app_paciente_edit', {id: paciente.id}) }}" class="btn btn-outline-primary btn-sm"><i class="bi bi-pencil me-1"></i>Editar</a>
+                {% if paciente.estado.value != 'DADO_DE_BAJA' %}
+                <button class="btn btn-outline-danger btn-sm" data-bs-toggle="modal" data-bs-target="#modalBaja"><i class="bi bi-person-dash me-1"></i>Dar de baja</button>
+                {% endif %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Tabs #}
+<ul class="nav nav-tabs mb-0" id="fichaTabs">
+    <li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-datos"><i class="bi bi-person-lines-fill me-1"></i>Datos</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-domicilio"><i class="bi bi-house me-1"></i>Domicilio</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-bitacora"><i class="bi bi-journal-text me-1"></i>Bitácora</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-comunicaciones"><i class="bi bi-chat-dots me-1"></i>Comunicaciones</a></li>
+    <li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-turnos"><i class="bi bi-calendar3 me-1"></i>Turnos</a></li>
+</ul>
+
+<div class="tab-content bg-white border border-top-0 rounded-bottom shadow-sm p-4">
+
+    {# Tab Datos #}
+    <div class="tab-pane fade show active" id="tab-datos">
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h6 class="fw-semibold text-muted text-uppercase mb-3" style="font-size:.75rem;letter-spacing:.05em">Datos personales</h6>
+                <dl class="row">
+                    <dt class="col-5 text-muted">Nombres</dt><dd class="col-7">{{ paciente.nombres }}</dd>
+                    <dt class="col-5 text-muted">Apellidos</dt><dd class="col-7">{{ paciente.apellidos }}</dd>
+                    <dt class="col-5 text-muted">RUT</dt><dd class="col-7 font-monospace">{{ paciente.rut }}</dd>
+                    <dt class="col-5 text-muted">Nacimiento</dt><dd class="col-7">{{ paciente.fechaNacimiento ? paciente.fechaNacimiento|date('d/m/Y') : '—' }}{% if paciente.edad %} <span class="text-muted">({{ paciente.edad }} años)</span>{% endif %}</dd>
+                    <dt class="col-5 text-muted">Teléfono</dt><dd class="col-7">{{ paciente.telefono ?? '—' }}</dd>
+                    <dt class="col-5 text-muted">Tel. emergencia</dt><dd class="col-7">{{ paciente.telefonoEmergencia ?? '—' }}</dd>
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-semibold text-muted text-uppercase mb-3" style="font-size:.75rem;letter-spacing:.05em">Servicio</h6>
+                <dl class="row">
+                    <dt class="col-5 text-muted">Mandante</dt><dd class="col-7">{{ paciente.mandante ? paciente.mandante.nombre : '—' }}</dd>
+                    <dt class="col-5 text-muted">Tipo servicio</dt><dd class="col-7">{{ paciente.tipoServicio.etiqueta }}</dd>
+                    <dt class="col-5 text-muted">Estado</dt><dd class="col-7"><span class="badge {{ paciente.estado.badgeClass }}">{{ paciente.estado.etiqueta }}</span></dd>
+                    <dt class="col-5 text-muted">Ingreso</dt><dd class="col-7">{{ paciente.fechaIngreso ? paciente.fechaIngreso|date('d/m/Y') : '—' }}</dd>
+                    <dt class="col-5 text-muted">Término</dt><dd class="col-7">{{ paciente.fechaTermino ? paciente.fechaTermino|date('d/m/Y') : '—' }}</dd>
+                    <dt class="col-5 text-muted">Dirección</dt><dd class="col-7">{{ paciente.direccion ?? '—' }}{% if paciente.comuna %}, {{ paciente.comuna }}{% endif %}</dd>
+                </dl>
+            </div>
+            {% if paciente.tutorNombre %}
+            <div class="col-12">
+                <h6 class="fw-semibold text-muted text-uppercase mb-3" style="font-size:.75rem;letter-spacing:.05em">Tutor / Responsable</h6>
+                <dl class="row">
+                    <dt class="col-md-2 text-muted">Nombre</dt><dd class="col-md-4">{{ paciente.tutorNombre }}</dd>
+                    <dt class="col-md-2 text-muted">Teléfono</dt><dd class="col-md-4">{{ paciente.tutorTelefono ?? '—' }}</dd>
+                    <dt class="col-md-2 text-muted">Relación</dt><dd class="col-md-4">{{ paciente.tutorRelacion ?? '—' }}</dd>
+                </dl>
+            </div>
+            {% endif %}
+            {% if paciente.observaciones %}
+            <div class="col-12">
+                <h6 class="fw-semibold text-muted text-uppercase mb-2" style="font-size:.75rem;letter-spacing:.05em">Observaciones</h6>
+                <p class="text-muted mb-0">{{ paciente.observaciones|nl2br }}</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Tab Condición Domicilio #}
+    <div class="tab-pane fade" id="tab-domicilio">
+        {% set condicion = paciente.condicionDomicilio %}
+        <div class="row g-4">
+            <div class="col-md-6">
+                <h6 class="fw-semibold text-muted text-uppercase mb-3" style="font-size:.75rem;letter-spacing:.05em">Acceso</h6>
+                <dl class="row">
+                    <dt class="col-5 text-muted">Descripción</dt><dd class="col-7">{{ condicion and condicion.accesoDescripcion ? condicion.accesoDescripcion : '—' }}</dd>
+                    <dt class="col-5 text-muted">Código acceso</dt><dd class="col-7 font-monospace">{{ condicion and condicion.codigoAcceso ? condicion.codigoAcceso : '—' }}</dd>
+                    <dt class="col-5 text-muted">Ascensor</dt><dd class="col-7">{% if condicion and condicion.requiereAscensor %}<span class="text-warning"><i class="bi bi-check-circle-fill me-1"></i>Sí</span>{% else %}No{% endif %}</dd>
+                </dl>
+                <h6 class="fw-semibold text-muted text-uppercase mb-3 mt-3" style="font-size:.75rem;letter-spacing:.05em">Mascotas</h6>
+                <dl class="row">
+                    <dt class="col-5 text-muted">¿Hay mascotas?</dt>
+                    <dd class="col-7">{% if condicion and condicion.tieneMascotas %}<span class="text-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>Sí</span>{% else %}No{% endif %}</dd>
+                    {% if condicion and condicion.mascotasDetalle %}<dt class="col-5 text-muted">Detalle</dt><dd class="col-7">{{ condicion.mascotasDetalle }}</dd>{% endif %}
+                </dl>
+            </div>
+            <div class="col-md-6">
+                <h6 class="fw-semibold text-muted text-uppercase mb-3" style="font-size:.75rem;letter-spacing:.05em">Barreras arquitectónicas</h6>
+                <dl class="row">
+                    <dt class="col-5 text-muted">¿Hay barreras?</dt>
+                    <dd class="col-7">{% if condicion and condicion.tieneBarrerasArquitectonicas %}<span class="text-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>Sí</span>{% else %}No{% endif %}</dd>
+                    {% if condicion and condicion.barrerasDetalle %}<dt class="col-5 text-muted">Detalle</dt><dd class="col-7">{{ condicion.barrerasDetalle }}</dd>{% endif %}
+                </dl>
+                {% if condicion and condicion.observacionesSeguridad %}
+                <div class="alert alert-warning mt-3">
+                    <i class="bi bi-shield-exclamation me-2"></i><strong>Seguridad:</strong><br>{{ condicion.observacionesSeguridad }}
+                </div>
+                {% endif %}
+            </div>
+            {% if puedeEditar %}
+            <div class="col-12">
+                <hr>
+                <h6 class="fw-semibold mb-3">Editar condición del domicilio</h6>
+                {{ form_start(condicionForm, {attr: {novalidate: 'novalidate'}}) }}
+                <div class="row g-3">
+                    <div class="col-md-6"><label class="form-label fw-semibold">Descripción del acceso</label>{{ form_widget(condicionForm.accesoDescripcion) }}</div>
+                    <div class="col-md-3"><label class="form-label fw-semibold">Código de acceso</label>{{ form_widget(condicionForm.codigoAcceso) }}</div>
+                    <div class="col-md-3 d-flex align-items-end pb-1">
+                        <div class="form-check">{{ form_widget(condicionForm.requiereAscensor) }}<label class="form-check-label ms-2">Requiere ascensor</label></div>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end pb-1">
+                        <div class="form-check">{{ form_widget(condicionForm.tieneMascotas) }}<label class="form-check-label ms-2">Mascotas</label></div>
+                    </div>
+                    <div class="col-md-4"><label class="form-label fw-semibold">Detalle mascotas</label>{{ form_widget(condicionForm.mascotasDetalle) }}</div>
+                    <div class="col-md-2 d-flex align-items-end pb-1">
+                        <div class="form-check">{{ form_widget(condicionForm.tieneBarrerasArquitectonicas) }}<label class="form-check-label ms-2">Barreras</label></div>
+                    </div>
+                    <div class="col-md-4"><label class="form-label fw-semibold">Detalle barreras</label>{{ form_widget(condicionForm.barrerasDetalle) }}</div>
+                    <div class="col-md-12"><label class="form-label fw-semibold">Observaciones de seguridad</label>{{ form_widget(condicionForm.observacionesSeguridad) }}</div>
+                </div>
+                <button type="submit" class="btn btn-primary mt-3"><i class="bi bi-save me-2"></i>Guardar condición</button>
+                {{ form_end(condicionForm) }}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    {# Tab Bitácora — Turbo Frame #}
+    <div class="tab-pane fade" id="tab-bitacora">
+        <turbo-frame id="bitacora-frame">
+            {% include 'paciente/_bitacora.html.twig' %}
+        </turbo-frame>
+    </div>
+
+    {# Tab Comunicaciones — Turbo Frame #}
+    <div class="tab-pane fade" id="tab-comunicaciones">
+        <turbo-frame id="comunicaciones-frame">
+            {% include 'paciente/_comunicaciones.html.twig' %}
+        </turbo-frame>
+    </div>
+
+    {# Tab Turnos #}
+    <div class="tab-pane fade" id="tab-turnos">
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-calendar3 fs-1 opacity-25 d-block mb-2"></i>
+            <p>El historial de turnos estará disponible en la Fase 3.</p>
+        </div>
+    </div>
+
+</div>
+
+{# Modal dar de baja #}
+{% if puedeEditar and paciente.estado.value != 'DADO_DE_BAJA' %}
+<div class="modal fade" id="modalBaja" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold text-danger"><i class="bi bi-person-dash me-2"></i>Dar de baja al paciente</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="post" action="{{ path('app_paciente_dar_de_baja', {id: paciente.id}) }}">
+                <div class="modal-body">
+                    <div class="alert alert-warning"><i class="bi bi-exclamation-triangle me-2"></i>Esta acción registrará la fecha de término y cambiará el estado a <strong>Dado de baja</strong>.</div>
+                    <input type="hidden" name="_token" value="{{ csrf_token('baja-' ~ paciente.id) }}">
+                    <label class="form-label fw-semibold">Motivo de la baja</label>
+                    <textarea name="motivo" class="form-control" rows="3" placeholder="Describe el motivo..." required></textarea>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-danger"><i class="bi bi-person-dash me-2"></i>Confirmar baja</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
