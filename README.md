@@ -97,6 +97,14 @@ Abre http://localhost:8090 en tu navegador.
 - Notificaciones por email a admins/coordinadores cuando hay turno descubierto (Messenger)
 - Revisión automática diaria a las 20:00 (Symfony Scheduler, cron `0 20 * * *`)
 
+### Fase 5 — Eventos Adversos
+- Registro de incidentes clínicos con 8 tipos y 4 niveles de gravedad (leve/moderado/grave/crítico)
+- Ciclo de vida: `Abierto` → `En proceso` → `Cerrado`
+- **Timeline de seguimiento** con notas cronológicas por autor
+- **Notificación automática** por email a admins/coordinadores en eventos Grave o Crítico (Messenger)
+- Index con contadores de estado y filtros por gravedad/estado
+- Formulario de cierre con observación obligatoria
+
 ### Fase 4 — Personal (documentos, disponibilidad, horas)
 - **Documentos del trabajador**: subida de archivos (PDF, Word, JPG/PNG hasta 10 MB), descarga y eliminación
 - **Disponibilidad**: registro de bloques horarios por fecha (disponible / no disponible)
@@ -174,7 +182,7 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 - [x] **Fase 2** — Módulo de Pacientes y Mandantes
 - [x] **Fase 3** — Módulo de Turnos y Calendario
 - [x] **Fase 4** — Módulo de Personal (documentos, disponibilidad, exportación de horas)
-- [ ] **Fase 5** — Módulo de Eventos Adversos
+- [x] **Fase 5** — Módulo de Eventos Adversos
 - [ ] **Fase 6** — Módulo de Finanzas y Facturación
 
 ## Notas técnicas
