@@ -29,7 +29,7 @@
                 <select name="mandante" class="form-select form-select-sm">
                     <option value="">Todos los mandantes</option>
                     {% for m in mandantes %}
-                    <option value="{{ m.id }}" {{ filtros.mandanteId == m.id|string ? 'selected' : '' }}>{{ m.nombre }}</option>
+                    <option value="{{ m.id }}" {{ filtros.mandanteId == (m.id ~ '') ? 'selected' : '' }}>{{ m.nombre }}</option>
                     {% endfor %}
                 </select>
             </div>

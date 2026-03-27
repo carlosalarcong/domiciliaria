@@ -10,10 +10,11 @@ use App\Enum\EstadoPaciente;
 use App\Enum\TipoServicio;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
-use Symfony\Component\Form\Extension\Core\Type\ChoiceType;
 use Symfony\Component\Form\Extension\Core\Type\DateType;
+use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\Extension\Core\Type\TextareaType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
+
 use Symfony\Component\Form\FormBuilderInterface;
 use Symfony\Component\OptionsResolver\OptionsResolver;
 
@@ -51,15 +52,17 @@ class PacienteType extends AbstractType
                     ->where('m.activo = true')
                     ->orderBy('m.nombre', 'ASC'),
             ])
-            ->add('tipoServicio', ChoiceType::class, [
-                'label'   => 'Tipo de servicio',
-                'choices' => TipoServicio::choices(),
-                'attr'    => ['class' => 'form-select'],
+            ->add('tipoServicio', EnumType::class, [
+                'class'        => TipoServicio::class,
+                'label'        => 'Tipo de servicio',
+                'choice_label' => fn(TipoServicio $e) => $e->etiqueta(),
+                'attr'         => ['class' => 'form-select'],
             ])
-            ->add('estado', ChoiceType::class, [
-                'label'   => 'Estado',
-                'choices' => EstadoPaciente::choices(),
-                'attr'    => ['class' => 'form-select'],
+            ->add('estado', EnumType::class, [
+                'class'        => EstadoPaciente::class,
+                'label'        => 'Estado',
+                'choice_label' => fn(EstadoPaciente $e) => $e->etiqueta(),
+                'attr'         => ['class' => 'form-select'],
             ])
             ->add('fechaIngreso', DateType::class, [
                 'label'  => 'Fecha de ingreso',
