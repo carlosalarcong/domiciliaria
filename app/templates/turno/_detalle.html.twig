@@ -1,0 +1,37 @@
+<ul class="list-unstyled mb-0">
+    <li class="mb-2">
+        <span class="text-muted">Estado:</span>
+        <span class="badge {{ turno.estado.badgeClass() }} ms-2">{{ turno.estado.etiqueta() }}</span>
+    </li>
+    <li class="mb-2">
+        <span class="text-muted">Paciente:</span>
+        <strong class="ms-2">{{ turno.paciente.nombreCompleto }}</strong>
+    </li>
+    <li class="mb-2">
+        <span class="text-muted">Trabajador:</span>
+        <span class="ms-2">{{ turno.trabajador ? turno.trabajador.nombreCompleto : '<em>Sin asignar</em>'|raw }}</span>
+    </li>
+    <li class="mb-2">
+        <span class="text-muted">Fecha:</span>
+        <span class="ms-2">{{ turno.fecha|date('d/m/Y') }}</span>
+    </li>
+    <li class="mb-2">
+        <span class="text-muted">Horario:</span>
+        <span class="ms-2">{{ turno.horaInicio|date('H:i') }} — {{ turno.horaTermino|date('H:i') }}</span>
+    </li>
+    <li class="mb-2">
+        <span class="text-muted">Tipo:</span>
+        <span class="ms-2">{{ turno.tipoTurno.etiqueta() }}</span>
+    </li>
+    {% if turno.esReemplazo %}
+    <li class="mb-2">
+        <span class="badge bg-warning text-dark">Reemplazo</span>
+        {% if turno.motivoReemplazo %}
+        <span class="ms-2 text-muted">{{ turno.motivoReemplazo.etiqueta() }}</span>
+        {% endif %}
+    </li>
+    {% endif %}
+    {% if turno.observaciones %}
+    <li class="mt-2 text-muted small">{{ turno.observaciones }}</li>
+    {% endif %}
+</ul>

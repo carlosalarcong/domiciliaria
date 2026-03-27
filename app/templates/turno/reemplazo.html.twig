@@ -1,0 +1,51 @@
+{% extends 'base.html.twig' %}
+{% block title %}Asignar reemplazo{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+    <a href="{{ path('app_turno_show', {id: turno.id}) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+        <h4 class="mb-0 fw-bold">Asignar reemplazo</h4>
+        <small class="text-muted">Turno del {{ turno.fecha|date('d/m/Y') }} — {{ turno.paciente.nombreCompleto }}</small>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm border-start border-warning border-4">
+            <div class="card-body">
+                <h6 class="fw-semibold text-warning mb-3"><i class="bi bi-exclamation-triangle me-2"></i>Turno a reemplazar</h6>
+                <ul class="list-unstyled mb-0">
+                    <li class="mb-1"><span class="text-muted">Paciente:</span> <strong>{{ turno.paciente.nombreCompleto }}</strong></li>
+                    <li class="mb-1"><span class="text-muted">Fecha:</span> {{ turno.fecha|date('d/m/Y') }}</li>
+                    <li class="mb-1"><span class="text-muted">Horario:</span> {{ turno.horaInicio|date('H:i') }} — {{ turno.horaTermino|date('H:i') }}</li>
+                    <li class="mb-1"><span class="text-muted">Trabajador actual:</span>
+                        {{ turno.trabajador ? turno.trabajador.nombreCompleto : '<em>Sin asignar</em>'|raw }}
+                    </li>
+                    <li><span class="text-muted">Estado:</span>
+                        <span class="badge {{ turno.estado.badgeClass() }}">{{ turno.estado.etiqueta() }}</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                {{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
+                <div class="mb-3">{{ form_row(form.reemplazo) }}</div>
+                <div class="mb-4">{{ form_row(form.motivo) }}</div>
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-warning">
+                        <i class="bi bi-arrow-repeat me-2"></i>Confirmar reemplazo
+                    </button>
+                    <a href="{{ path('app_turno_show', {id: turno.id}) }}" class="btn btn-light">Cancelar</a>
+                </div>
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

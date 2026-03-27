@@ -1,0 +1,156 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\Service;
+
+use App\Entity\Paciente;
+use App\Entity\Trabajador;
+use App\Entity\Turno;
+use App\Entity\User;
+use App\Enum\EstadoTurno;
+use App\Enum\MotivoReemplazo;
+use App\Message\TurnoDescubiertoMessage;
+use App\Repository\TurnoRepository;
+use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
+
+class TurnoService
+{
+    public function __construct(
+        private readonly EntityManagerInterface $em,
+        private readonly TurnoRepository $turnoRepository,
+        private readonly MessageBusInterface $bus,
+    ) {}
+
+    public function crear(Turno $turno, User $creadoPor): Turno
+    {
+        $turno->setCreadoPor($creadoPor);
+
+        // Si tiene trabajador asignado, queda CUBIERTO; si no, DESCUBIERTO
+        if ($turno->getTrabajador() !== null) {
+            $this->verificarDisponibilidad($turno->getTrabajador(), $turno->getFecha(), $turno->getHoraInicio(), $turno->getHoraTermino());
+            $turno->setEstado(EstadoTurno::CUBIERTO);
+        } else {
+            $turno->setEstado(EstadoTurno::DESCUBIERTO);
+            $this->despacharAlertaDescubierto($turno);
+        }
+
+        $this->em->persist($turno);
+        $this->em->flush();
+
+        return $turno;
+    }
+
+    /**
+     * Verifica que el trabajador no tenga conflicto de horario.
+     *
+     * @throws \DomainException si hay conflicto
+     */
+    public function verificarDisponibilidad(
+        Trabajador $trabajador,
+        \DateTimeInterface $fecha,
+        \DateTimeInterface $horaInicio,
+        \DateTimeInterface $horaTermino,
+    ): void {
+        $turnosExistentes = $this->turnoRepository->findByTrabajadorYFecha($trabajador, $fecha);
+
+        foreach ($turnosExistentes as $existente) {
+            if ($existente->getEstado() === EstadoTurno::DESCUBIERTO) {
+                continue;
+            }
+
+            $inicioExistente  = $existente->getHoraInicio();
+            $terminoExistente = $existente->getHoraTermino();
+
+            // Detecta solapamiento
+            if ($horaInicio < $terminoExistente && $horaTermino > $inicioExistente) {
+                throw new \DomainException(sprintf(
+                    'El trabajador %s ya tiene un turno asignado el %s entre %s y %s.',
+                    $trabajador->getNombreCompleto(),
+                    $fecha->format('d/m/Y'),
+                    $inicioExistente->format('H:i'),
+                    $terminoExistente->format('H:i'),
+                ));
+            }
+        }
+    }
+
+    public function asignarReemplazo(Turno $turno, Trabajador $reemplazo, MotivoReemplazo $motivo): Turno
+    {
+        $this->verificarDisponibilidad(
+            $reemplazo,
+            $turno->getFecha(),
+            $turno->getHoraInicio(),
+            $turno->getHoraTermino(),
+        );
+
+        $turno->setTrabajador($reemplazo);
+        $turno->setEsReemplazo(true);
+        $turno->setMotivoReemplazo($motivo);
+        $turno->setEstado(EstadoTurno::CUBIERTO);
+
+        $this->em->flush();
+
+        return $turno;
+    }
+
+    public function registrarAsistencia(Turno $turno, string $tipo): Turno
+    {
+        if ($tipo === 'inicio') {
+            $turno->setRegistroInicio(new \DateTime());
+            $turno->setEstado(EstadoTurno::PARCIAL);
+        } elseif ($tipo === 'termino') {
+            if ($turno->getRegistroInicio() === null) {
+                throw new \LogicException('No se puede registrar el término sin haber registrado el inicio.');
+            }
+            $turno->setRegistroTermino(new \DateTime());
+            $turno->setEstado(EstadoTurno::COMPLETADO);
+        }
+
+        $this->em->flush();
+
+        return $turno;
+    }
+
+    public function calcularEstadoCobertura(Paciente $paciente, \DateTimeInterface $inicioSemana): array
+    {
+        $turnos = $this->turnoRepository->findByPacienteYSemana($paciente, $inicioSemana);
+
+        $resumen = [
+            'total'       => count($turnos),
+            'cubiertos'   => 0,
+            'parciales'   => 0,
+            'descubiertos' => 0,
+            'completados' => 0,
+            'porcentaje'  => 0,
+        ];
+
+        foreach ($turnos as $turno) {
+            match ($turno->getEstado()) {
+                EstadoTurno::CUBIERTO    => $resumen['cubiertos']++,
+                EstadoTurno::PARCIAL     => $resumen['parciales']++,
+                EstadoTurno::DESCUBIERTO => $resumen['descubiertos']++,
+                EstadoTurno::COMPLETADO  => $resumen['completados']++,
+            };
+        }
+
+        if ($resumen['total'] > 0) {
+            $resumen['porcentaje'] = round(
+                (($resumen['cubiertos'] + $resumen['completados']) / $resumen['total']) * 100
+            );
+        }
+
+        return $resumen;
+    }
+
+    private function despacharAlertaDescubierto(Turno $turno): void
+    {
+        $this->bus->dispatch(new TurnoDescubiertoMessage(
+            turnoId:        (string) $turno->getId(),
+            pacienteNombre: $turno->getPaciente()?->getNombreCompleto() ?? 'Desconocido',
+            fecha:          $turno->getFecha()?->format('d/m/Y') ?? '—',
+            tipoTurno:      $turno->getTipoTurno()->etiqueta(),
+        ));
+    }
+}

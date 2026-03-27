@@ -1,0 +1,35 @@
+{% extends 'base.html.twig' %}
+{% block title %}Nuevo trabajador{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+    <a href="{{ path('app_trabajador_index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+        <h4 class="mb-0 fw-bold">Nuevo trabajador</h4>
+        <small class="text-muted">Registrar nuevo integrante del personal</small>
+    </div>
+</div>
+<div class="card border-0 shadow-sm" style="max-width:700px;">
+    <div class="card-body p-4">
+        {{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
+        <div class="row g-3">
+            <div class="col-md-6">{{ form_row(form.nombres) }}</div>
+            <div class="col-md-6">{{ form_row(form.apellidos) }}</div>
+            <div class="col-md-4">{{ form_row(form.rut) }}</div>
+            <div class="col-md-4">{{ form_row(form.perfil) }}</div>
+            <div class="col-md-4">{{ form_row(form.estado) }}</div>
+            <div class="col-md-6">{{ form_row(form.telefono) }}</div>
+            <div class="col-md-6">{{ form_row(form.email) }}</div>
+            <div class="col-12">{{ form_row(form.direccion) }}</div>
+            <div class="col-md-6">{{ form_row(form.fechaIngreso) }}</div>
+            <div class="col-md-6">{{ form_row(form.user) }}</div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-2"></i>Guardar</button>
+            <a href="{{ path('app_trabajador_index') }}" class="btn btn-light">Cancelar</a>
+        </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}

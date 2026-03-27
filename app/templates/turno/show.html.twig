@@ -1,0 +1,154 @@
+{% extends 'base.html.twig' %}
+{% block title %}Turno — {{ turno.paciente.nombreCompleto }}{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+    <a href="{{ path('app_turno_index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    <div class="flex-grow-1">
+        <h4 class="mb-0 fw-bold">Turno del {{ turno.fecha|date('d/m/Y') }}</h4>
+        <small class="text-muted">{{ turno.paciente.nombreCompleto }} — {{ turno.tipoTurno.etiqueta() }}</small>
+    </div>
+    <div class="d-flex gap-2">
+        {% if is_granted('ROLE_COORDINADOR') %}
+        <a href="{{ path('app_turno_edit', {id: turno.id}) }}" class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-pencil me-1"></i>Editar
+        </a>
+        {% if turno.estado.value == 'DESCUBIERTO' or turno.estado.value == 'CUBIERTO' %}
+        <a href="{{ path('app_turno_reemplazo', {id: turno.id}) }}" class="btn btn-outline-warning btn-sm">
+            <i class="bi bi-arrow-repeat me-1"></i>Reemplazo
+        </a>
+        {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 fw-semibold py-3">
+                <i class="bi bi-info-circle me-2 text-primary"></i>Datos del turno
+            </div>
+            <ul class="list-group list-group-flush">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span class="text-muted">Estado</span>
+                    <span class="badge {{ turno.estado.badgeClass() }}">{{ turno.estado.etiqueta() }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Paciente</span>
+                    <a href="{{ path('app_paciente_show', {id: turno.paciente.id}) }}" class="fw-semibold text-decoration-none">
+                        {{ turno.paciente.nombreCompleto }}
+                    </a>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Trabajador</span>
+                    {% if turno.trabajador %}
+                    <a href="{{ path('app_trabajador_show', {id: turno.trabajador.id}) }}" class="text-decoration-none">
+                        {{ turno.trabajador.nombreCompleto }}
+                    </a>
+                    {% else %}
+                    <em class="text-danger">Sin asignar</em>
+                    {% endif %}
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Fecha</span>
+                    <span>{{ turno.fecha|date('d/m/Y') }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Horario</span>
+                    <span class="font-monospace">{{ turno.horaInicio|date('H:i') }} — {{ turno.horaTermino|date('H:i') }}</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Tipo</span>
+                    <span>{{ turno.tipoTurno.etiqueta() }}</span>
+                </li>
+                {% if turno.esReemplazo %}
+                <li class="list-group-item d-flex justify-content-between">
+                    <span class="text-muted">Reemplazo</span>
+                    <span>
+                        <span class="badge bg-warning text-dark">Sí</span>
+                        {% if turno.motivoReemplazo %}
+                        <span class="ms-1 text-muted small">{{ turno.motivoReemplazo.etiqueta() }}</span>
+                        {% endif %}
+                    </span>
+                </li>
+                {% endif %}
+                {% if turno.observaciones %}
+                <li class="list-group-item">
+                    <p class="text-muted mb-1 small">Observaciones</p>
+                    <p class="mb-0">{{ turno.observaciones }}</p>
+                </li>
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        {# Registro de asistencia #}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 fw-semibold py-3">
+                <i class="bi bi-clock me-2 text-primary"></i>Registro de asistencia
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <div class="border rounded p-3 text-center {{ turno.registroInicio ? 'border-success' : 'border-secondary' }}">
+                            <div class="text-muted small mb-1">Inicio registrado</div>
+                            {% if turno.registroInicio %}
+                            <div class="fw-bold text-success">{{ turno.registroInicio|date('H:i') }}</div>
+                            <div class="text-muted small">{{ turno.registroInicio|date('d/m/Y') }}</div>
+                            {% else %}
+                            <div class="text-muted">—</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="border rounded p-3 text-center {{ turno.registroTermino ? 'border-primary' : 'border-secondary' }}">
+                            <div class="text-muted small mb-1">Término registrado</div>
+                            {% if turno.registroTermino %}
+                            <div class="fw-bold text-primary">{{ turno.registroTermino|date('H:i') }}</div>
+                            <div class="text-muted small">{{ turno.registroTermino|date('d/m/Y') }}</div>
+                            {% else %}
+                            <div class="text-muted">—</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                {# Botones de asistencia — visibles si el turno tiene trabajador #}
+                {% if turno.trabajador and turno.estado.value != 'DESCUBIERTO' %}
+                <div class="d-grid gap-2">
+                    {% if not turno.registroInicio %}
+                    <form method="post" action="{{ path('app_turno_asistencia', {id: turno.id, tipo: 'inicio'}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('asistencia_' ~ turno.id) }}">
+                        <button type="submit" class="btn btn-success w-100 py-3 fs-5">
+                            <i class="bi bi-play-circle me-2"></i>Iniciar turno
+                        </button>
+                    </form>
+                    {% elseif not turno.registroTermino %}
+                    <form method="post" action="{{ path('app_turno_asistencia', {id: turno.id, tipo: 'termino'}) }}">
+                        <input type="hidden" name="_token" value="{{ csrf_token('asistencia_' ~ turno.id) }}">
+                        <button type="submit" class="btn btn-primary w-100 py-3 fs-5">
+                            <i class="bi bi-stop-circle me-2"></i>Finalizar turno
+                        </button>
+                    </form>
+                    {% else %}
+                    <div class="alert alert-success mb-0">
+                        <i class="bi bi-check-circle me-2"></i>Turno completado correctamente.
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        {# Metadatos #}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body">
+                <small class="text-muted d-block">Creado por: {{ turno.creadoPor ? turno.creadoPor.nombreCompleto : '—' }}</small>
+                <small class="text-muted d-block">Creado el: {{ turno.creadoEn ? turno.creadoEn|date('d/m/Y H:i') : '—' }}</small>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

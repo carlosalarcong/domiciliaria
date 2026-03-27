@@ -16,10 +16,10 @@
         <a href="{{ path('app_mandante_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_mandante' ? 'active' : '' }}">
             <i class="bi bi-building"></i> Mandantes
         </a>
-        <a href="#" class="sidebar-link">
+        <a href="{{ path('app_turno_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_turno' ? 'active' : '' }}">
             <i class="bi bi-calendar3"></i> Turnos
         </a>
-        <a href="#" class="sidebar-link">
+        <a href="{{ path('app_trabajador_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_trabajador' ? 'active' : '' }}">
             <i class="bi bi-person-badge"></i> Personal
         </a>
 

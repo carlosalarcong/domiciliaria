@@ -1,0 +1,38 @@
+<?php
+
+declare(strict_types=1);
+
+namespace App\MessageHandler;
+
+use App\Message\RevisarTurnosDescubiertosMessage;
+use App\Message\TurnoDescubiertoMessage;
+use App\Repository\TurnoRepository;
+use Psr\Log\LoggerInterface;
+use Symfony\Component\Messenger\Attribute\AsMessageHandler;
+use Symfony\Component\Messenger\MessageBusInterface;
+
+#[AsMessageHandler]
+final class RevisarTurnosDescubiertosHandler
+{
+    public function __construct(
+        private readonly TurnoRepository $turnoRepository,
+        private readonly MessageBusInterface $bus,
+        private readonly LoggerInterface $logger,
+    ) {}
+
+    public function __invoke(RevisarTurnosDescubiertosMessage $message): void
+    {
+        $turnos = $this->turnoRepository->findDescubiertosProximosDias(1);
+
+        $this->logger->info(sprintf('Revisión diaria: %d turno(s) descubierto(s) para mañana.', count($turnos)));
+
+        foreach ($turnos as $turno) {
+            $this->bus->dispatch(new TurnoDescubiertoMessage(
+                turnoId:        (string) $turno->getId(),
+                pacienteNombre: $turno->getPaciente()?->getNombreCompleto() ?? 'Desconocido',
+                fecha:          $turno->getFecha()->format('d/m/Y'),
+                tipoTurno:      $turno->getTipoTurno()->etiqueta(),
+            ));
+        }
+    }
+}
