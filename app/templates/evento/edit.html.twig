@@ -1,0 +1,36 @@
+{% extends 'base.html.twig' %}
+{% block title %}Editar evento adverso{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+    <a href="{{ path('app_evento_show', {id: evento.id}) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    <div>
+        <h4 class="mb-0 fw-bold">Editar evento adverso</h4>
+        <small class="text-muted">{{ evento.paciente.nombreCompleto }} — {{ evento.fechaEvento|date('d/m/Y') }}</small>
+    </div>
+</div>
+
+<div class="card border-0 shadow-sm" style="max-width:800px;">
+    <div class="card-body p-4">
+        {{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
+        <div class="row g-3">
+            <div class="col-12">{{ form_row(form.paciente) }}</div>
+            <div class="col-md-6">{{ form_row(form.trabajador) }}</div>
+            <div class="col-md-3">{{ form_row(form.fechaEvento) }}</div>
+            <div class="col-md-3">{{ form_row(form.horaEvento) }}</div>
+            <div class="col-md-6">{{ form_row(form.tipo) }}</div>
+            <div class="col-md-6">{{ form_row(form.gravedad) }}</div>
+            <div class="col-12">{{ form_row(form.descripcion) }}</div>
+            <div class="col-12">{{ form_row(form.accionesTomadas) }}</div>
+            <div class="col-md-6">{{ form_row(form.notificadoFamilia) }}</div>
+            <div class="col-md-6">{{ form_row(form.notificadoMedico) }}</div>
+        </div>
+        <div class="mt-4 d-flex gap-2">
+            <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg me-2"></i>Guardar cambios</button>
+            <a href="{{ path('app_evento_show', {id: evento.id}) }}" class="btn btn-light">Cancelar</a>
+        </div>
+        {{ form_end(form) }}
+    </div>
+</div>
+{% endblock %}

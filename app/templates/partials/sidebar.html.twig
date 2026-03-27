@@ -24,7 +24,7 @@
         </a>
 
         <div class="sidebar-section mt-2">Gestión</div>
-        <a href="#" class="sidebar-link">
+        <a href="{{ path('app_evento_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_evento' ? 'active' : '' }}">
             <i class="bi bi-exclamation-triangle-fill"></i> Eventos Adversos
         </a>
 
