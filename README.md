@@ -123,6 +123,36 @@ Abre http://localhost:8090 en tu navegador.
 - Listas paginadas con filtros por año y estado
 - Permisos granulares: `FINANZAS_VER` y `FINANZAS_EDITAR` (FinanzasVoter)
 
+#### Cómo se llena el módulo de Finanzas
+
+**Liquidaciones (pago a trabajadores)**
+
+1. Ir a **Finanzas → Nueva liquidación**
+2. Seleccionar trabajador, año y mes
+3. Ingresar tarifas por tipo de turno (ej: $5.500/h turno día, $7.000/h turno noche)
+4. El sistema busca automáticamente todos los turnos con estado `COMPLETADO` del trabajador en ese período y genera los ítems con sus subtotales
+
+> Si el trabajador no tiene turnos completados ese mes, la liquidación queda en $0.
+
+Después se puede **Aprobar** y luego **Marcar como pagada** ingresando la fecha de pago.
+
+**Facturas (cobro a mandantes)**
+
+1. Ir a **Finanzas → Nueva factura**
+2. Seleccionar mandante, año y mes
+3. Ingresar el monto neto manualmente (lo que se le cobra al mandante)
+4. El IVA (19% por defecto, configurable) se calcula automáticamente
+5. Opcionalmente ingresar número de factura y observaciones
+
+Después se puede **Emitir** (genera fecha de vencimiento a 30 días) y **Marcar como pagada**.
+
+**Para que los turnos aparezcan en la liquidación**, deben estar en estado `COMPLETADO`:
+1. Crear un turno desde **Turnos → Nuevo turno** con un trabajador asignado
+2. Entrar al turno → **Iniciar turno** → **Finalizar turno**
+3. Ese turno ya aparecerá en el cálculo al generar la liquidación del período
+
+Los datos de prueba (`doctrine:fixtures:load`) incluyen liquidaciones y facturas de ejemplo en distintos estados.
+
 ## Estructura del proyecto
 
 ```
