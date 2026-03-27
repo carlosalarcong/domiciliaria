@@ -1,4 +1,5 @@
 parameters:
+    app.upload_dir: '%kernel.project_dir%/public/uploads/trabajadores'
 
 services:
     _defaults:
@@ -11,4 +12,8 @@ services:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    App\Service\TrabajadorService:
+        arguments:
+            $uploadDir: '%app.upload_dir%'
 

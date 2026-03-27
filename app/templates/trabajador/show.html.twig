@@ -27,60 +27,89 @@
 </div>
 
 <div class="row g-4">
-    <div class="col-lg-4">
+    {# Columna izquierda: datos del trabajador #}
+    <div class="col-lg-3">
         <div class="card border-0 shadow-sm">
             <div class="card-body text-center py-4">
                 <div class="bg-primary-subtle rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width:80px;height:80px;">
                     <i class="bi bi-person-badge fs-2 text-primary"></i>
                 </div>
-                <h5 class="fw-bold mb-1">{{ trabajador.nombreCompleto }}</h5>
-                <p class="text-muted mb-2">{{ trabajador.perfil.etiqueta() }}</p>
+                <h6 class="fw-bold mb-1">{{ trabajador.nombreCompleto }}</h6>
+                <p class="text-muted small mb-2">{{ trabajador.perfil.etiqueta() }}</p>
                 <span class="badge {{ trabajador.estado.badgeClass() }}">{{ trabajador.estado.etiqueta() }}</span>
             </div>
             <ul class="list-group list-group-flush">
-                <li class="list-group-item d-flex justify-content-between">
+                <li class="list-group-item d-flex justify-content-between small">
                     <span class="text-muted">RUT</span>
                     <span class="font-monospace">{{ trabajador.rut }}</span>
                 </li>
                 {% if trabajador.telefono %}
-                <li class="list-group-item d-flex justify-content-between">
+                <li class="list-group-item d-flex justify-content-between small">
                     <span class="text-muted">Teléfono</span>
                     <span>{{ trabajador.telefono }}</span>
                 </li>
                 {% endif %}
                 {% if trabajador.email %}
-                <li class="list-group-item d-flex justify-content-between">
+                <li class="list-group-item d-flex justify-content-between small">
                     <span class="text-muted">Email</span>
-                    <span>{{ trabajador.email }}</span>
+                    <a href="mailto:{{ trabajador.email }}" class="text-decoration-none">{{ trabajador.email }}</a>
                 </li>
                 {% endif %}
                 {% if trabajador.direccion %}
-                <li class="list-group-item d-flex justify-content-between">
-                    <span class="text-muted">Dirección</span>
+                <li class="list-group-item small">
+                    <span class="text-muted d-block">Dirección</span>
                     <span>{{ trabajador.direccion }}</span>
                 </li>
                 {% endif %}
                 {% if trabajador.fechaIngreso %}
-                <li class="list-group-item d-flex justify-content-between">
+                <li class="list-group-item d-flex justify-content-between small">
                     <span class="text-muted">Ingreso</span>
                     <span>{{ trabajador.fechaIngreso|date('d/m/Y') }}</span>
                 </li>
                 {% endif %}
                 {% if trabajador.user %}
-                <li class="list-group-item d-flex justify-content-between">
+                <li class="list-group-item d-flex justify-content-between small">
                     <span class="text-muted">Usuario</span>
                     <span>{{ trabajador.user.email }}</span>
                 </li>
                 {% endif %}
             </ul>
+            <div class="card-body pt-2">
+                <a href="{{ path('app_trabajador_horas', {id: trabajador.id}) }}" class="btn btn-outline-success btn-sm w-100">
+                    <i class="bi bi-download me-1"></i>Exportar horas
+                </a>
+            </div>
         </div>
     </div>
 
-    <div class="col-lg-8">
+    {# Columna derecha: pestañas #}
+    <div class="col-lg-9">
+        <ul class="nav nav-tabs mb-3" id="trabajadorTabs">
+            <li class="nav-item">
+                <a class="nav-link {{ tab == 'turnos' ? 'active' : '' }}"
+                   href="{{ path('app_trabajador_show', {id: trabajador.id, tab: 'turnos'}) }}">
+                    <i class="bi bi-calendar3 me-1"></i>Turnos
+                    <span class="badge bg-secondary ms-1">{{ trabajador.turnos|length }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ tab == 'documentos' ? 'active' : '' }}"
+                   href="{{ path('app_trabajador_show', {id: trabajador.id, tab: 'documentos'}) }}">
+                    <i class="bi bi-file-earmark me-1"></i>Documentos
+                    <span class="badge bg-secondary ms-1">{{ documentos|length }}</span>
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {{ tab == 'disponibilidad' ? 'active' : '' }}"
+                   href="{{ path('app_trabajador_show', {id: trabajador.id, tab: 'disponibilidad'}) }}">
+                    <i class="bi bi-clock me-1"></i>Disponibilidad
+                </a>
+            </li>
+        </ul>
+
+        {# ── TURNOS ── #}
+        {% if tab == 'turnos' %}
         <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-0 fw-semibold py-3">
-                <i class="bi bi-calendar3 me-2 text-primary"></i>Últimos turnos
-            </div>
             <div class="card-body p-0">
                 <div class="table-responsive">
                     <table class="table table-hover align-middle mb-0">
@@ -89,17 +118,19 @@
                                 <th class="ps-4">Fecha</th>
                                 <th>Paciente</th>
                                 <th>Tipo</th>
+                                <th>Horario</th>
                                 <th>Estado</th>
-                                <th class="pe-4 text-end">Acciones</th>
+                                <th class="pe-4 text-end">Ver</th>
                             </tr>
                         </thead>
                         <tbody>
-                        {% set turnos = trabajador.turnos|slice(0, 10) %}
-                        {% for turno in turnos %}
+                        {% set turnosOrdenados = trabajador.turnos|sort((a, b) => b.fecha <=> a.fecha) %}
+                        {% for turno in turnosOrdenados|slice(0, 20) %}
                         <tr>
                             <td class="ps-4">{{ turno.fecha|date('d/m/Y') }}</td>
                             <td>{{ turno.paciente.nombreCompleto }}</td>
-                            <td>{{ turno.tipoTurno.etiqueta() }}</td>
+                            <td class="text-muted small">{{ turno.tipoTurno.etiqueta() }}</td>
+                            <td class="font-monospace small">{{ turno.horaInicio|date('H:i') }}–{{ turno.horaTermino|date('H:i') }}</td>
                             <td><span class="badge {{ turno.estado.badgeClass() }}">{{ turno.estado.etiqueta() }}</span></td>
                             <td class="pe-4 text-end">
                                 <a href="{{ path('app_turno_show', {id: turno.id}) }}" class="btn btn-outline-secondary btn-sm">
@@ -108,13 +139,163 @@
                             </td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="5" class="text-center text-muted py-4">Sin turnos registrados.</td></tr>
+                        <tr><td colspan="6" class="text-center text-muted py-4">Sin turnos registrados.</td></tr>
                         {% endfor %}
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
+
+        {# ── DOCUMENTOS ── #}
+        {% elseif tab == 'documentos' %}
+        {% if is_granted('ROLE_COORDINADOR') %}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 fw-semibold py-3">
+                <i class="bi bi-upload me-2 text-primary"></i>Subir documento
+            </div>
+            <div class="card-body">
+                {{ form_start(formDoc, {attr: {enctype: 'multipart/form-data', novalidate: 'novalidate'}}) }}
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">{{ form_row(formDoc.tipo) }}</div>
+                    <div class="col-md-5">{{ form_row(formDoc.descripcion) }}</div>
+                    <div class="col-md-4">{{ form_row(formDoc.archivo) }}</div>
+                </div>
+                <button type="submit" class="btn btn-primary btn-sm mt-3">
+                    <i class="bi bi-upload me-1"></i>Subir
+                </button>
+                {{ form_end(formDoc) }}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Tipo</th>
+                                <th>Archivo</th>
+                                <th>Descripción</th>
+                                <th>Tamaño</th>
+                                <th>Fecha</th>
+                                <th class="pe-4 text-end">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for doc in documentos %}
+                        <tr>
+                            <td class="ps-4">
+                                <span class="badge {{ doc.tipo.badgeClass() }}">{{ doc.tipo.etiqueta() }}</span>
+                            </td>
+                            <td>
+                                <i class="bi {{ doc.iconoExtension }} me-1"></i>
+                                <span class="small">{{ doc.nombreOriginal }}</span>
+                            </td>
+                            <td class="text-muted small">{{ doc.descripcion ?? '—' }}</td>
+                            <td class="text-muted small">{{ doc.tamanoFormateado }}</td>
+                            <td class="text-muted small">{{ doc.creadoEn|date('d/m/Y') }}</td>
+                            <td class="pe-4 text-end">
+                                <div class="btn-group btn-group-sm">
+                                    <a href="{{ path('app_trabajador_documento_descargar', {id: trabajador.id, docId: doc.id}) }}"
+                                       class="btn btn-outline-success" title="Descargar">
+                                        <i class="bi bi-download"></i>
+                                    </a>
+                                    {% if is_granted('ROLE_ADMIN') %}
+                                    <form method="post" action="{{ path('app_trabajador_documento_eliminar', {id: trabajador.id, docId: doc.id}) }}" class="d-inline">
+                                        <input type="hidden" name="_token" value="{{ csrf_token('doc_eliminar_' ~ doc.id) }}">
+                                        <button type="submit" class="btn btn-outline-danger" title="Eliminar"
+                                                onclick="return confirm('¿Eliminar este documento?')">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-center text-muted py-4">
+                            <i class="bi bi-file-earmark fs-1 opacity-25 d-block mb-2"></i>
+                            Sin documentos subidos.
+                        </td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        {# ── DISPONIBILIDAD ── #}
+        {% elseif tab == 'disponibilidad' %}
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 fw-semibold py-3">
+                <i class="bi bi-plus-circle me-2 text-primary"></i>Registrar disponibilidad
+            </div>
+            <div class="card-body">
+                {{ form_start(formDisp, {attr: {novalidate: 'novalidate'}}) }}
+                <div class="row g-3 align-items-end">
+                    <div class="col-md-3">{{ form_row(formDisp.fecha) }}</div>
+                    <div class="col-md-2">{{ form_row(formDisp.horaDesde) }}</div>
+                    <div class="col-md-2">{{ form_row(formDisp.horaHasta) }}</div>
+                    <div class="col-md-2 pt-4">{{ form_row(formDisp.disponible) }}</div>
+                    <div class="col-md-3 pt-3">
+                        <button type="submit" class="btn btn-primary btn-sm w-100">
+                            <i class="bi bi-plus-lg me-1"></i>Guardar
+                        </button>
+                    </div>
+                </div>
+                {{ form_end(formDisp) }}
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-4">Fecha</th>
+                                <th>Desde</th>
+                                <th>Hasta</th>
+                                <th>Estado</th>
+                                {% if is_granted('ROLE_COORDINADOR') %}<th class="pe-4 text-end">Eliminar</th>{% endif %}
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for disp in disponibilidades %}
+                        <tr>
+                            <td class="ps-4">{{ disp.fecha|date('d/m/Y') }}</td>
+                            <td class="font-monospace">{{ disp.horaDesde ? disp.horaDesde|date('H:i') : '—' }}</td>
+                            <td class="font-monospace">{{ disp.horaHasta ? disp.horaHasta|date('H:i') : '—' }}</td>
+                            <td>
+                                {% if disp.disponible %}
+                                <span class="badge bg-success">Disponible</span>
+                                {% else %}
+                                <span class="badge bg-danger">No disponible</span>
+                                {% endif %}
+                            </td>
+                            {% if is_granted('ROLE_COORDINADOR') %}
+                            <td class="pe-4 text-end">
+                                <form method="post" action="{{ path('app_trabajador_disponibilidad_eliminar', {id: trabajador.id, dispId: disp.id}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('disp_eliminar_' ~ disp.id) }}">
+                                    <button type="submit" class="btn btn-outline-danger btn-sm"
+                                            onclick="return confirm('¿Eliminar este registro?')">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </form>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="5" class="text-center text-muted py-4">Sin registros de disponibilidad.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        {% endif %}
     </div>
 </div>
 {% endblock %}

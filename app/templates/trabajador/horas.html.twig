@@ -1,0 +1,112 @@
+{% extends 'base.html.twig' %}
+{% block title %}Horas trabajadas — {{ trabajador.nombreCompleto }}{% endblock %}
+{% block content %}
+<div class="d-flex align-items-center mb-4 gap-3">
+    <a href="{{ path('app_trabajador_show', {id: trabajador.id}) }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+    </a>
+    <div class="flex-grow-1">
+        <h4 class="mb-0 fw-bold">Horas trabajadas</h4>
+        <small class="text-muted">{{ trabajador.nombreCompleto }} — {{ trabajador.perfil.etiqueta() }}</small>
+    </div>
+</div>
+
+{# Filtro de fechas #}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Desde</label>
+                <input type="date" name="desde" class="form-control" value="{{ desde|date('Y-m-d') }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label">Hasta</label>
+                <input type="date" name="hasta" class="form-control" value="{{ hasta|date('Y-m-d') }}">
+            </div>
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary w-100">
+                    <i class="bi bi-search me-1"></i>Filtrar
+                </button>
+            </div>
+            <div class="col-md-3">
+                <a href="{{ path('app_trabajador_horas_exportar', {id: trabajador.id, desde: desde|date('Y-m-d'), hasta: hasta|date('Y-m-d')}) }}"
+                   class="btn btn-outline-success w-100">
+                    <i class="bi bi-file-earmark-spreadsheet me-1"></i>Exportar CSV
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# Resumen #}
+<div class="row g-3 mb-4">
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm text-center py-3">
+            <div class="fs-2 fw-bold text-primary">{{ resumen.total_horas }}</div>
+            <div class="text-muted small">Horas totales</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm text-center py-3">
+            <div class="fs-2 fw-bold text-success">{{ resumen.total_turnos }}</div>
+            <div class="text-muted small">Turnos completados</div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card border-0 shadow-sm text-center py-3">
+            <div class="fs-2 fw-bold text-info">
+                {{ resumen.total_turnos > 0 ? (resumen.total_horas / resumen.total_turnos)|round(1) : 0 }}
+            </div>
+            <div class="text-muted small">Promedio horas/turno</div>
+        </div>
+    </div>
+</div>
+
+{# Detalle #}
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 fw-semibold py-3">
+        <i class="bi bi-list-ul me-2 text-primary"></i>
+        Detalle — {{ desde|date('d/m/Y') }} al {{ hasta|date('d/m/Y') }}
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Fecha</th>
+                        <th>Paciente</th>
+                        <th>Tipo</th>
+                        <th>Inicio</th>
+                        <th>Término</th>
+                        <th class="text-end pe-4">Horas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for fila in resumen.turnos %}
+                <tr>
+                    <td class="ps-4">{{ fila.fecha|date('d/m/Y') }}</td>
+                    <td>{{ fila.paciente }}</td>
+                    <td class="text-muted small">{{ fila.tipo }}</td>
+                    <td class="font-monospace">{{ fila.hora_inicio|date('H:i') }}</td>
+                    <td class="font-monospace">{{ fila.hora_termino|date('H:i') }}</td>
+                    <td class="text-end pe-4 fw-semibold">{{ fila.horas }}</td>
+                </tr>
+                {% else %}
+                <tr><td colspan="6" class="text-center text-muted py-4">
+                    No hay turnos completados en el período seleccionado.
+                </td></tr>
+                {% endfor %}
+                </tbody>
+                {% if resumen.total_turnos > 0 %}
+                <tfoot class="table-light">
+                    <tr>
+                        <td colspan="5" class="ps-4 fw-bold text-end">TOTAL</td>
+                        <td class="text-end pe-4 fw-bold text-primary fs-5">{{ resumen.total_horas }} h</td>
+                    </tr>
+                </tfoot>
+                {% endif %}
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

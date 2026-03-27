@@ -64,6 +64,21 @@ class TurnoRepository extends ServiceEntityRepository
     }
 
     /** @return Turno[] */
+    public function findByTrabajadorYRango(Trabajador $trabajador, \DateTimeInterface $desde, \DateTimeInterface $hasta): array
+    {
+        return $this->createQueryBuilder('t')
+            ->leftJoin('t.paciente', 'p')->addSelect('p')
+            ->where('t.trabajador = :trabajador')
+            ->andWhere('t.fecha BETWEEN :desde AND :hasta')
+            ->setParameter('trabajador', $trabajador)
+            ->setParameter('desde', $desde)
+            ->setParameter('hasta', $hasta)
+            ->orderBy('t.fecha', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /** @return Turno[] */
     public function findByPacienteYSemana(Paciente $paciente, \DateTimeInterface $inicioSemana): array
     {
         $finSemana = (clone $inicioSemana)->modify('+6 days');

@@ -17,6 +17,17 @@ class DisponibilidadTrabajadorRepository extends ServiceEntityRepository
         parent::__construct($registry, DisponibilidadTrabajador::class);
     }
 
+    /** @return DisponibilidadTrabajador[] */
+    public function findByTrabajadorOrdenado(Trabajador $trabajador): array
+    {
+        return $this->createQueryBuilder('d')
+            ->where('d.trabajador = :trabajador')
+            ->setParameter('trabajador', $trabajador)
+            ->orderBy('d.fecha', 'DESC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function findByTrabajadorYFecha(Trabajador $trabajador, \DateTimeInterface $fecha): ?DisponibilidadTrabajador
     {
         return $this->createQueryBuilder('d')

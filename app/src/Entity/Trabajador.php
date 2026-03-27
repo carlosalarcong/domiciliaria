@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity;
 
+use App\Entity\DocumentoTrabajador;
 use App\Entity\Log\LogEntry;
 use App\Enum\EstadoTrabajador;
 use App\Enum\PerfilTrabajador;
@@ -87,10 +88,14 @@ class Trabajador
     #[ORM\OneToMany(targetEntity: DisponibilidadTrabajador::class, mappedBy: 'trabajador', cascade: ['remove'])]
     private Collection $disponibilidades;
 
+    #[ORM\OneToMany(targetEntity: DocumentoTrabajador::class, mappedBy: 'trabajador', cascade: ['remove'])]
+    private Collection $documentos;
+
     public function __construct()
     {
-        $this->turnos          = new ArrayCollection();
+        $this->turnos           = new ArrayCollection();
         $this->disponibilidades = new ArrayCollection();
+        $this->documentos       = new ArrayCollection();
     }
 
     public function getId(): ?Uuid { return $this->id; }
@@ -123,5 +128,7 @@ class Trabajador
     public function getTurnos(): Collection { return $this->turnos; }
     /** @return Collection<int, DisponibilidadTrabajador> */
     public function getDisponibilidades(): Collection { return $this->disponibilidades; }
+    /** @return Collection<int, DocumentoTrabajador> */
+    public function getDocumentos(): Collection { return $this->documentos; }
     public function __toString(): string { return $this->getNombreCompleto(); }
 }
