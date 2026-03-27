@@ -42,10 +42,12 @@ class EventoAdversoController extends AbstractController
         $conteos    = $this->repository->countByEstado();
 
         return $this->render('evento/index.html.twig', [
-            'pagination'   => $pagination,
-            'conteos'      => $conteos,
-            'filtroEstado' => $estadoVal,
-            'filtroGravedad' => $gravedadVal,
+            'pagination'      => $pagination,
+            'conteos'         => $conteos,
+            'filtroEstado'    => $estadoVal,
+            'filtroGravedad'  => $gravedadVal,
+            'estados'         => EstadoEvento::cases(),
+            'gravedades'      => GravedadEvento::cases(),
         ]);
     }
 
