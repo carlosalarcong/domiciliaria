@@ -1,0 +1,97 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard — Atención Domiciliaria{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Dashboard</h4>
+        <small class="text-muted">Resumen operativo del sistema</small>
+    </div>
+    <span class="badge bg-primary fs-6">{{ app.user.rolEtiqueta }}</span>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-primary bg-opacity-10 p-3">
+                    <i class="bi bi-people-fill text-primary fs-4"></i>
+                </div>
+                <div>
+                    <div class="h4 mb-0 fw-bold">—</div>
+                    <small class="text-muted">Pacientes activos</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-success bg-opacity-10 p-3">
+                    <i class="bi bi-calendar-check text-success fs-4"></i>
+                </div>
+                <div>
+                    <div class="h4 mb-0 fw-bold">—</div>
+                    <small class="text-muted">Turnos hoy</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-danger bg-opacity-10 p-3">
+                    <i class="bi bi-calendar-x text-danger fs-4"></i>
+                </div>
+                <div>
+                    <div class="h4 mb-0 fw-bold">—</div>
+                    <small class="text-muted">Turnos descubiertos</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-warning bg-opacity-10 p-3">
+                    <i class="bi bi-exclamation-triangle text-warning fs-4"></i>
+                </div>
+                <div>
+                    <div class="h4 mb-0 fw-bold">—</div>
+                    <small class="text-muted">Eventos este mes</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3">
+                <h6 class="mb-0 fw-semibold"><i class="bi bi-calendar3 me-2 text-primary"></i>Turnos próximos</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-calendar-plus fs-1 opacity-25"></i>
+                    <p class="mt-2">Los turnos aparecerán aquí una vez configurado el módulo de turnos.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3">
+                <h6 class="mb-0 fw-semibold"><i class="bi bi-bell me-2 text-warning"></i>Alertas</h6>
+            </div>
+            <div class="card-body">
+                <div class="text-center text-muted py-4">
+                    <i class="bi bi-bell-slash fs-1 opacity-25"></i>
+                    <p class="mt-2 small">Sin alertas pendientes.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

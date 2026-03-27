@@ -1,0 +1,13 @@
+# Variables de entorno locales
+.env.local
+
+# Docker volumes (datos de BD)
+docker/volumes/
+
+# Claude Code settings locales
+.claude/
+
+# IDE
+.idea/
+.vscode/
+*.swp

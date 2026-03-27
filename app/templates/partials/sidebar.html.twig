@@ -1,0 +1,41 @@
+<nav class="sidebar">
+    <div class="sidebar-brand">
+        <h5><i class="bi bi-house-heart-fill text-info me-2"></i>Domiciliaria</h5>
+        <small>Sistema de Atención Domiciliaria</small>
+    </div>
+    <div class="sidebar-nav">
+        <div class="sidebar-section">Principal</div>
+        <a href="{{ path('app_dashboard') }}" class="sidebar-link {{ app.request.attributes.get('_route') == 'app_dashboard' ? 'active' : '' }}">
+            <i class="bi bi-speedometer2"></i> Dashboard
+        </a>
+
+        <div class="sidebar-section mt-2">Operaciones</div>
+        <a href="#" class="sidebar-link">
+            <i class="bi bi-people-fill"></i> Pacientes
+        </a>
+        <a href="#" class="sidebar-link">
+            <i class="bi bi-calendar3"></i> Turnos
+        </a>
+        <a href="#" class="sidebar-link">
+            <i class="bi bi-person-badge"></i> Personal
+        </a>
+
+        <div class="sidebar-section mt-2">Gestión</div>
+        <a href="#" class="sidebar-link">
+            <i class="bi bi-exclamation-triangle-fill"></i> Eventos Adversos
+        </a>
+
+        {% if is_granted('FINANZAS_VER') %}
+        <a href="#" class="sidebar-link">
+            <i class="bi bi-cash-stack"></i> Finanzas
+        </a>
+        {% endif %}
+
+        {% if is_granted('ROLE_ADMIN') %}
+        <div class="sidebar-section mt-2">Administración</div>
+        <a href="{{ path('app_user_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_user' ? 'active' : '' }}">
+            <i class="bi bi-person-gear"></i> Usuarios
+        </a>
+        {% endif %}
+    </div>
+</nav>

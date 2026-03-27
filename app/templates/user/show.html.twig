@@ -1,0 +1,91 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}{{ usuario.nombreCompleto }}{% endblock %}
+
+{% block content %}
+<div class="mb-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ path('app_user_index') }}">Usuarios</a></li>
+            <li class="breadcrumb-item active">{{ usuario.nombreCompleto }}</li>
+        </ol>
+    </nav>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm text-center p-4">
+            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mx-auto mb-3"
+                 style="width:80px;height:80px;font-size:1.8rem">
+                {{ usuario.nombre|first|upper }}{{ usuario.apellido|first|upper }}
+            </div>
+            <h5 class="fw-bold mb-1">{{ usuario.nombreCompleto }}</h5>
+            <p class="text-muted mb-2">{{ usuario.email }}</p>
+            {% set rolClass = {
+                'ROLE_ADMIN': 'danger',
+                'ROLE_COORDINADOR': 'warning',
+                'ROLE_ENFERMERA': 'success',
+                'ROLE_TENS': 'primary',
+                'ROLE_VISUALIZADOR': 'secondary'
+            } %}
+            <span class="badge bg-{{ rolClass[usuario.rolPrincipal] ?? 'secondary' }} fs-6 mb-3">
+                {{ usuario.rolEtiqueta }}
+            </span>
+            {% if usuario.activo %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle">Activo</span>
+            {% else %}
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">Inactivo</span>
+            {% endif %}
+            <hr>
+            <div class="d-grid gap-2">
+                <a href="{{ path('app_user_edit', {id: usuario.id}) }}" class="btn btn-primary btn-sm">
+                    <i class="bi bi-pencil me-2"></i>Editar
+                </a>
+                <form method="post" action="{{ path('app_user_toggle_activo', {id: usuario.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('toggle-activo-' ~ usuario.id) }}">
+                    <button type="submit" class="btn btn-outline-{{ usuario.activo ? 'warning' : 'success' }} btn-sm w-100"
+                            onclick="return confirm('¿Confirmas esta acción?')">
+                        <i class="bi bi-{{ usuario.activo ? 'person-dash' : 'person-check' }} me-2"></i>
+                        {{ usuario.activo ? 'Desactivar' : 'Activar' }}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3">
+                <h6 class="mb-0 fw-semibold">Información de la cuenta</h6>
+            </div>
+            <div class="card-body">
+                <dl class="row">
+                    <dt class="col-sm-4 text-muted">Nombre completo</dt>
+                    <dd class="col-sm-8">{{ usuario.nombreCompleto }}</dd>
+                    <dt class="col-sm-4 text-muted">Email</dt>
+                    <dd class="col-sm-8">{{ usuario.email }}</dd>
+                    <dt class="col-sm-4 text-muted">Roles</dt>
+                    <dd class="col-sm-8">
+                        {% for rol in usuario.roles %}
+                            {% if rol != 'ROLE_USER' %}
+                                <span class="badge bg-secondary me-1">{{ rol }}</span>
+                            {% endif %}
+                        {% endfor %}
+                    </dd>
+                    <dt class="col-sm-4 text-muted">Estado</dt>
+                    <dd class="col-sm-8">
+                        {% if usuario.activo %}
+                            <span class="text-success"><i class="bi bi-check-circle-fill me-1"></i>Activo</span>
+                        {% else %}
+                            <span class="text-danger"><i class="bi bi-x-circle-fill me-1"></i>Inactivo</span>
+                        {% endif %}
+                    </dd>
+                    <dt class="col-sm-4 text-muted">Creado el</dt>
+                    <dd class="col-sm-8">{{ usuario.creadoEn ? usuario.creadoEn|date('d/m/Y H:i') : '—' }}</dd>
+                    <dt class="col-sm-4 text-muted">Última actualización</dt>
+                    <dd class="col-sm-8">{{ usuario.actualizadoEn ? usuario.actualizadoEn|date('d/m/Y H:i') : '—' }}</dd>
+                </dl>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
