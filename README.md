@@ -113,6 +113,16 @@ Abre http://localhost:8090 en tu navegador.
 - Vista `trabajador/show` con pestañas: Turnos / Documentos / Disponibilidad
 - Formularios con tema Bootstrap 5 aplicado globalmente
 
+### Fase 6 — Finanzas y Facturación
+- **Liquidaciones mensuales**: generación automática a partir de turnos completados, con tarifas configurables por tipo de concepto (día, noche, 24h, visita, reemplazo)
+- Ciclo de vida: `Borrador` → `Aprobada` → `Pagada`
+- **Exportación CSV** de liquidación por trabajador (UTF-8 BOM, compatible Excel)
+- **Facturas a mandantes**: creación con monto neto, IVA configurable y número de factura
+- Ciclo de vida: `Borrador` → `Emitida` → `Pagada` (con fecha de vencimiento automática)
+- Dashboard de finanzas con resumen de montos por estado (liquidaciones y facturas)
+- Listas paginadas con filtros por año y estado
+- Permisos granulares: `FINANZAS_VER` y `FINANZAS_EDITAR` (FinanzasVoter)
+
 ## Estructura del proyecto
 
 ```
@@ -128,7 +138,8 @@ domiciliaria/
 │   │   ├── Controller/             # SecurityController, DashboardController,
 │   │   │                           # UserController, MandanteController,
 │   │   │                           # PacienteController, TurnoController,
-│   │   │                           # TrabajadorController
+│   │   │                           # TrabajadorController, EventoAdversoController,
+│   │   │                           # FinanzasController
 │   │   ├── Entity/                 # User, Paciente, Mandante, Trabajador,
 │   │   │                           # Turno, DisponibilidadTrabajador, ...
 │   │   ├── Enum/                   # TipoTurno, EstadoTurno, TipoServicio, ...
@@ -183,7 +194,7 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 - [x] **Fase 3** — Módulo de Turnos y Calendario
 - [x] **Fase 4** — Módulo de Personal (documentos, disponibilidad, exportación de horas)
 - [x] **Fase 5** — Módulo de Eventos Adversos
-- [ ] **Fase 6** — Módulo de Finanzas y Facturación
+- [x] **Fase 6** — Módulo de Finanzas y Facturación
 
 ## Notas técnicas
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
+use App\Entity\Mandante;
 use App\Entity\Paciente;
 use App\Entity\Trabajador;
 use App\Entity\Turno;
@@ -71,6 +72,21 @@ class TurnoRepository extends ServiceEntityRepository
             ->where('t.trabajador = :trabajador')
             ->andWhere('t.fecha BETWEEN :desde AND :hasta')
             ->setParameter('trabajador', $trabajador)
+            ->setParameter('desde', $desde)
+            ->setParameter('hasta', $hasta)
+            ->orderBy('t.fecha', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /** @return Turno[] */
+    public function findByMandanteYRango(Mandante $mandante, \DateTimeInterface $desde, \DateTimeInterface $hasta): array
+    {
+        return $this->createQueryBuilder('t')
+            ->leftJoin('t.paciente', 'p')->addSelect('p')
+            ->where('p.mandante = :mandante')
+            ->andWhere('t.fecha BETWEEN :desde AND :hasta')
+            ->setParameter('mandante', $mandante)
             ->setParameter('desde', $desde)
             ->setParameter('hasta', $hasta)
             ->orderBy('t.fecha', 'ASC')

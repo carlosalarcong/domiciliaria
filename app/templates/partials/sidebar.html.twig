@@ -29,7 +29,7 @@
         </a>
 
         {% if is_granted('FINANZAS_VER') %}
-        <a href="#" class="sidebar-link">
+        <a href="{{ path('app_finanzas_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_finanzas' ? 'active' : '' }}">
             <i class="bi bi-cash-stack"></i> Finanzas
         </a>
         {% endif %}

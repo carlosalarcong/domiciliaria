@@ -1,0 +1,120 @@
+{% extends 'base.html.twig' %}
+{% block title %}Factura — {{ factura.mandante.nombre }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Factura — {{ factura.mandante.nombre }}</h4>
+        <small class="text-muted">{{ factura.periodoLabel }}{% if factura.numeroFactura %} · N° {{ factura.numeroFactura }}{% endif %}</small>
+    </div>
+    <a href="{{ path('app_finanzas_facturas') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Volver
+    </a>
+</div>
+
+{# Resumen montos #}
+<div class="row g-3 mb-4">
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <div class="fw-bold fs-5">$ {{ factura.montoNeto|number_format(0, ',', '.') }}</div>
+            <div class="small text-muted">Monto neto</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <div class="fw-bold fs-5">$ {{ factura.montoIva|number_format(0, ',', '.') }}</div>
+            <div class="small text-muted">IVA ({{ factura.porcentajeIva }}%)</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <div class="fw-bold fs-4 text-success">$ {{ factura.montoTotal|number_format(0, ',', '.') }}</div>
+            <div class="small text-muted">Total</div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card border-0 shadow-sm text-center p-3">
+            <span class="badge {{ factura.estado.badgeClass() }} fs-6">{{ factura.estado.etiqueta() }}</span>
+            <div class="small text-muted mt-1">Estado</div>
+        </div>
+    </div>
+</div>
+
+{# Datos de la factura #}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 fw-semibold py-3">
+        <i class="bi bi-info-circle me-2 text-primary"></i>Datos de la factura
+    </div>
+    <div class="card-body">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="text-muted small">Mandante</div>
+                <div class="fw-semibold">{{ factura.mandante.nombre }}</div>
+            </div>
+            <div class="col-md-2">
+                <div class="text-muted small">Período</div>
+                <div>{{ factura.periodoLabel }}</div>
+            </div>
+            <div class="col-md-2">
+                <div class="text-muted small">N° Factura</div>
+                <div>{{ factura.numeroFactura ?? '—' }}</div>
+            </div>
+            <div class="col-md-2">
+                <div class="text-muted small">Fecha emisión</div>
+                <div>{{ factura.fechaEmision ? factura.fechaEmision|date('d/m/Y') : '—' }}</div>
+            </div>
+            <div class="col-md-2">
+                <div class="text-muted small">Vencimiento</div>
+                <div class="{{ factura.estado.value == 'vencida' ? 'text-danger fw-semibold' : '' }}">
+                    {{ factura.fechaVencimiento ? factura.fechaVencimiento|date('d/m/Y') : '—' }}
+                </div>
+            </div>
+            {% if factura.observaciones %}
+            <div class="col-12">
+                <div class="text-muted small">Observaciones</div>
+                <div>{{ factura.observaciones }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{# Acciones #}
+{% if is_granted('FINANZAS_EDITAR') %}
+<div class="card border-0 shadow-sm">
+    <div class="card-header bg-white border-0 fw-semibold py-3">
+        <i class="bi bi-gear me-2 text-secondary"></i>Acciones
+    </div>
+    <div class="card-body d-flex gap-3 flex-wrap">
+
+        {% if factura.estado.value == 'borrador' %}
+        <form method="post" action="{{ path('app_finanzas_factura_emitir', {id: factura.id}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('fac_' ~ factura.id) }}">
+            <button type="submit" class="btn btn-primary"
+                    onclick="return confirm('¿Emitir esta factura?')">
+                <i class="bi bi-send me-2"></i>Emitir factura
+            </button>
+        </form>
+        {% endif %}
+
+        {% if factura.estado.value == 'emitida' %}
+        <form method="post" action="{{ path('app_finanzas_factura_pagar', {id: factura.id}) }}" class="d-flex gap-2 align-items-center">
+            <input type="hidden" name="_token" value="{{ csrf_token('fac_' ~ factura.id) }}">
+            <input type="date" name="fecha_pago" class="form-control form-control-sm" value="{{ 'today'|date('Y-m-d') }}" required style="width:160px">
+            <button type="submit" class="btn btn-success"
+                    onclick="return confirm('¿Marcar como pagada?')">
+                <i class="bi bi-cash me-2"></i>Marcar pagada
+            </button>
+        </form>
+        {% endif %}
+
+    </div>
+</div>
+{% endif %}
+
+{% if factura.fechaPago %}
+<div class="alert alert-success mt-3">
+    <i class="bi bi-check-circle me-2"></i>
+    Pagada el <strong>{{ factura.fechaPago|date('d/m/Y') }}</strong>
+</div>
+{% endif %}
+{% endblock %}

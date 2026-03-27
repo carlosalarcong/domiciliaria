@@ -1,0 +1,78 @@
+{% extends 'base.html.twig' %}
+{% block title %}Finanzas{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Finanzas</h4>
+        <small class="text-muted">Liquidaciones de personal y facturación a mandantes</small>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    {# Liquidaciones #}
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 fw-semibold py-3">
+                <i class="bi bi-receipt me-2 text-primary"></i>Liquidaciones de personal
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    {% for estado in estadosLiq %}
+                    <div class="col-6">
+                        <div class="border rounded p-3 text-center">
+                            <div class="fw-bold fs-5">
+                                {{ (montosLiquidacion[estado.value] ?? 0)|number_format(0, ',', '.') }}
+                            </div>
+                            <div class="small text-muted">$ {{ estado.etiqueta() }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ path('app_finanzas_liquidaciones') }}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-list me-1"></i>Ver todas
+                    </a>
+                    {% if is_granted('FINANZAS_EDITAR') %}
+                    <a href="{{ path('app_finanzas_liquidacion_nueva') }}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-plus-lg me-1"></i>Nueva liquidación
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# Facturas #}
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 fw-semibold py-3">
+                <i class="bi bi-file-earmark-text me-2 text-success"></i>Facturación a mandantes
+            </div>
+            <div class="card-body">
+                <div class="row g-3 mb-3">
+                    {% for estado in estadosFac %}
+                    <div class="col-4">
+                        <div class="border rounded p-3 text-center">
+                            <div class="fw-bold fs-5">
+                                {{ (montosFactura[estado.value] ?? 0)|number_format(0, ',', '.') }}
+                            </div>
+                            <div class="small text-muted">$ {{ estado.etiqueta() }}</div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="d-flex gap-2">
+                    <a href="{{ path('app_finanzas_facturas') }}" class="btn btn-outline-success btn-sm">
+                        <i class="bi bi-list me-1"></i>Ver todas
+                    </a>
+                    {% if is_granted('FINANZAS_EDITAR') %}
+                    <a href="{{ path('app_finanzas_factura_nueva') }}" class="btn btn-success btn-sm">
+                        <i class="bi bi-plus-lg me-1"></i>Nueva factura
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
