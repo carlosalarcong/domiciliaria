@@ -7,8 +7,12 @@ Sistema web de gestión de atención domiciliaria para empresas de salud en Chil
 - **PHP 8.3** + **Symfony 7.4** (LTS)
 - **PostgreSQL 16** con Doctrine ORM y migraciones
 - **Redis** para sesiones y mensajería asíncrona
-- **Twig** + **Bootstrap 5** para el frontend
+- **Twig** + **Bootstrap 5** (CDN) para el frontend
+- **FullCalendar 6** (CDN) para el calendario de turnos
 - **Gedmo DoctrineExtensions** para audit log automático y timestamps
+- **Symfony Messenger** para notificaciones asíncronas
+- **Symfony Scheduler** para tareas programadas (cron)
+- **KnpPaginator** para paginación
 - **Docker** para el entorno local
 
 ## Requisitos
@@ -31,7 +35,8 @@ cd domiciliaria
 docker compose up -d --build
 ```
 
-Esto levanta:
+Servicios disponibles:
+
 | Servicio | Puerto |
 |----------|--------|
 | Nginx (app web) | http://localhost:8090 |
@@ -65,37 +70,73 @@ Abre http://localhost:8090 en tu navegador.
 | tens@domiciliaria.cl | tens1234 | TENS |
 | visualizador@domiciliaria.cl | vis12345 | Visualizador |
 
+## Módulos implementados
+
+### Fase 1 — Auth y estructura base
+- Login con Symfony Security
+- Gestión de usuarios con roles (`ROLE_ADMIN`, `ROLE_COORDINADOR`, `ROLE_ENFERMERA`, `ROLE_TENS`, `ROLE_VISUALIZADOR`)
+- Voters para permisos granulares
+- Audit log automático (Gedmo Loggable)
+- Dashboard principal
+
+### Fase 2 — Pacientes
+- CRUD de mandantes (empresas/entidades contratantes)
+- CRUD de pacientes con ficha clínica completa (5 pestañas)
+- Condición de domicilio (acceso, mascotas, barreras arquitectónicas)
+- Bitácora operativa con Turbo Frames
+- Historial de comunicaciones con Turbo Frames
+
+### Fase 3 — Turnos y Calendario
+- Calendario visual con **FullCalendar** (vistas mensual, semanal y lista)
+- Colores por estado: verde (cubierto), amarillo (parcial), rojo (descubierto), azul (completado)
+- Click en evento abre modal con detalle del turno
+- Formulario de creación con validación de disponibilidad **en tiempo real** (API JS)
+- Gestión de reemplazos con registro de motivo
+- Botones de asistencia **Iniciar / Finalizar turno** (diseño móvil)
+- CRUD de personal (trabajadores) con perfiles TENS, Enfermera, Cuidador
+- Notificaciones por email a admins/coordinadores cuando hay turno descubierto (Messenger)
+- Revisión automática diaria a las 20:00 (Symfony Scheduler, cron `0 20 * * *`)
+
 ## Estructura del proyecto
 
 ```
 domiciliaria/
 ├── docker/
-│   ├── nginx/default.conf      # Configuración Nginx
-│   └── php/Dockerfile          # PHP 8.3 + extensiones + Composer
+│   ├── nginx/default.conf          # Configuración Nginx
+│   └── php/Dockerfile              # PHP 8.3 + extensiones + Composer
 ├── app/
-│   ├── config/                 # Configuración Symfony
-│   ├── migrations/             # Migraciones de base de datos
+│   ├── config/
+│   │   └── packages/               # messenger.yaml, scheduler.yaml, etc.
+│   ├── migrations/                 # Migraciones de base de datos
 │   ├── src/
-│   │   ├── Controller/         # Controladores HTTP
-│   │   ├── Entity/             # Entidades Doctrine
-│   │   ├── Form/               # Formularios Symfony
-│   │   ├── Repository/         # Repositorios de datos
-│   │   ├── Security/Voter/     # Voters para permisos granulares
-│   │   └── Service/            # Lógica de negocio
-│   ├── templates/              # Vistas Twig
-│   └── tests/                  # Tests PHPUnit
+│   │   ├── Controller/             # SecurityController, DashboardController,
+│   │   │                           # UserController, MandanteController,
+│   │   │                           # PacienteController, TurnoController,
+│   │   │                           # TrabajadorController
+│   │   ├── Entity/                 # User, Paciente, Mandante, Trabajador,
+│   │   │                           # Turno, DisponibilidadTrabajador, ...
+│   │   ├── Enum/                   # TipoTurno, EstadoTurno, TipoServicio, ...
+│   │   ├── Form/                   # TurnoType, TrabajadorType, ReemplazoType, ...
+│   │   ├── Message/                # TurnoDescubiertoMessage, ...
+│   │   ├── MessageHandler/         # TurnoDescubiertoHandler, ...
+│   │   ├── Repository/             # TurnoRepository (+ findEventosCalendario), ...
+│   │   ├── Scheduler/              # TurnosDescubiertosSchedule
+│   │   ├── Security/Voter/         # TurnoVoter, PacienteVoter, FinanzasVoter
+│   │   └── Service/                # TurnoService, PacienteService, UserService, ...
+│   ├── templates/                  # Vistas Twig por módulo
+│   └── tests/                      # Tests PHPUnit (Service/)
 └── docker-compose.yml
 ```
 
 ## Roles y permisos
 
-| Rol | Turnos | Pacientes clínicos | Finanzas | Usuarios |
-|-----|--------|-------------------|----------|----------|
-| ROLE_ADMIN | ✅ CRUD | ✅ | ✅ | ✅ |
-| ROLE_COORDINADOR | ✅ Crear/Editar | ✅ | ✅ | ❌ |
-| ROLE_ENFERMERA | 👁 Ver | ✅ | ❌ | ❌ |
-| ROLE_TENS | 👁 Ver | ❌ | ❌ | ❌ |
-| ROLE_VISUALIZADOR | 👁 Ver | ❌ | ❌ | ❌ |
+| Rol | Turnos | Personal | Pacientes | Finanzas | Usuarios |
+|-----|--------|----------|-----------|----------|----------|
+| ROLE_ADMIN | ✅ CRUD | ✅ CRUD | ✅ | ✅ | ✅ |
+| ROLE_COORDINADOR | ✅ Crear/Editar | 👁 Ver | ✅ | ✅ | ❌ |
+| ROLE_ENFERMERA | 👁 Ver | 👁 Ver | ✅ | ❌ | ❌ |
+| ROLE_TENS | 👁 Ver | 👁 Ver | ❌ | ❌ | ❌ |
+| ROLE_VISUALIZADOR | 👁 Ver | 👁 Ver | ❌ | ❌ | ❌ |
 
 ## Comandos útiles
 
@@ -114,14 +155,17 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 
 # Limpiar caché
 docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console cache:clear"
+
+# Procesar cola de mensajes (notificaciones email)
+docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console messenger:consume async -vv"
 ```
 
 ## Fases del proyecto
 
 - [x] **Fase 1** — Auth, roles y estructura base
-- [ ] **Fase 2** — Módulo de Pacientes
-- [ ] **Fase 3** — Módulo de Turnos y Calendario
-- [ ] **Fase 4** — Módulo de Personal
+- [x] **Fase 2** — Módulo de Pacientes y Mandantes
+- [x] **Fase 3** — Módulo de Turnos, Calendario y Personal
+- [ ] **Fase 4** — Módulo de Personal (documentos, exportación de horas)
 - [ ] **Fase 5** — Módulo de Eventos Adversos
 - [ ] **Fase 6** — Módulo de Finanzas y Facturación
 
@@ -136,3 +180,10 @@ composer dump-autoload  # regenera autoload_runtime.php
 
 ### Audit log
 Todas las entidades marcadas con `#[Gedmo\Loggable]` registran cambios automáticamente en la tabla `ext_log_entries`. Se usa una entidad `LogEntry` personalizada con campo `data` de tipo `json` para compatibilidad con Doctrine DBAL 4.
+
+### Messenger (notificaciones asíncronas)
+Por defecto el transporte está configurado como `sync` (procesamiento inmediato). Para producción, cambiar a Redis en `.env`:
+```env
+MESSENGER_TRANSPORT_DSN=redis://redis:6379/messages
+```
+Y ejecutar el worker: `php bin/console messenger:consume async`
