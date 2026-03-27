@@ -87,7 +87,7 @@ Abre http://localhost:8090 en tu navegador.
 - Historial de comunicaciones con Turbo Frames
 
 ### Fase 3 — Turnos y Calendario
-- Calendario visual con **FullCalendar** (vistas mensual, semanal y lista)
+- Calendario visual con **FullCalendar** (vistas mensual, semanal y lista, en español)
 - Colores por estado: verde (cubierto), amarillo (parcial), rojo (descubierto), azul (completado)
 - Click en evento abre modal con detalle del turno
 - Formulario de creación con validación de disponibilidad **en tiempo real** (API JS)
@@ -96,6 +96,14 @@ Abre http://localhost:8090 en tu navegador.
 - CRUD de personal (trabajadores) con perfiles TENS, Enfermera, Cuidador
 - Notificaciones por email a admins/coordinadores cuando hay turno descubierto (Messenger)
 - Revisión automática diaria a las 20:00 (Symfony Scheduler, cron `0 20 * * *`)
+
+### Fase 4 — Personal (documentos, disponibilidad, horas)
+- **Documentos del trabajador**: subida de archivos (PDF, Word, JPG/PNG hasta 10 MB), descarga y eliminación
+- **Disponibilidad**: registro de bloques horarios por fecha (disponible / no disponible)
+- **Horas trabajadas**: cálculo basado en turnos completados, con filtro por rango de fechas
+- **Exportación CSV** de horas trabajadas compatible con Excel (UTF-8 BOM)
+- Vista `trabajador/show` con pestañas: Turnos / Documentos / Disponibilidad
+- Formularios con tema Bootstrap 5 aplicado globalmente
 
 ## Estructura del proyecto
 
@@ -164,8 +172,8 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 
 - [x] **Fase 1** — Auth, roles y estructura base
 - [x] **Fase 2** — Módulo de Pacientes y Mandantes
-- [x] **Fase 3** — Módulo de Turnos, Calendario y Personal
-- [ ] **Fase 4** — Módulo de Personal (documentos, exportación de horas)
+- [x] **Fase 3** — Módulo de Turnos y Calendario
+- [x] **Fase 4** — Módulo de Personal (documentos, disponibilidad, exportación de horas)
 - [ ] **Fase 5** — Módulo de Eventos Adversos
 - [ ] **Fase 6** — Módulo de Finanzas y Facturación
 
