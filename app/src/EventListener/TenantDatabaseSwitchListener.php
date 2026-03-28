@@ -46,15 +46,23 @@ class TenantDatabaseSwitchListener implements EventSubscriberInterface
         $subdomain = $this->tenantResolver->extractSubdomain($request->getHost());
 
         if ($subdomain === null) {
-            // Dominio principal — no se cambia BD
             return;
         }
 
-        // Evitar re-switch innecesario en el mismo request
+        // Evitar re-switch innecesario en el mismo request (memoria)
         if ($this->lastSwitchedSlug === $subdomain) {
             return;
         }
 
+        // Intentar resolver desde la sesión (evita query a BD central)
+        $cached = $this->tenantContext->getCurrentTenant();
+        if ($cached !== null && ($cached['slug'] ?? '') === $subdomain) {
+            $this->lastSwitchedSlug = $subdomain;
+            $this->eventDispatcher->dispatch(new SwitchDbEvent((string) $cached['id']));
+            return;
+        }
+
+        // Cache miss — consultar BD central
         $tenant = $this->tenantResolver->getTenantBySlug($subdomain);
 
         if ($tenant === null) {
@@ -72,7 +80,6 @@ class TenantDatabaseSwitchListener implements EventSubscriberInterface
             'db'   => $tenant['database_name'],
         ]);
 
-        // Dispara el evento que el hakam DbSwitchEventListener escucha
         $this->eventDispatcher->dispatch(new SwitchDbEvent((string) $tenant['id']));
     }
 }
