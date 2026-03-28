@@ -28,6 +28,12 @@
             text-align: center;
             color: white;
         }
+        .toggle-password {
+            cursor: pointer;
+            border-left: 0;
+            background: white;
+        }
+        .toggle-password:hover { color: #3182ce; }
     </style>
 </head>
 <body>
@@ -45,6 +51,13 @@
             </div>
         {% endif %}
 
+        {% for msg in app.flashes('success') %}
+            <div class="alert alert-success d-flex align-items-center gap-2">
+                <i class="bi bi-check-circle-fill"></i>
+                <div>{{ msg }}</div>
+            </div>
+        {% endfor %}
+
         <form method="post" action="{{ path('app_login') }}" novalidate>
             <div class="mb-3">
                 <label for="email" class="form-label fw-semibold">Email</label>
@@ -54,13 +67,22 @@
                            value="{{ last_username }}" autocomplete="email" autofocus required>
                 </div>
             </div>
-            <div class="mb-3">
+            <div class="mb-1">
                 <label for="password" class="form-label fw-semibold">Contraseña</label>
                 <div class="input-group">
                     <span class="input-group-text"><i class="bi bi-lock"></i></span>
                     <input type="password" id="password" name="password" class="form-control"
                            autocomplete="current-password" required>
+                    <button type="button" class="btn btn-outline-secondary toggle-password"
+                            onclick="togglePassword()" tabindex="-1" title="Mostrar/ocultar contraseña">
+                        <i class="bi bi-eye" id="toggleIcon"></i>
+                    </button>
                 </div>
+            </div>
+            <div class="mb-3 text-end">
+                <a href="{{ path('app_forgot_password_request') }}" class="small text-muted">
+                    ¿Olvidaste tu contraseña?
+                </a>
             </div>
             <div class="mb-3 form-check">
                 <input type="checkbox" class="form-check-input" id="remember_me" name="_remember_me">
@@ -74,5 +96,18 @@
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function togglePassword() {
+    const input = document.getElementById('password');
+    const icon  = document.getElementById('toggleIcon');
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.className = 'bi bi-eye-slash';
+    } else {
+        input.type = 'password';
+        icon.className = 'bi bi-eye';
+    }
+}
+</script>
 </body>
 </html>
