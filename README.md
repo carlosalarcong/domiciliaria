@@ -2,6 +2,45 @@
 
 Sistema web de gestión de atención domiciliaria para empresas de salud en Chile, construido con Symfony 7.4 y PHP 8.3.
 
+## Arquitectura multi-tenant
+
+Cada clínica opera en una base de datos PostgreSQL completamente aislada. El tenant se resuelve por subdominio.
+
+| Clínica | URL de ingreso | Base de datos |
+|---------|---------------|---------------|
+| Clínica Demo (RM) | http://demo.localhost:8090/login | `clinica_demo` |
+| Clínica Norte (Antofagasta) | http://norte.localhost:8090/login | `clinica_norte` |
+
+> **Requisito:** Agregar las siguientes líneas en `C:\Windows\System32\drivers\etc\hosts`:
+> ```
+> 127.0.0.1  demo.localhost
+> 127.0.0.1  norte.localhost
+> ```
+
+### Usuarios por clínica
+
+**Clínica Demo** (`clinica_demo`)
+
+| Email | Contraseña | Rol |
+|-------|-----------|-----|
+| admin@clinica-demo.cl | admin1234 | Administrador |
+| coordinador@clinica-demo.cl | coord1234 | Coordinador |
+| enfermera@clinica-demo.cl | enf1234! | Enfermera |
+| tens@clinica-demo.cl | tens1234 | TENS |
+| visualizador@clinica-demo.cl | vis12345 | Visualizador |
+
+**Clínica Norte** (`clinica_norte`)
+
+| Email | Contraseña | Rol |
+|-------|-----------|-----|
+| admin@clinica-norte.cl | admin1234 | Administrador |
+| coordinador@clinica-norte.cl | coord1234 | Coordinador |
+| enfermera@clinica-norte.cl | enf1234! | Enfermera |
+| tens@clinica-norte.cl | tens1234 | TENS |
+| visualizador@clinica-norte.cl | vis12345 | Visualizador |
+
+---
+
 ## Stack tecnológico
 
 - **PHP 8.3** + **Symfony 7.4** (LTS)
@@ -49,26 +88,28 @@ Servicios disponibles:
 docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && composer install --no-plugins && composer dump-autoload"
 ```
 
-### 4. Ejecutar migraciones y cargar datos de prueba
+### 4. Migraciones de la BD central
 
 ```bash
 docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console doctrine:migrations:migrate --no-interaction"
-docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console doctrine:fixtures:load --no-interaction"
 ```
 
-### 5. Acceder al sistema
+### 5. Crear tenants y cargar datos de prueba
 
-Abre http://localhost:8090 en tu navegador.
+```bash
+# Crear las dos clínicas de demo (crea BD + ejecuta migraciones del tenant)
+docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console app:tenant:crear 'Clínica Demo' demo"
+docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console app:tenant:crear 'Clínica Norte' norte"
 
-## Usuarios de prueba
+# Cargar datos de prueba en cada tenant (purga y recarga)
+docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console tenant:fixtures:load 1 --no-interaction"
+docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console tenant:fixtures:load 2 --no-interaction"
+```
 
-| Email | Contraseña | Rol |
-|-------|-----------|-----|
-| admin@domiciliaria.cl | admin1234 | Administrador |
-| coordinador@domiciliaria.cl | coord1234 | Coordinador |
-| enfermera@domiciliaria.cl | enf1234! | Enfermera |
-| tens@domiciliaria.cl | tens1234 | TENS |
-| visualizador@domiciliaria.cl | vis12345 | Visualizador |
+### 6. Acceder al sistema
+
+- **Clínica Demo:** http://demo.localhost:8090/login
+- **Clínica Norte:** http://norte.localhost:8090/login
 
 ## Módulos implementados
 
@@ -215,6 +256,15 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 
 # Procesar cola de mensajes (notificaciones email)
 docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console messenger:consume async -vv"
+
+# Multi-tenant: crear nueva clínica
+docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console app:tenant:crear 'Nombre Clínica' subdominio"
+
+# Multi-tenant: aplicar migraciones pendientes a todos los tenants
+docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console app:tenant:migrate-all"
+
+# Multi-tenant: recargar fixtures de un tenant (ID del tenant)
+docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console tenant:fixtures:load 1 --no-interaction"
 ```
 
 ## Fases del proyecto
@@ -225,6 +275,7 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 - [x] **Fase 4** — Módulo de Personal (documentos, disponibilidad, exportación de horas)
 - [x] **Fase 5** — Módulo de Eventos Adversos
 - [x] **Fase 6** — Módulo de Finanzas y Facturación
+- [x] **Fase 7** — Arquitectura multi-tenant (hakam/multi-tenancy-bundle, BD aislada por clínica)
 
 ## Notas técnicas
 
