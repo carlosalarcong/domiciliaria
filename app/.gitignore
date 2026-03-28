@@ -11,3 +11,4 @@
 ###> phpunit/phpunit ###
 /phpunit.xml
 ###< phpunit/phpunit ###
+/config/reference.php
