@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\DisponibilidadTrabajador;
-use App\Entity\Trabajador;
+use App\Entity\Tenant\DisponibilidadTrabajador;
+use App\Entity\Tenant\Trabajador;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 

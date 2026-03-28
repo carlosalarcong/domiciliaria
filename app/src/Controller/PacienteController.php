@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\Paciente;
+use App\Entity\Tenant\Paciente;
 use App\Enum\EstadoPaciente;
 use App\Enum\TipoBitacora;
 use App\Enum\TipoComunicacion;

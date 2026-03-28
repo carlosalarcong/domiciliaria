@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Entity;
+namespace App\Entity\Tenant;
 
-use App\Entity\Log\LogEntry;
+use App\Entity\Tenant\Log\LogEntry;
 use App\Enum\EstadoPaciente;
 use App\Enum\TipoServicio;
 use App\Repository\PacienteRepository;

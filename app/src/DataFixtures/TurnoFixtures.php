@@ -4,24 +4,23 @@ declare(strict_types=1);
 
 namespace App\DataFixtures;
 
-use App\Entity\Paciente;
-use App\Entity\Trabajador;
-use App\Entity\Turno;
-use App\Entity\User;
+use App\Entity\Tenant\Paciente;
+use App\Entity\Tenant\Trabajador;
+use App\Entity\Tenant\Turno;
+use App\Entity\Tenant\User;
 use App\Enum\EstadoTrabajador;
 use App\Enum\EstadoTurno;
 use App\Enum\PerfilTrabajador;
 use App\Enum\TipoTurno;
 use Doctrine\Bundle\FixturesBundle\Fixture;
-use Doctrine\Common\DataFixtures\DependentFixtureInterface;
+use Hakam\MultiTenancyBundle\Attribute\TenantFixture;
+use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
-class TurnoFixtures extends Fixture implements DependentFixtureInterface
+#[TenantFixture]
+class TurnoFixtures extends Fixture implements OrderedFixtureInterface
 {
-    public function getDependencies(): array
-    {
-        return [PacienteFixtures::class, UserFixtures::class];
-    }
+    public function getOrder(): int { return 3; }
 
     public function load(ObjectManager $manager): void
     {

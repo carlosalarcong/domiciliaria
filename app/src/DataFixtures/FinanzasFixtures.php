@@ -4,28 +4,27 @@ declare(strict_types=1);
 
 namespace App\DataFixtures;
 
-use App\Entity\Factura;
-use App\Entity\ItemLiquidacion;
-use App\Entity\LiquidacionMensual;
-use App\Entity\Mandante;
-use App\Entity\Trabajador;
-use App\Entity\Turno;
-use App\Entity\User;
+use App\Entity\Tenant\Factura;
+use App\Entity\Tenant\ItemLiquidacion;
+use App\Entity\Tenant\LiquidacionMensual;
+use App\Entity\Tenant\Mandante;
+use App\Entity\Tenant\Trabajador;
+use App\Entity\Tenant\Turno;
+use App\Entity\Tenant\User;
 use App\Enum\EstadoFactura;
 use App\Enum\EstadoLiquidacion;
 use App\Enum\EstadoTurno;
 use App\Enum\TipoConcepto;
 use App\Enum\TipoTurno;
 use Doctrine\Bundle\FixturesBundle\Fixture;
-use Doctrine\Common\DataFixtures\DependentFixtureInterface;
+use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
+use Hakam\MultiTenancyBundle\Attribute\TenantFixture;
 
-class FinanzasFixtures extends Fixture implements DependentFixtureInterface
+#[TenantFixture]
+class FinanzasFixtures extends Fixture implements OrderedFixtureInterface
 {
-    public function getDependencies(): array
-    {
-        return [TurnoFixtures::class];
-    }
+    public function getOrder(): int { return 4; }
 
     public function load(ObjectManager $manager): void
     {

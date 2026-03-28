@@ -4,12 +4,12 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Entity\Factura;
-use App\Entity\ItemLiquidacion;
-use App\Entity\LiquidacionMensual;
-use App\Entity\Mandante;
-use App\Entity\Trabajador;
-use App\Entity\User;
+use App\Entity\Tenant\Factura;
+use App\Entity\Tenant\ItemLiquidacion;
+use App\Entity\Tenant\LiquidacionMensual;
+use App\Entity\Tenant\Mandante;
+use App\Entity\Tenant\Trabajador;
+use App\Entity\Tenant\User;
 use App\Enum\EstadoFactura;
 use App\Enum\EstadoLiquidacion;
 use App\Enum\EstadoTurno;

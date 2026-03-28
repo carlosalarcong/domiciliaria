@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\User;
+use App\Entity\Tenant\User;
 use App\Form\ChangePasswordType;
 use App\Form\UserType;
 use App\Repository\UserRepository;

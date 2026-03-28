@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\EventoAdverso;
-use App\Entity\Paciente;
+use App\Entity\Tenant\EventoAdverso;
+use App\Entity\Tenant\Paciente;
 use App\Enum\EstadoEvento;
 use App\Enum\GravedadEvento;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;

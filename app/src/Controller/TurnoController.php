@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\Turno;
+use App\Entity\Tenant\Turno;
 use App\Form\ReemplazoType;
 use App\Form\TurnoType;
 use App\Repository\TurnoRepository;
@@ -170,7 +170,7 @@ class TurnoController extends AbstractController
             return $this->json(['disponible' => true]);
         }
 
-        $trabajador = $this->em->find(\App\Entity\Trabajador::class, $trabajadorId);
+        $trabajador = $this->em->find(\App\Entity\Tenant\Trabajador::class, $trabajadorId);
         if (!$trabajador) {
             return $this->json(['disponible' => true]);
         }

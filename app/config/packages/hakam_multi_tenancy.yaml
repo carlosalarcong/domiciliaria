@@ -1,7 +1,6 @@
 hakam_multi_tenancy:
     tenant_database_className: 'App\Entity\Main\TenantDb'
     tenant_database_identifier: 'id'
-    tenant_config_provider: 'App\Service\CustomTenantConfigProvider'
     tenant_connection:
         url: '%env(DATABASE_URL)%'
         driver: 'pdo_pgsql'
@@ -16,5 +15,5 @@ hakam_multi_tenancy:
             type: 'attribute'
             dir: '%kernel.project_dir%/src/Entity/Tenant'
             prefix: 'App\Entity\Tenant'
-            alias: 'AppTenant'
+            alias: 'App'
             is_bundle: false

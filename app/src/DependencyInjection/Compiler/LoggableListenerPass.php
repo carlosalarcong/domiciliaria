@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\DependencyInjection\Compiler;
 
-use App\Entity\Log\LogEntry;
+use App\Entity\Tenant\Log\LogEntry;
 use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\EventoAdverso;
+use App\Entity\Tenant\EventoAdverso;
 use App\Enum\EstadoEvento;
 use App\Enum\GravedadEvento;
 use App\Form\EventoAdversoType;

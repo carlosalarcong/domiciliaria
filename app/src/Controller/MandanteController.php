@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\Mandante;
+use App\Entity\Tenant\Mandante;
 use App\Form\MandanteType;
 use App\Repository\MandanteRepository;
 use App\Service\MandanteService;

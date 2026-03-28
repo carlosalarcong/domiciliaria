@@ -4,13 +4,18 @@ declare(strict_types=1);
 
 namespace App\DataFixtures;
 
-use App\Entity\User;
+use App\Entity\Tenant\User;
 use Doctrine\Bundle\FixturesBundle\Fixture;
+use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
+use Hakam\MultiTenancyBundle\Attribute\TenantFixture;
 use Symfony\Component\PasswordHasher\Hasher\UserPasswordHasherInterface;
 
-class UserFixtures extends Fixture
+#[TenantFixture]
+class UserFixtures extends Fixture implements OrderedFixtureInterface
 {
+    public function getOrder(): int { return 1; }
+
     public function __construct(
         private readonly UserPasswordHasherInterface $passwordHasher,
     ) {}

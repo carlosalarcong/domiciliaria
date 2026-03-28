@@ -83,8 +83,7 @@ class TenantCrearCommand extends Command
                 ->find('tenant:migrations:migrate')
                 ->run(
                     new ArrayInput([
-                        'type'             => 'init',
-                        'dbId'             => (string) $tenant->getId(),
+                        '--dbid'           => (string) $tenant->getId(),
                         '--no-interaction' => true,
                     ]),
                     $output

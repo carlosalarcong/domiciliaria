@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\EventListener;
 
-use App\Entity\Log\LogEntry;
+use App\Entity\Tenant\Log\LogEntry;
 use Gedmo\Loggable\LoggableListener;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 

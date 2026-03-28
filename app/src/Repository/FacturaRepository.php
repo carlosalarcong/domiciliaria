@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\Factura;
-use App\Entity\Mandante;
+use App\Entity\Tenant\Factura;
+use App\Entity\Tenant\Mandante;
 use App\Enum\EstadoFactura;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;

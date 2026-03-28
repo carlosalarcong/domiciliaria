@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\Mandante;
-use App\Entity\Paciente;
+use App\Entity\Tenant\Mandante;
+use App\Entity\Tenant\Paciente;
 use App\Enum\EstadoPaciente;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;

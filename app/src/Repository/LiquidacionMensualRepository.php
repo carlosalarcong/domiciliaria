@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\LiquidacionMensual;
-use App\Entity\Trabajador;
+use App\Entity\Tenant\LiquidacionMensual;
+use App\Entity\Tenant\Trabajador;
 use App\Enum\EstadoLiquidacion;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\ORM\QueryBuilder;

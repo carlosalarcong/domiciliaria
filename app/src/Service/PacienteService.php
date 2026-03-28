@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Entity\BitacoraOperativa;
-use App\Entity\CondicionDomicilio;
-use App\Entity\HistorialComunicacion;
-use App\Entity\Paciente;
-use App\Entity\User;
+use App\Entity\Tenant\BitacoraOperativa;
+use App\Entity\Tenant\CondicionDomicilio;
+use App\Entity\Tenant\HistorialComunicacion;
+use App\Entity\Tenant\Paciente;
+use App\Entity\Tenant\User;
 use App\Enum\EstadoPaciente;
 use App\Enum\TipoBitacora;
 use App\Enum\TipoComunicacion;

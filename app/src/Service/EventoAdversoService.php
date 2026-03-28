@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Entity\EventoAdverso;
-use App\Entity\SeguimientoEvento;
-use App\Entity\User;
+use App\Entity\Tenant\EventoAdverso;
+use App\Entity\Tenant\SeguimientoEvento;
+use App\Entity\Tenant\User;
 use App\Enum\EstadoEvento;
 use App\Message\EventoAdversoGraveMessage;
 use Doctrine\ORM\EntityManagerInterface;

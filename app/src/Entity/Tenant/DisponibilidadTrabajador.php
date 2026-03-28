@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Entity;
+namespace App\Entity\Tenant;
 
 use App\Repository\DisponibilidadTrabajadorRepository;
 use Doctrine\ORM\Mapping as ORM;

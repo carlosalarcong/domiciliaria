@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\DisponibilidadTrabajador;
-use App\Entity\DocumentoTrabajador;
-use App\Entity\Trabajador;
+use App\Entity\Tenant\DisponibilidadTrabajador;
+use App\Entity\Tenant\DocumentoTrabajador;
+use App\Entity\Tenant\Trabajador;
 use App\Form\DisponibilidadTrabajadorType;
 use App\Form\DocumentoTrabajadorType;
 use App\Form\TrabajadorType;

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Service;
 
-use App\Entity\Mandante;
+use App\Entity\Tenant\Mandante;
 use App\Repository\MandanteRepository;
 use Doctrine\ORM\EntityManagerInterface;
 

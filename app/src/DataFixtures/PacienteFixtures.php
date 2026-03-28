@@ -4,26 +4,25 @@ declare(strict_types=1);
 
 namespace App\DataFixtures;
 
-use App\Entity\BitacoraOperativa;
-use App\Entity\CondicionDomicilio;
-use App\Entity\HistorialComunicacion;
-use App\Entity\Mandante;
-use App\Entity\Paciente;
-use App\Entity\User;
+use Hakam\MultiTenancyBundle\Attribute\TenantFixture;
+use App\Entity\Tenant\BitacoraOperativa;
+use App\Entity\Tenant\CondicionDomicilio;
+use App\Entity\Tenant\HistorialComunicacion;
+use App\Entity\Tenant\Mandante;
+use App\Entity\Tenant\Paciente;
+use App\Entity\Tenant\User;
 use App\Enum\EstadoPaciente;
 use App\Enum\TipoBitacora;
 use App\Enum\TipoComunicacion;
 use App\Enum\TipoServicio;
 use Doctrine\Bundle\FixturesBundle\Fixture;
-use Doctrine\Common\DataFixtures\DependentFixtureInterface;
+use Doctrine\Common\DataFixtures\OrderedFixtureInterface;
 use Doctrine\Persistence\ObjectManager;
 
-class PacienteFixtures extends Fixture implements DependentFixtureInterface
+#[TenantFixture]
+class PacienteFixtures extends Fixture implements OrderedFixtureInterface
 {
-    public function getDependencies(): array
-    {
-        return [UserFixtures::class];
-    }
+    public function getOrder(): int { return 2; }
 
     public function load(ObjectManager $manager): void
     {

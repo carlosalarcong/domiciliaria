@@ -5,3 +5,7 @@ stof_doctrine_extensions:
             timestampable: true
             loggable: true
             sluggable: true
+        tenant:
+            timestampable: true
+            loggable: true
+            sluggable: true

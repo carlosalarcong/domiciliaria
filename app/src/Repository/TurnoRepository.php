@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\Mandante;
-use App\Entity\Paciente;
-use App\Entity\Trabajador;
-use App\Entity\Turno;
+use App\Entity\Tenant\Mandante;
+use App\Entity\Tenant\Paciente;
+use App\Entity\Tenant\Trabajador;
+use App\Entity\Tenant\Turno;
 use App\Enum\EstadoTurno;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;

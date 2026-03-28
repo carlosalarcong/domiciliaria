@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Entity\Factura;
-use App\Entity\LiquidacionMensual;
+use App\Entity\Tenant\Factura;
+use App\Entity\Tenant\LiquidacionMensual;
 use App\Enum\EstadoFactura;
 use App\Enum\EstadoLiquidacion;
 use App\Enum\TipoConcepto;

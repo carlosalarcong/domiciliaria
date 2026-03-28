@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Entity\Log;
+namespace App\Entity\Tenant\Log;
 
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Loggable\Entity\Repository\LogEntryRepository;

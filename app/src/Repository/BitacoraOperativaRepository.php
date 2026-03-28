@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Repository;
 
-use App\Entity\BitacoraOperativa;
-use App\Entity\Paciente;
+use App\Entity\Tenant\BitacoraOperativa;
+use App\Entity\Tenant\Paciente;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
