@@ -29,7 +29,7 @@ class FinanzasFixtures extends Fixture implements OrderedFixtureInterface
     public function load(ObjectManager $manager): void
     {
         /** @var User $admin */
-        $admin = $manager->getRepository(User::class)->findOneBy(['email' => 'admin@domiciliaria.cl']);
+        $admin = $manager->getRepository(User::class)->findAll()[0];
 
         $trabajadores = $manager->getRepository(Trabajador::class)->findAll();
         $mandantes    = $manager->getRepository(Mandante::class)->findAll();
