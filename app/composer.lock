@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "614ccdfaa5c5d7e4c20f830c83b6a412",
+    "content-hash": "e3f84e97f62a6fabff7d7c2035bbf381",
     "packages": [
         {
             "name": "doctrine/collections",
@@ -1317,6 +1317,67 @@
                 }
             ],
             "time": "2025-12-13T19:37:35+00:00"
+        },
+        {
+            "name": "hakam/multi-tenancy-bundle",
+            "version": "v3.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/RamyHakam/multi_tenancy_bundle.git",
+                "reference": "a55bb4cee4d8d13053969c9d4bbf05dae4a80aae"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/RamyHakam/multi_tenancy_bundle/zipball/a55bb4cee4d8d13053969c9d4bbf05dae4a80aae",
+                "reference": "a55bb4cee4d8d13053969c9d4bbf05dae4a80aae",
+                "shasum": ""
+            },
+            "require": {
+                "doctrine/doctrine-bundle": "^2.7",
+                "doctrine/doctrine-migrations-bundle": "^3.0",
+                "doctrine/orm": "^2.15 || ^3.0",
+                "php": "^8.2",
+                "psr/cache": "^3.0",
+                "symfony/cache-contracts": "^3.0",
+                "symfony/config": "^6.4|^7.0",
+                "symfony/dependency-injection": "^6.4|^7.0",
+                "symfony/filesystem": "^6.4|^7.0",
+                "symfony/http-kernel": "^6.4|^7.0",
+                "symfony/var-exporter": "^6.4|^7.0|^8.0"
+            },
+            "require-dev": {
+                "dg/bypass-finals": "^1.9",
+                "doctrine/doctrine-fixtures-bundle": "^3.6",
+                "phpunit/phpunit": "^10.0",
+                "symfony/phpunit-bridge": "^6.4|^7.0"
+            },
+            "type": "symfony-bundle",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "3.0.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Hakam\\MultiTenancyBundle\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ramy Hakam",
+                    "email": "pencilsoft1@gmail.com"
+                }
+            ],
+            "description": "Flexible and production-ready multi-tenancy bundle for Symfony.",
+            "support": {
+                "issues": "https://github.com/RamyHakam/multi_tenancy_bundle/issues",
+                "source": "https://github.com/RamyHakam/multi_tenancy_bundle/tree/v3.0.0"
+            },
+            "time": "2026-02-21T15:15:43+00:00"
         },
         {
             "name": "knplabs/knp-components",

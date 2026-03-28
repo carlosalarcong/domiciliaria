@@ -1,0 +1,20 @@
+hakam_multi_tenancy:
+    tenant_database_className: 'App\Entity\Main\TenantDb'
+    tenant_database_identifier: 'id'
+    tenant_config_provider: 'App\Service\CustomTenantConfigProvider'
+    tenant_connection:
+        url: '%env(DATABASE_URL)%'
+        driver: 'pdo_pgsql'
+        charset: 'utf8'
+        server_version: '16'
+    tenant_migration:
+        tenant_migration_namespace: 'DoctrineMigrations'
+        tenant_migration_path: '%kernel.project_dir%/migrations/Tenant'
+    tenant_entity_manager:
+        tenant_naming_strategy: 'doctrine.orm.naming_strategy.underscore_number_aware'
+        mapping:
+            type: 'attribute'
+            dir: '%kernel.project_dir%/src/Entity/Tenant'
+            prefix: 'App\Entity\Tenant'
+            alias: 'AppTenant'
+            is_bundle: false

@@ -17,3 +17,59 @@ services:
         arguments:
             $uploadDir: '%app.upload_dir%'
 
+    # ── Multi-tenancy ──────────────────────────────────────────────────────────
+
+    App\Service\TenantResolver:
+        arguments:
+            $centralDbUrl: '%env(DATABASE_URL)%'
+
+    App\Service\TenantContext:
+        arguments:
+            $requestStack: '@request_stack'
+            $centralDbUrl: '%env(DATABASE_URL)%'
+
+    App\Service\CustomTenantConfigProvider:
+        arguments:
+            $tenantResolver: '@App\Service\TenantResolver'
+
+    Hakam\MultiTenancyBundle\Port\TenantConfigProviderInterface:
+        alias: App\Service\CustomTenantConfigProvider
+        public: false
+
+    App\EventListener\TenantDatabaseSwitchListener:
+        arguments:
+            $tenantResolver:  '@App\Service\TenantResolver'
+            $tenantContext:   '@App\Service\TenantContext'
+            $eventDispatcher: '@event_dispatcher'
+            $logger:          '@logger'
+        tags:
+            - { name: kernel.event_subscriber }
+
+    App\EventListener\AuthenticationListener:
+        arguments:
+            $tenantContext: '@App\Service\TenantContext'
+        tags:
+            - { name: kernel.event_subscriber }
+
+    App\EventSubscriber\DynamicControllerSubscriber:
+        arguments:
+            $tenantContext:       '@App\Service\TenantContext'
+            $logger:              '@logger'
+            $excludedControllers: []
+            $excludedNamespaces:  []
+        tags:
+            - { name: kernel.event_subscriber }
+
+    App\Command\TenantCrearCommand:
+        arguments:
+            $em:           '@doctrine.orm.default_entity_manager'
+            $centralDbUrl: '%env(DATABASE_URL)%'
+        tags:
+            - { name: console.command }
+
+    App\Command\TenantMigrateAllCommand:
+        arguments:
+            $em: '@doctrine.orm.default_entity_manager'
+        tags:
+            - { name: console.command }
+

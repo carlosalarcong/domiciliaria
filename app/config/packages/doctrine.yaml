@@ -1,38 +1,75 @@
 doctrine:
     dbal:
-        url: '%env(resolve:DATABASE_URL)%'
-        profiling_collect_backtrace: '%kernel.debug%'
-        use_savepoints: true
+        default_connection: default
+        connections:
+            default:
+                url: '%env(resolve:DATABASE_URL)%'
+                profiling_collect_backtrace: '%kernel.debug%'
+                use_savepoints: true
+            tenant:
+                driver: pdo_pgsql
+                host: '%env(TENANT_DB_HOST)%'
+                port: 5432
+                dbname: domiciliaria
+                user: '%env(TENANT_DB_USER)%'
+                password: '%env(TENANT_DB_PASSWORD)%'
+                charset: utf8
+                server_version: '16'
+                wrapper_class: 'Hakam\MultiTenancyBundle\Doctrine\DBAL\TenantConnection'
+
     orm:
+        default_entity_manager: default
         auto_generate_proxy_classes: true
         enable_lazy_ghost_objects: true
-        report_fields_where_declared: true
-        validate_xml_mapping: true
-        naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
-        auto_mapping: true
-        mappings:
-            App:
-                type: attribute
-                is_bundle: false
-                dir: '%kernel.project_dir%/src/Entity'
-                prefix: 'App\Entity'
-                alias: App
+
+        entity_managers:
+            default:
+                connection: default
+                report_fields_where_declared: true
+                validate_xml_mapping: true
+                naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+                auto_mapping: false
+                mappings:
+                    App:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Entity'
+                        prefix: 'App\Entity'
+                        alias: App
+
+            tenant:
+                connection: tenant
+                naming_strategy: doctrine.orm.naming_strategy.underscore_number_aware
+                auto_mapping: false
+                mappings:
+                    AppTenant:
+                        type: attribute
+                        is_bundle: false
+                        dir: '%kernel.project_dir%/src/Entity/Tenant'
+                        prefix: 'App\Entity\Tenant'
+                        alias: AppTenant
 
 when@test:
     doctrine:
         dbal:
-            dbname_suffix: '_test%env(default::TEST_TOKEN)%'
+            connections:
+                default:
+                    dbname_suffix: '_test%env(default::TEST_TOKEN)%'
 
 when@prod:
     doctrine:
         orm:
-            auto_generate_proxy_classes: false
-            proxy_dir: '%kernel.build_dir%/doctrine/orm/Proxies'
-            query_cache_driver:
-                type: pool
-                pool: doctrine.system_cache_pool
-            result_cache_driver:
-                type: pool
-                pool: doctrine.result_cache_pool
+            entity_managers:
+                default:
+                    auto_generate_proxy_classes: false
+                    proxy_dir: '%kernel.build_dir%/doctrine/orm/Proxies'
+                    query_cache_driver:
+                        type: pool
+                        pool: doctrine.system_cache_pool
+                    result_cache_driver:
+                        type: pool
+                        pool: doctrine.result_cache_pool
         dbal:
-            profiling_collect_backtrace: false
+            connections:
+                default:
+                    profiling_collect_backtrace: false

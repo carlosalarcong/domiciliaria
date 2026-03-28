@@ -1425,6 +1425,61 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     generate_final_classes?: bool|Param, // Default: true
  *     generate_final_entities?: bool|Param, // Default: false
  * }
+ * @psalm-type HakamMultiTenancyConfig = array{
+ *     tenant_database_className?: mixed, // Tenant dbs configuration Class Name // Default: "TenantDb"
+ *     tenant_database_identifier?: mixed, // tenant db column name to get db configuration // Default: "id"
+ *     tenant_config_provider?: mixed, // Service ID of the TenantConfigProviderInterface implementation // Default: "hakam_tenant_config_provider.doctrine"
+ *     tenant_connection?: array{ // tenant entity manager connection configuration
+ *         url?: mixed, // Default: "%env(DATABASE_URL)%"
+ *         host?: mixed, // Default: "127.0.0.1"
+ *         port?: mixed, // Default: "3306"
+ *         driver?: mixed, // Default: "pdo_mysql"
+ *         charset?: mixed, // Default: "utf8"
+ *         server_version?: mixed, // Default: "5.7"
+ *         ...<mixed>
+ *     },
+ *     tenant_migration?: array{ // tenant db migration configurations, Its recommended to have a different migration for tenants dbs than you main migration config
+ *         tenant_migration_namespace?: mixed, // Default: "DoctrineMigrations\\Tenant"
+ *         tenant_migration_path?: mixed, // Default: "%kernel.project_dir%/migrations/Tenant"
+ *         ...<mixed>
+ *     },
+ *     tenant_entity_manager?: array{ // tenant entity manger configuration , which is used to manage tenant entities
+ *         tenant_naming_strategy?: mixed, // Default: "doctrine.orm.naming_strategy.default"
+ *         dql?: array{ // tenant entity manager dql configuration
+ *             string_functions?: array<string, scalar|Param|null>,
+ *             numeric_functions?: array<string, scalar|Param|null>,
+ *             datetime_functions?: array<string, scalar|Param|null>,
+ *         },
+ *         mapping?: array{ // tenant Entity Manager mapping configuration, Its recommended to have a different mapping config than your main entity config
+ *             type?: mixed, // mapping type default attribute // Default: "attribute"
+ *             dir?: mixed, // directory of tenant entities, it could be different from main directory // Default: "%kernel.project_dir%/src/Entity"
+ *             prefix?: mixed, // Tenant entities prefix example " #App\Entity\Tenant" // Default: "App\\Tenant"
+ *             alias?: mixed, // Tenant entities alias example " Tenant "
+ *             is_bundle?: mixed, // Tenant entities alias example " Tenant " // Default: false
+ *             ...<mixed>
+ *         },
+ *         ...<mixed>
+ *     },
+ *     resolver?: bool|array{ // Automatic tenant resolution configuration
+ *         enabled?: bool|Param, // Default: false
+ *         strategy?: "subdomain"|"host"|"path"|"header"|"chain"|Param, // The resolution strategy to use // Default: "subdomain"
+ *         throw_on_missing?: bool|Param, // Whether to throw an exception if tenant cannot be resolved // Default: false
+ *         excluded_paths?: list<scalar|Param|null>,
+ *         options?: array{ // Strategy-specific options
+ *             subdomain_position?: int|Param, // Which subdomain part to use (0 = first) // Default: 0
+ *             base_domain?: scalar|Param|null, // Base domain for subdomain resolution (auto-detect if null) // Default: null
+ *             path_segment?: int|Param, // Which path segment to use (0 = first) // Default: 0
+ *             header_name?: scalar|Param|null, // HTTP header name for header resolution // Default: "X-Tenant-ID"
+ *             host_map?: array<string, scalar|Param|null>,
+ *             chain_order?: list<scalar|Param|null>,
+ *             ...<mixed>
+ *         },
+ *     },
+ *     cache?: bool|array{ // Tenant-aware cache isolation configuration
+ *         enabled?: bool|Param, // Default: false
+ *         prefix_separator?: scalar|Param|null, // Separator between tenant ID and cache key // Default: "__"
+ *     },
+ * }
  * @psalm-type ConfigType = array{
  *     imports?: ImportsConfig,
  *     parameters?: ParametersConfig,
@@ -1438,6 +1493,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *     stof_doctrine_extensions?: StofDoctrineExtensionsConfig,
  *     knp_paginator?: KnpPaginatorConfig,
  *     turbo?: TurboConfig,
+ *     hakam_multi_tenancy?: HakamMultiTenancyConfig,
  *     "when@dev"?: array{
  *         imports?: ImportsConfig,
  *         parameters?: ParametersConfig,
@@ -1452,6 +1508,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         knp_paginator?: KnpPaginatorConfig,
  *         turbo?: TurboConfig,
  *         maker?: MakerConfig,
+ *         hakam_multi_tenancy?: HakamMultiTenancyConfig,
  *     },
  *     "when@prod"?: array{
  *         imports?: ImportsConfig,
@@ -1466,6 +1523,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         stof_doctrine_extensions?: StofDoctrineExtensionsConfig,
  *         knp_paginator?: KnpPaginatorConfig,
  *         turbo?: TurboConfig,
+ *         hakam_multi_tenancy?: HakamMultiTenancyConfig,
  *     },
  *     "when@test"?: array{
  *         imports?: ImportsConfig,
@@ -1480,6 +1538,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  *         stof_doctrine_extensions?: StofDoctrineExtensionsConfig,
  *         knp_paginator?: KnpPaginatorConfig,
  *         turbo?: TurboConfig,
+ *         hakam_multi_tenancy?: HakamMultiTenancyConfig,
  *     },
  *     ...<string, ExtensionType|array{ // extra keys must follow the when@%env% pattern or match an extension alias
  *         imports?: ImportsConfig,

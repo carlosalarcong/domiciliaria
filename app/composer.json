@@ -13,6 +13,7 @@
         "doctrine/doctrine-migrations-bundle": "^3.7",
         "doctrine/orm": "^3.6",
         "gedmo/doctrine-extensions": "^3.22",
+        "hakam/multi-tenancy-bundle": "^3.0",
         "knplabs/knp-paginator-bundle": "^6.10",
         "stof/doctrine-extensions-bundle": "^1.15",
         "symfony/asset": "^7.4",
