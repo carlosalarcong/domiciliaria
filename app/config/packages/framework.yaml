@@ -31,10 +31,10 @@ framework:
         pools:
             cache.redis:
                 adapter: cache.adapter.redis
-                provider: redis_client
+                provider: 'redis://redis:6379'
             cache.rate_limiter:
                 adapter: cache.adapter.redis
-                provider: redis_client
+                provider: 'redis://redis:6379'
 
     rate_limiter:
         login_limiter:

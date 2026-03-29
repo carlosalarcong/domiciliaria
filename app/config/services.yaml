@@ -9,8 +9,7 @@ services:
     # ── Redis ──────────────────────────────────────────────────────────────────
 
     redis_client:
-        class: Redis
-        factory: ['Symfony\Component\Cache\Adapter\RedisAdapter', 'createConnection']
+        class: Predis\Client
         arguments:
             - '%env(REDIS_URL)%'
 
