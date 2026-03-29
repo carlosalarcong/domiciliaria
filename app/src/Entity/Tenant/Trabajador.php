@@ -18,7 +18,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: TrabajadorRepository::class)]
 #[ORM\Table(name: 'trabajadores')]
-#[UniqueEntity(fields: ['rut'], message: 'Este RUT ya está registrado.')]
+#[UniqueEntity(fields: ['rutHash'], message: 'Este RUT ya está registrado.')]
 #[Gedmo\Loggable(logEntryClass: LogEntry::class)]
 class Trabajador
 {
@@ -38,10 +38,19 @@ class Trabajador
     #[Gedmo\Versioned]
     private ?string $apellidos = null;
 
-    #[ORM\Column(length: 15, unique: true)]
+    #[ORM\Column(type: 'text', nullable: true)]
     #[Assert\NotBlank]
     #[Gedmo\Versioned]
     private ?string $rut = null;
+
+    #[ORM\Column(length: 64, unique: true, nullable: true)]
+    private ?string $rutHash = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $cuentaBancaria = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $datosPrevisionales = null;
 
     #[ORM\Column(type: 'string', enumType: PerfilTrabajador::class)]
     #[Gedmo\Versioned]
@@ -105,6 +114,12 @@ class Trabajador
     public function getNombreCompleto(): string { return trim($this->nombres . ' ' . $this->apellidos); }
     public function getRut(): ?string { return $this->rut; }
     public function setRut(string $r): static { $this->rut = $r; return $this; }
+    public function getRutHash(): ?string { return $this->rutHash; }
+    public function setRutHash(?string $h): static { $this->rutHash = $h; return $this; }
+    public function getCuentaBancaria(): ?string { return $this->cuentaBancaria; }
+    public function setCuentaBancaria(?string $c): static { $this->cuentaBancaria = $c; return $this; }
+    public function getDatosPrevisionales(): ?string { return $this->datosPrevisionales; }
+    public function setDatosPrevisionales(?string $d): static { $this->datosPrevisionales = $d; return $this; }
     public function getPerfil(): PerfilTrabajador { return $this->perfil; }
     public function setPerfil(PerfilTrabajador $p): static { $this->perfil = $p; return $this; }
     public function getTelefono(): ?string { return $this->telefono; }

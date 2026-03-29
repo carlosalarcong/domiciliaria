@@ -1,0 +1,38 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Códigos de respaldo 2FA{% endblock %}
+
+{% block body %}
+<div class="container py-4" style="max-width:540px">
+    <div class="card shadow-sm border-warning">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0"><i class="bi bi-key-fill me-2"></i>Guarda tus códigos de respaldo</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="alert alert-danger">
+                <i class="bi bi-exclamation-triangle-fill me-2"></i>
+                <strong>¡Importante!</strong> Guarda estos códigos en un lugar seguro. Cada código solo puede usarse <strong>una vez</strong> y no podrás recuperarlos después.
+            </div>
+
+            <div class="row g-2 mb-4">
+                {% for code in backup_codes %}
+                    <div class="col-6">
+                        <div class="p-2 border rounded text-center bg-light">
+                            <code class="fs-5 fw-bold user-select-all">{{ code }}</code>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="d-grid gap-2">
+                <button onclick="window.print()" class="btn btn-outline-secondary">
+                    <i class="bi bi-printer me-2"></i>Imprimir códigos
+                </button>
+                <a href="{{ path('app_dashboard') }}" class="btn btn-primary">
+                    <i class="bi bi-check-circle me-2"></i>He guardado mis códigos, continuar
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

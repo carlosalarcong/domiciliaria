@@ -1,0 +1,54 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Configurar autenticación 2FA{% endblock %}
+
+{% block body %}
+<div class="container py-4" style="max-width:540px">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0"><i class="bi bi-shield-lock-fill me-2"></i>Configurar autenticación en dos pasos</h5>
+        </div>
+        <div class="card-body p-4">
+            {% for msg in app.flashes('error') %}
+                <div class="alert alert-danger"><i class="bi bi-x-circle-fill me-2"></i>{{ msg }}</div>
+            {% endfor %}
+
+            <ol class="mb-4">
+                <li class="mb-2">Descarga <strong>Google Authenticator</strong> o <strong>Authy</strong> en tu smartphone.</li>
+                <li class="mb-2">Escanea el código QR con la app:</li>
+            </ol>
+
+            <div class="text-center mb-4">
+                <div id="qrcode" class="d-inline-block p-2 border rounded bg-white"></div>
+                <div class="mt-2">
+                    <small class="text-muted">¿No puedes escanearlo? Ingresa el código manualmente:</small><br>
+                    <code class="user-select-all fs-6 text-break">{{ secret }}</code>
+                </div>
+            </div>
+
+            <ol start="3">
+                <li>Ingresa el código de 6 dígitos que muestra la app para confirmar:</li>
+            </ol>
+
+            <form method="post" action="{{ path('app_2fa_enable') }}" autocomplete="off">
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="bi bi-key"></i></span>
+                    <input type="text" name="code" class="form-control form-control-lg text-center"
+                           maxlength="6" autofocus placeholder="000000" inputmode="numeric"
+                           style="letter-spacing:.4em;font-size:1.5rem">
+                </div>
+                <button type="submit" class="btn btn-success w-100 py-2 fw-semibold">
+                    <i class="bi bi-check-circle me-2"></i>Activar 2FA
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+<script>
+QRCode.toCanvas(document.getElementById('qrcode'), {{ qr_content|json_encode }}, { width: 200 }, function(err) {
+    if (err) document.getElementById('qrcode').textContent = 'Error al generar QR';
+});
+</script>
+{% endblock %}
