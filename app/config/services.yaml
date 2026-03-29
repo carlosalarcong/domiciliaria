@@ -31,6 +31,15 @@ services:
         arguments:
             $encryptionKey: '%env(APP_ENCRYPTION_KEY)%'
 
+    App\Command\EncryptExistingDataCommand:
+        arguments:
+            $defaultEm: '@doctrine.orm.default_entity_manager'
+            $tenantEm:  '@doctrine.orm.tenant_entity_manager'
+
+    App\Command\RotateEncryptionKeyCommand:
+        arguments:
+            $em: '@doctrine.orm.tenant_entity_manager'
+
     # ── Rate Limiter ──────────────────────────────────────────────────────────
 
     App\EventListener\RateLimitListener:
