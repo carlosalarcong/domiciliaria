@@ -124,7 +124,33 @@ Resultado esperado para cada clínica:
 
 ---
 
-## 7. Cargar datos de prueba
+## 7. Configurar la clave de cifrado
+
+El sistema cifra datos sensibles (RUTs, diagnósticos, medicamentos, observaciones, datos bancarios) usando AES-256-GCM. La clave se debe generar y configurar antes de cargar datos.
+
+### Generar la clave
+
+```bash
+docker exec domicialiaria-php-1 bash -c \
+  "cd /var/www/html/app && php bin/console app:security:generate-key"
+```
+
+La salida muestra una clave con formato `def0000...` (88 caracteres).
+
+### Configurar la clave localmente
+
+Crear el archivo `app/.env.local` (no se sube al repositorio):
+
+```bash
+# app/.env.local
+APP_ENCRYPTION_KEY=def0000...  ← pegar la clave generada
+```
+
+> **Importante:** Sin esta clave la app no arranca. Guárdala en un lugar seguro — si se pierde, los datos cifrados no se pueden recuperar.
+
+---
+
+## 7b. Cargar datos de prueba
 
 Carga usuarios, pacientes, mandantes, trabajadores, turnos, liquidaciones y facturas de ejemplo en cada clínica. **Purga los datos existentes antes de insertar.**
 
