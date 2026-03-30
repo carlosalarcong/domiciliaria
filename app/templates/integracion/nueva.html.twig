@@ -1,0 +1,124 @@
+{% extends 'base.html.twig' %}
+{% block title %}Nueva integración{% endblock %}
+{% block page_title %}Nueva integración{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Nueva integración</h4>
+        <small class="text-muted">Configura un webhook hacia un sistema externo</small>
+    </div>
+    <a href="{{ path('app_integracion_index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Volver
+    </a>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                {{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
+
+                <div class="mb-3">
+                    {{ form_label(form.nombre, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                    {{ form_widget(form.nombre, {attr: {class: 'form-control'}}) }}
+                    {{ form_errors(form.nombre) }}
+                </div>
+
+                <div class="mb-3">
+                    {{ form_label(form.url, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                    {{ form_widget(form.url, {attr: {class: 'form-control font-monospace'}}) }}
+                    {{ form_errors(form.url) }}
+                    <div class="form-text">El sistema enviará un POST a esta URL cuando ocurran los eventos seleccionados.</div>
+                </div>
+
+                <div class="mb-4">
+                    {{ form_label(form.secret, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                    <div class="input-group">
+                        {{ form_widget(form.secret, {attr: {class: 'form-control font-monospace', id: 'secretInput'}}) }}
+                        <button type="button" class="btn btn-outline-secondary" onclick="generarSecret()">
+                            <i class="bi bi-arrow-repeat"></i> Regenerar
+                        </button>
+                    </div>
+                    <div class="form-text">
+                        Usada para firmar el payload via <code>HMAC-SHA256</code>.
+                        Guárdala en tu sistema externo para verificar la autenticidad de los webhooks.
+                    </div>
+                </div>
+
+                <div class="mb-4">
+                    {{ form_label(form.eventos, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+                    <div class="card bg-light border-0 p-3">
+                        {% set grupos = {} %}
+                        {% for child in form.eventos %}
+                            {% set grupo = child.vars.attr['data-group'] ?? 'Otros' %}
+                            {% set grupos = grupos|merge({(grupo): (grupos[grupo] ?? [])|merge([child])}) %}
+                        {% endfor %}
+                        {% for grupo, items in grupos %}
+                        <div class="mb-3">
+                            <div class="text-muted small fw-bold text-uppercase mb-2" style="letter-spacing:.05em">
+                                {{ grupo }}
+                            </div>
+                            {% for child in items %}
+                            <div class="form-check">
+                                {{ form_widget(child, {attr: {class: 'form-check-input'}}) }}
+                                {{ form_label(child, null, {label_attr: {class: 'form-check-label'}}) }}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {{ form_errors(form.eventos) }}
+                </div>
+
+                <div class="mb-4 form-check form-switch">
+                    {{ form_widget(form.activo, {attr: {class: 'form-check-input', role: 'switch'}}) }}
+                    {{ form_label(form.activo, null, {label_attr: {class: 'form-check-label fw-semibold'}}) }}
+                </div>
+
+                <div class="d-flex gap-2">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-lg me-2"></i>Crear integración
+                    </button>
+                    <a href="{{ path('app_integracion_index') }}" class="btn btn-outline-secondary">Cancelar</a>
+                </div>
+
+                {{ form_end(form) }}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm bg-primary-subtle">
+            <div class="card-body p-4">
+                <h6 class="fw-bold mb-3"><i class="bi bi-code-square me-2"></i>Formato del payload</h6>
+                <pre class="bg-dark text-light p-3 rounded small mb-0" style="font-size:.75rem;overflow-x:auto">{
+  "evento": "liquidacion.pagada",
+  "timestamp": "2026-03-30T15:42:00Z",
+  "tenant": "demo",
+  "version": "1",
+  "datos": {
+    "id": "uuid",
+    ...
+  }
+}</pre>
+                <hr class="my-3">
+                <h6 class="fw-bold mb-2"><i class="bi bi-shield-check me-2"></i>Verificación de firma</h6>
+                <p class="small text-muted mb-2">Cada request incluye el header:</p>
+                <code class="small">X-Signature: sha256=&lt;hmac&gt;</code>
+                <p class="small text-muted mt-2 mb-0">Verifica con <code>HMAC-SHA256(body, secret)</code>.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% block javascripts %}{{ parent() }}
+<script>
+function generarSecret() {
+    const arr = new Uint8Array(16);
+    crypto.getRandomValues(arr);
+    document.getElementById('secretInput').value = Array.from(arr).map(b => b.toString(16).padStart(2,'0')).join('');
+}
+</script>
+{% endblock %}
+{% endblock %}

@@ -48,6 +48,9 @@
         <a href="{{ path('app_auditoria_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_auditoria' ? 'active' : '' }}">
             <i class="bi bi-journal-text"></i> Auditoría
         </a>
+        <a href="{{ path('app_integracion_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_integracion' ? 'active' : '' }}">
+            <i class="bi bi-plug"></i> Integraciones
+        </a>
         {% endif %}
     </div>
 </nav>
