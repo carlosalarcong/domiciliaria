@@ -20,6 +20,25 @@ class TurnoRepository extends ServiceEntityRepository
         parent::__construct($registry, Turno::class);
     }
 
+    /** @return array<string, int> estado => count para los turnos de hoy */
+    public function countHoyByEstado(): array
+    {
+        $hoy  = new \DateTime('today');
+        $rows = $this->createQueryBuilder('t')
+            ->select('t.estado, COUNT(t.id) as total')
+            ->where('t.fecha = :hoy')
+            ->setParameter('hoy', $hoy)
+            ->groupBy('t.estado')
+            ->getQuery()
+            ->getResult();
+
+        $result = [];
+        foreach ($rows as $row) {
+            $result[$row['estado']->value] = (int) $row['total'];
+        }
+        return $result;
+    }
+
     /** @return Turno[] */
     public function findByRangoFecha(\DateTimeInterface $desde, \DateTimeInterface $hasta): array
     {
