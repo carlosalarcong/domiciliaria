@@ -39,6 +39,9 @@
         <a href="{{ path('app_user_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_user' ? 'active' : '' }}">
             <i class="bi bi-person-gear"></i> Usuarios
         </a>
+        <a href="{{ path('app_auditoria_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_auditoria' ? 'active' : '' }}">
+            <i class="bi bi-journal-text"></i> Auditoría
+        </a>
         {% endif %}
     </div>
 </nav>
