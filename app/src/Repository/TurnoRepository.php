@@ -130,6 +130,31 @@ class TurnoRepository extends ServiceEntityRepository
     }
 
     /**
+     * Reporte por paciente: agrupa turnos de un año por paciente y estado.
+     * @return array<int, array{paciente_id: string, nombres: string, apellidos: string, estado: EstadoTurno, tipo_turno: TipoTurno, total: int}>
+     */
+    public function reportePorPaciente(int $anio): array
+    {
+        return $this->createQueryBuilder('t')
+            ->select(
+                'IDENTITY(t.paciente) as paciente_id',
+                'p.nombres',
+                'p.apellidos',
+                't.estado',
+                't.tipoTurno as tipo_turno',
+                'COUNT(t.id) as total',
+            )
+            ->leftJoin('t.paciente', 'p')
+            ->where('YEAR(t.fecha) = :anio')
+            ->setParameter('anio', $anio)
+            ->groupBy('t.paciente, p.nombres, p.apellidos, t.estado, t.tipoTurno')
+            ->orderBy('p.apellidos', 'ASC')
+            ->addOrderBy('p.nombres', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
      * Para FullCalendar: todos los turnos en rango como array serializable.
      */
     public function findEventosCalendario(\DateTimeInterface $desde, \DateTimeInterface $hasta): array
