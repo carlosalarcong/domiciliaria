@@ -341,6 +341,10 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 
 ## Notas técnicas
 
+### Content Security Policy (CSP)
+
+El CSP está configurado en `docker/nginx/default.conf`. Permite cargar scripts, estilos y fuentes desde `cdn.jsdelivr.net` (Bootstrap, Bootstrap Icons, FullCalendar). El `connect-src` también incluye `cdn.jsdelivr.net` para permitir la carga de source maps en DevTools sin warnings.
+
 ### SSL corporativo
 Si el entorno tiene inspección SSL (certificado autofirmado en la cadena), instalar dependencias con `--no-plugins` para evitar que Symfony Flex intente descargar recetas vía HTTPS:
 ```bash
