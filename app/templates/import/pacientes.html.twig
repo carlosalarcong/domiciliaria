@@ -1,0 +1,131 @@
+{% extends 'base.html.twig' %}
+{% block title %}Importar pacientes{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Importar pacientes</h4>
+        <small class="text-muted">Carga masiva desde CSV</small>
+    </div>
+    <a href="{{ path('app_import_index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Volver
+    </a>
+</div>
+
+{% if resultado is not null %}
+    {# ── Resultado ── #}
+    <div class="row g-3 mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3">
+                <div class="fs-2 fw-bold text-success">{{ resultado.importados }}</div>
+                <small class="text-muted">Importados</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3">
+                <div class="fs-2 fw-bold text-warning">{{ resultado.omitidos }}</div>
+                <small class="text-muted">Omitidos (RUT ya existe)</small>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 shadow-sm text-center p-3">
+                <div class="fs-2 fw-bold text-danger">{{ resultado.errores|length }}</div>
+                <small class="text-muted">Errores</small>
+            </div>
+        </div>
+    </div>
+
+    {% if resultado.errores|length > 0 %}
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-danger bg-opacity-10 border-0">
+            <h6 class="mb-0 fw-semibold text-danger"><i class="bi bi-exclamation-triangle me-2"></i>Filas con error</h6>
+        </div>
+        <div class="card-body p-0">
+            <table class="table table-sm mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3" style="width:80px">Línea</th>
+                        <th style="width:160px">RUT</th>
+                        <th>Motivo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for e in resultado.errores %}
+                    <tr>
+                        <td class="ps-3">{{ e.linea }}</td>
+                        <td><code>{{ e.rut }}</code></td>
+                        <td class="text-danger small">{{ e.motivo }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if resultado.importados > 0 %}
+    <div class="alert alert-success">
+        <i class="bi bi-check-circle me-2"></i>
+        Se importaron <strong>{{ resultado.importados }}</strong> paciente(s) correctamente.
+        <a href="{{ path('app_paciente_index') }}" class="alert-link ms-2">Ver pacientes</a>
+    </div>
+    {% endif %}
+{% endif %}
+
+{# ── Formulario de carga ── #}
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-4">
+        <h6 class="fw-semibold mb-1">Subir archivo CSV</h6>
+        <p class="text-muted small mb-3">
+            El archivo debe tener las columnas en el orden de la plantilla. Separador: punto y coma (;).
+        </p>
+
+        <form method="post" enctype="multipart/form-data">
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Archivo CSV</label>
+                <input type="file" name="archivo" class="form-control" accept=".csv,text/csv" required>
+                <div class="form-text">Máximo 5 MB. Formato: UTF-8 o UTF-8 con BOM.</div>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-upload me-2"></i>Importar pacientes
+                </button>
+                <a href="{{ path('app_import_pacientes_plantilla') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-file-earmark-arrow-down me-2"></i>Descargar plantilla
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ── Columnas esperadas ── #}
+<div class="card border-0 shadow-sm mt-4">
+    <div class="card-body p-4">
+        <h6 class="fw-semibold mb-3">Columnas del CSV</h6>
+        <div class="table-responsive">
+            <table class="table table-sm table-bordered mb-0 small">
+                <thead class="table-light">
+                    <tr><th>Columna</th><th>Obligatorio</th><th>Valores válidos</th><th>Ejemplo</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>nombres</code></td><td><span class="badge bg-danger">Sí</span></td><td>Texto</td><td>Carmen Rosa</td></tr>
+                    <tr><td><code>apellidos</code></td><td><span class="badge bg-danger">Sí</span></td><td>Texto</td><td>Vásquez Muñoz</td></tr>
+                    <tr><td><code>rut</code></td><td><span class="badge bg-danger">Sí</span></td><td>Texto con puntos y guión</td><td>8.234.567-K</td></tr>
+                    <tr><td><code>tipo_servicio</code></td><td><span class="badge bg-danger">Sí</span></td><td>TURNO_12H · TURNO_24H · VISITA</td><td>TURNO_24H</td></tr>
+                    <tr><td><code>fecha_nacimiento</code></td><td><span class="badge bg-secondary">No</span></td><td>dd/mm/aaaa</td><td>12/03/1945</td></tr>
+                    <tr><td><code>estado</code></td><td><span class="badge bg-secondary">No</span></td><td>ACTIVO · SUSPENDIDO · DADO_DE_BAJA (default: ACTIVO)</td><td>ACTIVO</td></tr>
+                    <tr><td><code>mandante</code></td><td><span class="badge bg-secondary">No</span></td><td>Nombre exacto del mandante existente en el sistema</td><td>FONASA Región Metropolitana</td></tr>
+                    <tr><td><code>fecha_ingreso</code></td><td><span class="badge bg-secondary">No</span></td><td>dd/mm/aaaa</td><td>15/01/2024</td></tr>
+                    <tr><td><code>fecha_termino</code></td><td><span class="badge bg-secondary">No</span></td><td>dd/mm/aaaa</td><td></td></tr>
+                    <tr><td><code>direccion</code></td><td><span class="badge bg-secondary">No</span></td><td>Texto</td><td>Av. Providencia 1234</td></tr>
+                    <tr><td><code>comuna</code></td><td><span class="badge bg-secondary">No</span></td><td>Texto</td><td>Providencia</td></tr>
+                    <tr><td><code>region</code></td><td><span class="badge bg-secondary">No</span></td><td>Texto</td><td>Metropolitana</td></tr>
+                    <tr><td><code>telefono</code></td><td><span class="badge bg-secondary">No</span></td><td>Texto</td><td>+56 9 1111 2222</td></tr>
+                    <tr><td><code>tutor_nombre</code></td><td><span class="badge bg-secondary">No</span></td><td>Texto</td><td>Pedro Vásquez</td></tr>
+                    <tr><td><code>tutor_telefono</code></td><td><span class="badge bg-secondary">No</span></td><td>Texto</td><td>+56 9 3333 4444</td></tr>
+                    <tr><td><code>tutor_relacion</code></td><td><span class="badge bg-secondary">No</span></td><td>Texto</td><td>Hijo</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
