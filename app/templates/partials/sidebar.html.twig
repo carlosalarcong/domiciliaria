@@ -23,6 +23,12 @@
             <i class="bi bi-person-badge"></i> Personal
         </a>
 
+        {% if is_granted('ROLE_TENS') or is_granted('ROLE_ENFERMERA') %}
+        <a href="{{ path('app_campo_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_campo' ? 'active' : '' }}">
+            <i class="bi bi-phone"></i> Vista de campo
+        </a>
+        {% endif %}
+
         <div class="sidebar-section mt-2">Gestión</div>
         <a href="{{ path('app_evento_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_evento' ? 'active' : '' }}">
             <i class="bi bi-exclamation-triangle-fill"></i> Eventos Adversos
