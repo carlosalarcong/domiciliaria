@@ -101,10 +101,11 @@ class EventoAdversoController extends AbstractController
         }
 
         $form = $this->createForm(EventoAdversoType::class, $evento);
+        $responsableAnterior = $evento->getResponsable();
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->service->actualizar($evento);
+            $this->service->actualizar($evento, $responsableAnterior);
             $this->addFlash('success', 'Evento actualizado correctamente.');
 
             return $this->redirectToRoute('app_evento_show', ['id' => $evento->getId()]);

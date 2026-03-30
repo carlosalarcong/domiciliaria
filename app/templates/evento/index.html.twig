@@ -97,6 +97,7 @@
                         <th>Gravedad</th>
                         <th>Estado</th>
                         <th>Trabajador</th>
+                        <th>Responsable</th>
                         <th class="pe-4 text-end">Ver</th>
                     </tr>
                 </thead>
@@ -116,6 +117,13 @@
                         <span class="badge {{ evento.estado.badgeClass() }}">{{ evento.estado.etiqueta() }}</span>
                     </td>
                     <td class="text-muted small">{{ evento.trabajador ? evento.trabajador.nombreCompleto : '—' }}</td>
+                    <td class="small">
+                        {% if evento.responsable %}
+                            <i class="bi bi-person-check-fill text-primary me-1"></i>{{ evento.responsable.nombreCompleto }}
+                        {% else %}
+                            <span class="text-danger fst-italic">Sin asignar</span>
+                        {% endif %}
+                    </td>
                     <td class="pe-4 text-end">
                         <a href="{{ path('app_evento_show', {id: evento.id}) }}" class="btn btn-outline-secondary btn-sm">
                             <i class="bi bi-eye"></i>
@@ -123,7 +131,7 @@
                     </td>
                 </tr>
                 {% else %}
-                <tr><td colspan="7" class="text-center text-muted py-5">
+                <tr><td colspan="8" class="text-center text-muted py-5">
                     <i class="bi bi-shield-check fs-1 opacity-25 d-block mb-2"></i>
                     No hay eventos adversos registrados.
                 </td></tr>
