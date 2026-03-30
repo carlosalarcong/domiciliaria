@@ -174,6 +174,9 @@
                                     <div class="text-muted" style="font-size:.75rem">
                                         <span class="badge {{ evento.gravedad.badgeClass }} me-1">{{ evento.gravedad.etiqueta }}</span>
                                         {{ evento.fechaEvento|date('d/m/Y') }}
+                                        {% if not evento.responsable %}
+                                            <span class="badge bg-danger ms-1">sin responsable</span>
+                                        {% endif %}
                                     </div>
                                 </div>
                                 <a href="{{ path('app_evento_show', {id: evento.id}) }}" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size:.75rem">Ver</a>

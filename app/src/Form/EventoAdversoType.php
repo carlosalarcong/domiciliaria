@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Form;
 
-use App\Entity\EventoAdverso;
-use App\Entity\Paciente;
-use App\Entity\Trabajador;
+use App\Entity\Tenant\EventoAdverso;
+use App\Entity\Tenant\Paciente;
+use App\Entity\Tenant\Trabajador;
+use App\Entity\Tenant\User;
 use App\Enum\GravedadEvento;
 use App\Enum\TipoEventoAdverso;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
@@ -73,11 +74,24 @@ class EventoAdversoType extends AbstractType
                 'label'    => 'Médico notificado',
                 'required' => false,
             ])
+            ->add('responsable', EntityType::class, [
+                'label'        => 'Responsable de seguimiento',
+                'class'        => User::class,
+                'choice_label' => fn(User $u) => $u->getNombreCompleto() . ' (' . $u->getRolEtiqueta() . ')',
+                'query_builder' => fn($repo) => $repo->createQueryBuilder('u')
+                    ->where("u.roles LIKE :admin OR u.roles LIKE :coord")
+                    ->setParameter('admin', '%ROLE_ADMIN%')
+                    ->setParameter('coord', '%ROLE_COORDINADOR%')
+                    ->andWhere('u.activo = true')
+                    ->orderBy('u.apellido', 'ASC'),
+                'placeholder'  => '— Sin responsable asignado —',
+                'required'     => false,
+            ])
         ;
     }
 
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setDefaults(['data_class' => EventoAdverso::class]);
+        $resolver->setDefaults(['data_class' => \App\Entity\Tenant\EventoAdverso::class]);
     }
 }

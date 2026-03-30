@@ -9,6 +9,7 @@ use App\Entity\Tenant\SeguimientoEvento;
 use App\Entity\Tenant\User;
 use App\Enum\EstadoEvento;
 use App\Message\EventoAdversoGraveMessage;
+use App\Message\EventoResponsableAsignadoMessage;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
@@ -34,9 +35,14 @@ class EventoAdversoService
         return $evento;
     }
 
-    public function actualizar(EventoAdverso $evento): EventoAdverso
+    public function actualizar(EventoAdverso $evento, ?User $responsableAnterior = null): EventoAdverso
     {
         $this->em->flush();
+
+        $responsableNuevo = $evento->getResponsable();
+        if ($responsableNuevo !== null && $responsableNuevo !== $responsableAnterior) {
+            $this->despacharNotificacionResponsable($evento, $responsableNuevo);
+        }
 
         return $evento;
     }
@@ -74,6 +80,23 @@ class EventoAdversoService
         $this->em->flush();
 
         return $evento;
+    }
+
+    private function despacharNotificacionResponsable(EventoAdverso $evento, User $responsable): void
+    {
+        if (!$responsable->getEmail() || !$responsable->isActivo()) {
+            return;
+        }
+
+        $this->bus->dispatch(new EventoResponsableAsignadoMessage(
+            eventoId:          (string) $evento->getId(),
+            pacienteNombre:    $evento->getPaciente()?->getNombreCompleto() ?? 'Desconocido',
+            tipo:              $evento->getTipo()->etiqueta(),
+            gravedad:          $evento->getGravedad()->value,
+            fecha:             $evento->getFechaEvento()?->format('d/m/Y') ?? '—',
+            responsableEmail:  $responsable->getEmail(),
+            responsableNombre: $responsable->getNombreCompleto(),
+        ));
     }
 
     private function despacharAlerta(EventoAdverso $evento): void

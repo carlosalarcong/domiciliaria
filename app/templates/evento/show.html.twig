@@ -38,12 +38,24 @@
                 </li>
                 {% if evento.trabajador %}
                 <li class="list-group-item d-flex justify-content-between">
-                    <span class="text-muted">Trabajador</span>
+                    <span class="text-muted">Trabajador involucrado</span>
                     <a href="{{ path('app_trabajador_show', {id: evento.trabajador.id}) }}" class="text-decoration-none">
                         {{ evento.trabajador.nombreCompleto }}
                     </a>
                 </li>
                 {% endif %}
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    <span class="text-muted">Responsable</span>
+                    {% if evento.responsable %}
+                        <span class="fw-semibold">
+                            <i class="bi bi-person-check-fill text-primary me-1"></i>
+                            {{ evento.responsable.nombreCompleto }}
+                            <span class="badge bg-secondary ms-1" style="font-size:.7rem">{{ evento.responsable.rolEtiqueta }}</span>
+                        </span>
+                    {% else %}
+                        <span class="text-danger fst-italic small"><i class="bi bi-person-x me-1"></i>Sin responsable</span>
+                    {% endif %}
+                </li>
                 <li class="list-group-item d-flex justify-content-between">
                     <span class="text-muted">Fecha</span>
                     <span>{{ evento.fechaEvento|date('d/m/Y') }}
