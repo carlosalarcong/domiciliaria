@@ -134,6 +134,8 @@
                                         <span class="text-muted fst-italic">vacío</span>
                                     {% elseif valor is iterable %}
                                         <span class="text-info">[objeto]</span>
+                                    {% elseif valor|slice(0,4) == 'enc:' %}
+                                        <span class="text-muted" title="valor cifrado"><i class="bi bi-lock-fill"></i> cifrado</span>
                                     {% else %}
                                         {{ valor|slice(0, 40) }}{{ valor|length > 40 ? '…' : '' }}
                                     {% endif %}
