@@ -8,11 +8,14 @@ use App\Entity\Tenant\Factura;
 use App\Entity\Tenant\LiquidacionMensual;
 use App\Enum\EstadoFactura;
 use App\Enum\EstadoLiquidacion;
+use App\Enum\EstadoTurno;
 use App\Enum\TipoConcepto;
+use App\Enum\TipoTurno;
 use App\Form\FacturaType;
 use App\Form\LiquidacionType;
 use App\Repository\FacturaRepository;
 use App\Repository\LiquidacionMensualRepository;
+use App\Repository\TurnoRepository;
 use App\Service\ExportService;
 use App\Service\FinanzasService;
 use Knp\Component\Pager\PaginatorInterface;
@@ -32,6 +35,7 @@ class FinanzasController extends AbstractController
         private readonly FinanzasService $finanzasService,
         private readonly LiquidacionMensualRepository $liquidacionRepository,
         private readonly FacturaRepository $facturaRepository,
+        private readonly TurnoRepository $turnoRepository,
         private readonly PaginatorInterface $paginator,
         private readonly ExportService $exportService,
     ) {}
@@ -49,6 +53,7 @@ class FinanzasController extends AbstractController
 
         $reporteMandante  = [];
         $reporteTrabajador = [];
+        $reportePaciente  = [];
         $flujoIngresos    = array_fill(1, 12, 0.0);
         $flujoEgresos     = array_fill(1, 12, 0.0);
 
@@ -113,12 +118,42 @@ class FinanzasController extends AbstractController
             }
         }
 
+        if ($tipo === 'paciente') {
+            $tipoKeys = array_map(fn(TipoTurno $t) => $t->value, TipoTurno::cases());
+            $rows = $this->turnoRepository->reportePorPaciente($anio);
+            foreach ($rows as $row) {
+                $id = (string) $row['paciente_id'];
+                if (!isset($reportePaciente[$id])) {
+                    $reportePaciente[$id] = [
+                        'nombre'      => trim($row['nombres'] . ' ' . $row['apellidos']),
+                        'total'       => 0,
+                        'por_tipo'    => array_fill_keys($tipoKeys, 0),
+                        'por_estado'  => [],
+                    ];
+                }
+                $count = (int) $row['total'];
+                $tipo_turno = $row['tipo_turno'] instanceof TipoTurno
+                    ? $row['tipo_turno']->value
+                    : (string) $row['tipo_turno'];
+                $estado = $row['estado'] instanceof EstadoTurno
+                    ? $row['estado']->value
+                    : (string) $row['estado'];
+
+                $reportePaciente[$id]['total'] += $count;
+                $reportePaciente[$id]['por_tipo'][$tipo_turno] = ($reportePaciente[$id]['por_tipo'][$tipo_turno] ?? 0) + $count;
+                $reportePaciente[$id]['por_estado'][$estado]   = ($reportePaciente[$id]['por_estado'][$estado] ?? 0) + $count;
+            }
+            usort($reportePaciente, fn($a, $b) => $b['total'] <=> $a['total']);
+        }
+
         return $this->render('finanzas/reportes.html.twig', [
             'anio'              => $anio,
             'tipo'              => $tipo,
             'meses'             => $meses,
             'reporteMandante'   => $reporteMandante,
             'reporteTrabajador' => $reporteTrabajador,
+            'reportePaciente'   => $reportePaciente,
+            'tiposTurno'        => TipoTurno::cases(),
             'flujoIngresos'     => $flujoIngresos,
             'flujoEgresos'      => $flujoEgresos,
             'aniosDisponibles'  => range((int) date('Y'), (int) date('Y') - 3),

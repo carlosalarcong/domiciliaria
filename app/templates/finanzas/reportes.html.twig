@@ -5,7 +5,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h4 class="mb-0 fw-bold">Reportes Financieros</h4>
-        <small class="text-muted">Análisis por mandante, trabajador y flujo mensual</small>
+        <small class="text-muted">Análisis por mandante, trabajador, paciente y flujo mensual</small>
     </div>
     <a href="{{ path('app_finanzas_index') }}" class="btn btn-outline-secondary btn-sm">
         <i class="bi bi-arrow-left me-1"></i>Volver
@@ -32,6 +32,10 @@
                     <a href="{{ path('app_finanzas_reportes', {anio: anio, tipo: 'trabajador'}) }}"
                        class="btn {{ tipo == 'trabajador' ? 'btn-primary' : 'btn-outline-primary' }}">
                         <i class="bi bi-people me-1"></i>Por trabajador
+                    </a>
+                    <a href="{{ path('app_finanzas_reportes', {anio: anio, tipo: 'paciente'}) }}"
+                       class="btn {{ tipo == 'paciente' ? 'btn-primary' : 'btn-outline-primary' }}">
+                        <i class="bi bi-person-heart me-1"></i>Por paciente
                     </a>
                     <a href="{{ path('app_finanzas_reportes', {anio: anio, tipo: 'flujo'}) }}"
                        class="btn {{ tipo == 'flujo' ? 'btn-primary' : 'btn-outline-primary' }}">
@@ -250,7 +254,129 @@
     {% endif %}
 
 {# ══════════════════════════════════════════════════════════════
-   REPORTE 3: FLUJO MENSUAL
+   REPORTE 3: POR PACIENTE
+══════════════════════════════════════════════════════════════ #}
+{% elseif tipo == 'paciente' %}
+
+    {% if reportePaciente is empty %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center text-muted py-5">
+                <i class="bi bi-person-heart fs-1 opacity-25 d-block mb-2"></i>
+                No hay turnos registrados para {{ anio }}.
+            </div>
+        </div>
+    {% else %}
+        {% set totalTurnos = reportePaciente|map(r => r.total)|reduce((carry, val) => carry + val, 0) %}
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm text-center py-3">
+                    <div class="fw-bold fs-4 text-primary">{{ totalTurnos }}</div>
+                    <div class="small text-muted">Total turnos {{ anio }}</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm text-center py-3">
+                    <div class="fw-bold fs-4">{{ reportePaciente|length }}</div>
+                    <div class="small text-muted">Pacientes activos</div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm text-center py-3">
+                    <div class="fw-bold fs-4 text-success">
+                        {% set totalCubiertos = 0 %}
+                        {% for row in reportePaciente %}
+                            {% set totalCubiertos = totalCubiertos + (row.por_estado['CUBIERTO'] ?? 0) %}
+                        {% endfor %}
+                        {{ totalTurnos > 0 ? ((totalCubiertos / totalTurnos) * 100)|round ~ '%' : '—' }}
+                    </div>
+                    <div class="small text-muted">Cobertura promedio</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-8">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 fw-semibold py-3">
+                        <i class="bi bi-person-heart me-2 text-primary"></i>Turnos por paciente — {{ anio }}
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0" style="font-size:.9rem">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3">Paciente</th>
+                                        <th class="text-center">Total</th>
+                                        {% for tipoT in tiposTurno %}
+                                        <th class="text-center text-muted small">{{ tipoT.etiqueta() }}</th>
+                                        {% endfor %}
+                                        <th class="text-center text-success">Cubiertos</th>
+                                        <th class="text-center text-danger pe-3">Descubiertos</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for row in reportePaciente %}
+                                <tr>
+                                    <td class="ps-3 fw-semibold">{{ row.nombre }}</td>
+                                    <td class="text-center fw-bold">{{ row.total }}</td>
+                                    {% for tipoT in tiposTurno %}
+                                    <td class="text-center text-muted">
+                                        {{ row.por_tipo[tipoT.value] ?? 0 ?: '—' }}
+                                    </td>
+                                    {% endfor %}
+                                    <td class="text-center text-success">{{ row.por_estado['CUBIERTO'] ?? 0 ?: '—' }}</td>
+                                    <td class="text-center pe-3 {{ (row.por_estado['DESCUBIERTO'] ?? 0) > 0 ? 'text-danger fw-semibold' : 'text-muted' }}">
+                                        {{ row.por_estado['DESCUBIERTO'] ?? 0 ?: '—' }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                                <tfoot class="table-light fw-bold">
+                                    <tr>
+                                        <td class="ps-3">Total</td>
+                                        <td class="text-center">{{ totalTurnos }}</td>
+                                        {% for tipoT in tiposTurno %}
+                                        <td class="text-center">
+                                            {% set sumTipo = 0 %}
+                                            {% for row in reportePaciente %}
+                                                {% set sumTipo = sumTipo + (row.por_tipo[tipoT.value] ?? 0) %}
+                                            {% endfor %}
+                                            {{ sumTipo ?: '—' }}
+                                        </td>
+                                        {% endfor %}
+                                        <td class="text-center text-success">
+                                            {% set sumCub = 0 %}
+                                            {% for row in reportePaciente %}{% set sumCub = sumCub + (row.por_estado['CUBIERTO'] ?? 0) %}{% endfor %}
+                                            {{ sumCub }}
+                                        </td>
+                                        <td class="text-center pe-3 text-danger">
+                                            {% set sumDesc = 0 %}
+                                            {% for row in reportePaciente %}{% set sumDesc = sumDesc + (row.por_estado['DESCUBIERTO'] ?? 0) %}{% endfor %}
+                                            {{ sumDesc }}
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0 fw-semibold py-3">
+                        <i class="bi bi-bar-chart me-2 text-primary"></i>Top 8 pacientes por turnos
+                    </div>
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <canvas id="chartPaciente" height="320"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+{# ══════════════════════════════════════════════════════════════
+   REPORTE 4: FLUJO MENSUAL
 ══════════════════════════════════════════════════════════════ #}
 {% else %}
 
@@ -377,6 +503,37 @@ new Chart(document.getElementById('chartTrabajador'), {
             x: {
                 ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'k' }
             }
+        }
+    }
+});
+{% endif %}
+
+{% if tipo == 'paciente' and reportePaciente is not empty %}
+{% set topPac = reportePaciente|slice(0, 8) %}
+new Chart(document.getElementById('chartPaciente'), {
+    type: 'bar',
+    data: {
+        labels: {{ topPac|map(r => r.nombre)|json_encode|raw }},
+        datasets: [{
+            label: 'Total turnos',
+            data: {{ topPac|map(r => r.total)|json_encode|raw }},
+            backgroundColor: '#3b82f680',
+            borderColor: '#3b82f6',
+            borderWidth: 1,
+        },{
+            label: 'Descubiertos',
+            data: [{% for r in topPac %}{{ r.por_estado['DESCUBIERTO'] ?? 0 }}{% if not loop.last %},{% endif %}{% endfor %}],
+            backgroundColor: '#ef444480',
+            borderColor: '#ef4444',
+            borderWidth: 1,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+            x: { ticks: { stepSize: 1 } }
         }
     }
 });
