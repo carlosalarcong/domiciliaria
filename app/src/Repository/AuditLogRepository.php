@@ -14,4 +14,22 @@ class AuditLogRepository extends ServiceEntityRepository
     {
         parent::__construct($registry, AuditLog::class);
     }
+
+    public function findQueryBuilder(?string $evento, ?string $ip, ?string $email): \Doctrine\ORM\QueryBuilder
+    {
+        $qb = $this->createQueryBuilder('a')
+            ->orderBy('a.createdAt', 'DESC');
+
+        if ($evento) {
+            $qb->andWhere('a.evento = :evento')->setParameter('evento', $evento);
+        }
+        if ($ip) {
+            $qb->andWhere('a.ipAddress LIKE :ip')->setParameter('ip', '%' . $ip . '%');
+        }
+        if ($email) {
+            $qb->andWhere('a.emailIntentado LIKE :email')->setParameter('email', '%' . $email . '%');
+        }
+
+        return $qb;
+    }
 }

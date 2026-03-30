@@ -1,0 +1,148 @@
+{% extends 'base.html.twig' %}
+{% block title %}Auditoría — Accesos{% endblock %}
+{% block page_title %}Auditoría{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Accesos y seguridad</h4>
+        <small class="text-muted">Intentos de inicio de sesión y eventos de seguridad</small>
+    </div>
+</div>
+
+{# ── Tabs ── #}
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link" href="{{ path('app_auditoria_index') }}">
+            <i class="bi bi-clock-history me-1"></i>Cambios de datos
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link active" href="{{ path('app_auditoria_accesos') }}">
+            <i class="bi bi-shield-lock me-1"></i>Accesos y seguridad
+        </a>
+    </li>
+</ul>
+
+{# ── Filtros ── #}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Evento</label>
+                <select name="evento" class="form-select form-select-sm">
+                    <option value="">Todos</option>
+                    <option value="LOGIN_SUCCESS" {{ filtroEvento == 'LOGIN_SUCCESS' ? 'selected' : '' }}>Login exitoso</option>
+                    <option value="LOGIN_FAILED"  {{ filtroEvento == 'LOGIN_FAILED'  ? 'selected' : '' }}>Login fallido</option>
+                    <option value="IP_BLOCKED"    {{ filtroEvento == 'IP_BLOCKED'    ? 'selected' : '' }}>IP bloqueada</option>
+                    <option value="LOGOUT"        {{ filtroEvento == 'LOGOUT'        ? 'selected' : '' }}>Logout</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Email</label>
+                <input type="text" name="email" class="form-control form-control-sm"
+                       placeholder="email intentado" value="{{ filtroEmail }}">
+            </div>
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">IP</label>
+                <input type="text" name="ip" class="form-control form-control-sm"
+                       placeholder="ej: 192.168" value="{{ filtroIp }}">
+            </div>
+            <div class="col-md-3 d-flex gap-1 align-items-end">
+                <button type="submit" class="btn btn-primary btn-sm">
+                    <i class="bi bi-search me-1"></i>Filtrar
+                </button>
+                <a href="{{ path('app_auditoria_accesos') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x me-1"></i>Limpiar
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ── Tabla ── #}
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        {% if pagination.items is empty %}
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-shield-lock fs-1 opacity-25 d-block mb-2"></i>
+                No hay registros de acceso.
+            </div>
+        {% else %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size:.875rem">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3" style="width:150px">Fecha</th>
+                        <th style="width:120px">Evento</th>
+                        <th>Email</th>
+                        <th style="width:130px">IP</th>
+                        <th style="width:100px">Tenant</th>
+                        <th class="pe-3">Detalle / User Agent</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for log in pagination %}
+                <tr class="{{ log.evento == 'LOGIN_FAILED' ? 'table-warning' : (log.evento == 'IP_BLOCKED' ? 'table-danger' : '') }}">
+                    <td class="ps-3 text-muted small">
+                        {{ log.createdAt|date('d/m/Y H:i:s') }}
+                    </td>
+                    <td>
+                        {% if log.evento == 'LOGIN_SUCCESS' %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                <i class="bi bi-check-circle me-1"></i>éxito
+                            </span>
+                        {% elseif log.evento == 'LOGIN_FAILED' %}
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
+                                <i class="bi bi-x-circle me-1"></i>fallido
+                            </span>
+                        {% elseif log.evento == 'IP_BLOCKED' %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                <i class="bi bi-slash-circle me-1"></i>bloqueada
+                            </span>
+                        {% elseif log.evento == 'LOGOUT' %}
+                            <span class="badge bg-secondary-subtle text-secondary border">
+                                <i class="bi bi-box-arrow-right me-1"></i>logout
+                            </span>
+                        {% else %}
+                            <span class="badge bg-light text-muted border">{{ log.evento }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <span class="text-truncate d-block" style="max-width:200px" title="{{ log.emailIntentado }}">
+                            {{ log.emailIntentado ?? '<em class="text-muted">—</em>'|raw }}
+                        </span>
+                    </td>
+                    <td>
+                        <code class="small">{{ log.ipAddress }}</code>
+                    </td>
+                    <td class="text-muted small">{{ log.tenant ?? '—' }}</td>
+                    <td class="pe-3">
+                        {% if log.detalles is not empty %}
+                            <span class="text-muted small">
+                            {% for k, v in log.detalles %}
+                                {{ k }}: <strong>{{ v }}</strong>{% if not loop.last %} · {% endif %}
+                            {% endfor %}
+                            </span>
+                        {% endif %}
+                        {% if log.userAgent %}
+                            <div class="text-muted" style="font-size:.7rem;max-width:300px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis"
+                                 title="{{ log.userAgent }}">{{ log.userAgent }}</div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="px-3 py-2 border-top d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                {{ pagination.totalItemCount }} registro{{ pagination.totalItemCount != 1 ? 's' : '' }}
+            </small>
+            <div>{{ knp_pagination_render(pagination) }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
