@@ -126,6 +126,7 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 - Condición de domicilio (acceso, mascotas, barreras arquitectónicas)
 - Bitácora operativa con Turbo Frames
 - Historial de comunicaciones con Turbo Frames
+- **Notificación automática por cambio de estado**: email a admins/coordinadores cuando un paciente cambia a `Activo`, `Suspendido` o `Dado de baja` (Messenger)
 
 ### Fase 3 — Turnos y Calendario
 - Calendario visual con **FullCalendar** (vistas mensual, semanal y lista, en español)
@@ -159,6 +160,7 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 - Ciclo de vida: `Borrador` → `Aprobada` → `Pagada`
 - **Exportación CSV** de liquidación por trabajador (UTF-8 BOM, compatible Excel)
 - **Facturas a mandantes**: creación con monto neto, IVA configurable y número de factura
+- **Descuento automático por turnos descubiertos**: al crear la factura se puede ingresar un monto por turno descubierto y el sistema cuenta los turnos en estado `DESCUBIERTO` del período y aplica el descuento antes del IVA
 - Ciclo de vida: `Borrador` → `Emitida` → `Pagada` (con fecha de vencimiento automática)
 - Dashboard de finanzas con resumen de montos por estado (liquidaciones y facturas)
 - Listas paginadas con filtros por año y estado
@@ -182,8 +184,9 @@ Después se puede **Aprobar** y luego **Marcar como pagada** ingresando la fecha
 1. Ir a **Finanzas → Nueva factura**
 2. Seleccionar mandante, año y mes
 3. Ingresar el monto neto manualmente (lo que se le cobra al mandante)
-4. El IVA (19% por defecto, configurable) se calcula automáticamente
-5. Opcionalmente ingresar número de factura y observaciones
+4. Opcionalmente ingresar el **descuento por turno descubierto** — el sistema cuenta los turnos en estado `DESCUBIERTO` del período y calcula el descuento total automáticamente (`N turnos × monto`). El IVA se aplica sobre el monto ya descontado
+5. El IVA (19% por defecto, configurable) se calcula automáticamente
+6. Opcionalmente ingresar número de factura y observaciones
 
 Después se puede **Emitir** (genera fecha de vencimiento a 30 días) y **Marcar como pagada**.
 
@@ -334,6 +337,7 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 - [x] **Fase 8** — Exportación CSV masiva de pacientes, turnos y facturas
 - [x] **Fase 9** — API REST pública con autenticación por token y permisos granulares
 - [x] **Fase 10** — Importación masiva de pacientes y trabajadores desde CSV
+- [x] **Fase 11** — Notificación por cambio de estado de paciente y descuento automático en factura por turnos descubiertos
 
 ## Notas técnicas
 
