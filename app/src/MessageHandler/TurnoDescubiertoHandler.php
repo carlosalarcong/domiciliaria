@@ -6,10 +6,12 @@ namespace App\MessageHandler;
 
 use App\Message\TurnoDescubiertoMessage;
 use App\Repository\UserRepository;
+use App\Service\NotificacionService;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Mime\Email;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[AsMessageHandler]
 final class TurnoDescubiertoHandler
@@ -18,6 +20,8 @@ final class TurnoDescubiertoHandler
         private readonly UserRepository $userRepository,
         private readonly MailerInterface $mailer,
         private readonly LoggerInterface $logger,
+        private readonly NotificacionService $notificacionService,
+        private readonly UrlGeneratorInterface $urlGenerator,
     ) {}
 
     public function __invoke(TurnoDescubiertoMessage $message): void
@@ -30,9 +34,19 @@ final class TurnoDescubiertoHandler
         ]);
 
         // Notificar a admins y coordinadores
-        $destinatarios = $this->userRepository->findByRol('ROLE_ADMIN');
-        $coordinadores = $this->userRepository->findByRol('ROLE_COORDINADOR');
-        $destinatarios = array_merge($destinatarios, $coordinadores);
+        $destinatarios = array_merge(
+            $this->userRepository->findByRol('ROLE_ADMIN'),
+            $this->userRepository->findByRol('ROLE_COORDINADOR'),
+        );
+
+        $url = $this->urlGenerator->generate('app_turno_show', ['id' => $message->turnoId], UrlGeneratorInterface::ABSOLUTE_PATH);
+        $this->notificacionService->crearParaVarios(
+            $destinatarios,
+            'turno_descubierto',
+            "Turno descubierto — {$message->pacienteNombre}",
+            "{$message->fecha} · {$message->tipoTurno}",
+            $url,
+        );
 
         foreach ($destinatarios as $usuario) {
             if (!$usuario->getEmail() || !$usuario->isActivo()) {
