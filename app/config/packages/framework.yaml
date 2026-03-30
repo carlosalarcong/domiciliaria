@@ -2,19 +2,55 @@ framework:
     secret: '%env(APP_SECRET)%'
     http_method_override: true
     handle_all_throwables: true
+
     session:
-        handler_id: null
+        handler_id: Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler
         cookie_secure: auto
-        cookie_samesite: lax
+        cookie_httponly: true
+        cookie_samesite: strict
+        gc_maxlifetime: 1800
         storage_factory_id: session.storage.factory.native
+
     php_errors:
         log: true
+
     csrf_protection: true
     form: true
+
     validation:
         email_validation_mode: html5
+
     assets: ~
+
     translator:
         default_path: '%kernel.project_dir%/translations'
         fallbacks:
             - es
+
+    cache:
+        pools:
+            cache.redis:
+                adapter: cache.adapter.redis
+                provider: 'redis://redis:6379'
+            cache.rate_limiter:
+                adapter: cache.adapter.redis
+                provider: 'redis://redis:6379'
+
+    rate_limiter:
+        login_limiter:
+            policy: sliding_window
+            limit: 10
+            interval: '1 minute'
+            cache_pool: cache.rate_limiter
+
+        api_limiter:
+            policy: sliding_window
+            limit: 100
+            interval: '1 minute'
+            cache_pool: cache.rate_limiter
+
+        export_limiter:
+            policy: sliding_window
+            limit: 5
+            interval: '1 hour'
+            cache_pool: cache.rate_limiter

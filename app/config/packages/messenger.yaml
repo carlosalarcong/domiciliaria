@@ -18,3 +18,4 @@ framework:
         routing:
             App\Message\TurnoDescubiertoMessage: async
             App\Message\RevisarTurnosDescubiertosMessage: async
+            App\Message\BackupDatabaseMessage: async

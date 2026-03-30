@@ -18,7 +18,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 
 #[ORM\Entity(repositoryClass: PacienteRepository::class)]
 #[ORM\Table(name: 'pacientes')]
-#[UniqueEntity(fields: ['rut'], message: 'Este RUT ya está registrado.')]
+#[UniqueEntity(fields: ['rutHash'], message: 'Este RUT ya está registrado.')]
 #[Gedmo\Loggable(logEntryClass: LogEntry::class)]
 class Paciente
 {
@@ -38,10 +38,22 @@ class Paciente
     #[Gedmo\Versioned]
     private ?string $apellidos = null;
 
-    #[ORM\Column(length: 15, unique: true)]
+    #[ORM\Column(type: 'text', nullable: true)]
     #[Assert\NotBlank]
     #[Gedmo\Versioned]
     private ?string $rut = null;
+
+    /** Hash HMAC determinístico del RUT para mantener unicidad en BD */
+    #[ORM\Column(length: 64, unique: true, nullable: true)]
+    private ?string $rutHash = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[Gedmo\Versioned]
+    private ?string $diagnosticos = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    #[Gedmo\Versioned]
+    private ?string $medicamentos = null;
 
     #[ORM\Column(type: 'date', nullable: true)]
     #[Gedmo\Versioned]
@@ -142,6 +154,12 @@ class Paciente
 
     public function getRut(): ?string { return $this->rut; }
     public function setRut(string $rut): static { $this->rut = $rut; return $this; }
+    public function getRutHash(): ?string { return $this->rutHash; }
+    public function setRutHash(?string $h): static { $this->rutHash = $h; return $this; }
+    public function getDiagnosticos(): ?string { return $this->diagnosticos; }
+    public function setDiagnosticos(?string $d): static { $this->diagnosticos = $d; return $this; }
+    public function getMedicamentos(): ?string { return $this->medicamentos; }
+    public function setMedicamentos(?string $m): static { $this->medicamentos = $m; return $this; }
 
     public function getFechaNacimiento(): ?\DateTimeInterface { return $this->fechaNacimiento; }
     public function setFechaNacimiento(?\DateTimeInterface $d): static { $this->fechaNacimiento = $d; return $this; }

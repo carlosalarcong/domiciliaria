@@ -6,12 +6,47 @@ services:
         autowire: true
         autoconfigure: true
 
+    # ── Redis ──────────────────────────────────────────────────────────────────
+
+    redis_client:
+        class: Predis\Client
+        arguments:
+            - '%env(REDIS_URL)%'
+
+    Symfony\Component\HttpFoundation\Session\Storage\Handler\RedisSessionHandler:
+        arguments:
+            - '@redis_client'
+            - { prefix: 'sess_', ttl: 1800 }
+
     App\:
         resource: '../src/'
         exclude:
             - '../src/DependencyInjection/'
             - '../src/Entity/'
             - '../src/Kernel.php'
+
+    # ── Encryption ────────────────────────────────────────────────────────────
+
+    App\Service\EncryptionService:
+        arguments:
+            $encryptionKey: '%env(APP_ENCRYPTION_KEY)%'
+
+    App\Command\EncryptExistingDataCommand:
+        arguments:
+            $defaultEm: '@doctrine.orm.default_entity_manager'
+            $tenantEm:  '@doctrine.orm.tenant_entity_manager'
+
+    App\Command\RotateEncryptionKeyCommand:
+        arguments:
+            $em: '@doctrine.orm.tenant_entity_manager'
+
+    # ── Rate Limiter ──────────────────────────────────────────────────────────
+
+    App\EventListener\RateLimitListener:
+        arguments:
+            $loginLimiter:  '@limiter.login_limiter'
+            $apiLimiter:    '@limiter.api_limiter'
+            $exportLimiter: '@limiter.export_limiter'
 
     Doctrine\ORM\EntityManagerInterface:
         alias: doctrine.orm.tenant_entity_manager
@@ -85,4 +120,18 @@ services:
             $em: '@doctrine.orm.default_entity_manager'
         tags:
             - { name: console.command }
+
+    App\MessageHandler\BackupDatabaseHandler:
+        arguments:
+            $dbHost:     '%env(PGHOST)%'
+            $dbPort:     '%env(PGPORT)%'
+            $dbUser:     '%env(PGUSER)%'
+            $dbPassword: '%env(PGPASSWORD)%'
+            $s3Bucket:   '%env(default::AWS_S3_BUCKET)%'
+            $s3Region:   '%env(default::AWS_DEFAULT_REGION)%'
+
+    App\Scheduler\BackupSchedule:
+        arguments:
+            $defaultEm: '@doctrine.orm.default_entity_manager'
+            $cache:     '@cache.redis'
 
