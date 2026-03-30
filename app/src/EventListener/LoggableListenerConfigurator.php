@@ -4,16 +4,18 @@ declare(strict_types=1);
 
 namespace App\EventListener;
 
-use App\Entity\Tenant\Log\LogEntry;
 use Gedmo\Loggable\LoggableListener;
-use Symfony\Component\HttpKernel\Event\RequestEvent;
+use Symfony\Component\EventDispatcher\Attribute\AsEventListener;
+use Symfony\Component\HttpKernel\Event\ControllerEvent;
+use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\Security\Core\Authentication\Token\Storage\TokenStorageInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
 
 /**
- * Configura el LoggableListener de Gedmo para usar nuestra entidad
- * LogEntry personalizada y registra el usuario autenticado como autor.
+ * Registra el usuario autenticado en el LoggableListener de Gedmo
+ * justo antes de cada controller, cuando la sesión de seguridad ya está cargada.
  */
+#[AsEventListener(event: KernelEvents::CONTROLLER, priority: 0)]
 class LoggableListenerConfigurator
 {
     public function __construct(
@@ -21,13 +23,11 @@ class LoggableListenerConfigurator
         private readonly TokenStorageInterface $tokenStorage,
     ) {}
 
-    public function onKernelRequest(RequestEvent $event): void
+    public function __invoke(ControllerEvent $event): void
     {
         if (!$event->isMainRequest()) {
             return;
         }
-
-        $this->loggableListener->setDefaultLogEntryClass(LogEntry::class);
 
         $token = $this->tokenStorage->getToken();
         if ($token !== null && $token->getUser() instanceof UserInterface) {
