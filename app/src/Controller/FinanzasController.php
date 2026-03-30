@@ -13,6 +13,7 @@ use App\Form\FacturaType;
 use App\Form\LiquidacionType;
 use App\Repository\FacturaRepository;
 use App\Repository\LiquidacionMensualRepository;
+use App\Service\ExportService;
 use App\Service\FinanzasService;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -32,6 +33,7 @@ class FinanzasController extends AbstractController
         private readonly LiquidacionMensualRepository $liquidacionRepository,
         private readonly FacturaRepository $facturaRepository,
         private readonly PaginatorInterface $paginator,
+        private readonly ExportService $exportService,
     ) {}
 
     // ─── Dashboard ────────────────────────────────────────────────────────────
@@ -171,6 +173,29 @@ class FinanzasController extends AbstractController
             'estados'      => EstadoFactura::cases(),
             'filtroEstado' => $request->query->get('estado', ''),
         ]);
+    }
+
+    #[Route('/facturas/exportar', name: 'facturas_exportar', methods: ['GET'])]
+    public function facturasExportar(Request $request): Response
+    {
+        $anio   = $request->query->getInt('anio', (int) date('Y'));
+        $estado = EstadoFactura::tryFrom($request->query->get('estado', ''));
+
+        $facturas = $this->facturaRepository
+            ->findQueryBuilder($anio, $estado ?: null)
+            ->getQuery()
+            ->getResult();
+
+        $csv      = $this->exportService->exportarFacturasCsv($facturas);
+        $filename = sprintf('facturas_%d.csv', $anio);
+
+        $response = new StreamedResponse(fn() => print($csv));
+        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
+        $response->headers->set('Content-Disposition', HeaderUtils::makeDisposition(
+            HeaderUtils::DISPOSITION_ATTACHMENT, $filename
+        ));
+
+        return $response;
     }
 
     #[Route('/facturas/nueva', name: 'factura_nueva', methods: ['GET', 'POST'])]

@@ -8,13 +8,16 @@ use App\Entity\Tenant\Turno;
 use App\Form\ReemplazoType;
 use App\Form\TurnoType;
 use App\Repository\TurnoRepository;
+use App\Service\ExportService;
 use App\Service\TurnoService;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -27,12 +30,32 @@ class TurnoController extends AbstractController
         private readonly TurnoService $turnoService,
         private readonly EntityManagerInterface $em,
         private readonly PaginatorInterface $paginator,
+        private readonly ExportService $exportService,
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
         return $this->render('turno/index.html.twig');
+    }
+
+    #[Route('/exportar', name: 'exportar', methods: ['GET'])]
+    public function exportar(Request $request): Response
+    {
+        $desde = new \DateTime($request->query->getString('desde', 'first day of this month'));
+        $hasta = new \DateTime($request->query->getString('hasta', 'last day of this month'));
+
+        $turnos   = $this->repository->findByRangoFecha($desde, $hasta);
+        $csv      = $this->exportService->exportarTurnosCsv($turnos);
+        $filename = sprintf('turnos_%s_%s.csv', $desde->format('Ymd'), $hasta->format('Ymd'));
+
+        $response = new StreamedResponse(fn() => print($csv));
+        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
+        $response->headers->set('Content-Disposition', HeaderUtils::makeDisposition(
+            HeaderUtils::DISPOSITION_ATTACHMENT, $filename
+        ));
+
+        return $response;
     }
 
     #[Route('/nuevo', name: 'new', methods: ['GET', 'POST'])]

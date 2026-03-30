@@ -14,11 +14,14 @@ use App\Form\ComunicacionType;
 use App\Form\PacienteType;
 use App\Repository\MandanteRepository;
 use App\Repository\PacienteRepository;
+use App\Service\ExportService;
 use App\Service\PacienteService;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\HttpFoundation\HeaderUtils;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Symfony\Component\Routing\Attribute\Route;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
@@ -31,6 +34,7 @@ class PacienteController extends AbstractController
         private readonly PacienteRepository $pacienteRepository,
         private readonly MandanteRepository $mandanteRepository,
         private readonly PaginatorInterface $paginator,
+        private readonly ExportService $exportService,
     ) {}
 
     #[Route('', name: 'app_paciente_index', methods: ['GET'])]
@@ -53,6 +57,31 @@ class PacienteController extends AbstractController
             'filtros'    => compact('estado', 'mandanteId', 'tipoServicio'),
             'estados'    => EstadoPaciente::cases(),
         ]);
+    }
+
+    #[Route('/exportar', name: 'app_paciente_exportar', methods: ['GET'])]
+    #[IsGranted('ROLE_COORDINADOR')]
+    public function exportar(Request $request): Response
+    {
+        $estado       = $request->query->getString('estado', '');
+        $mandanteId   = $request->query->getString('mandante', '');
+        $tipoServicio = $request->query->getString('tipo', '');
+
+        $pacientes = $this->pacienteRepository
+            ->findQueryBuilder($estado ?: null, $mandanteId ?: null, $tipoServicio ?: null)
+            ->getQuery()
+            ->getResult();
+
+        $csv      = $this->exportService->exportarPacientesCsv($pacientes);
+        $filename = 'pacientes_' . date('Ymd') . '.csv';
+
+        $response = new StreamedResponse(fn() => print($csv));
+        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
+        $response->headers->set('Content-Disposition', HeaderUtils::makeDisposition(
+            HeaderUtils::DISPOSITION_ATTACHMENT, $filename
+        ));
+
+        return $response;
     }
 
     #[Route('/nuevo', name: 'app_paciente_new', methods: ['GET', 'POST'])]
