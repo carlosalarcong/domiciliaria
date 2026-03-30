@@ -53,6 +53,16 @@ class FacturaType extends AbstractType
                 'required' => false,
                 'mapped'   => false,
             ])
+            ->add('descuentoPorTurnoDescubierto', MoneyType::class, [
+                'label'    => 'Descuento por turno descubierto ($)',
+                'currency' => 'CLP',
+                'divisor'  => 1,
+                'data'     => 0,
+                'mapped'   => false,
+                'required' => false,
+                'attr'     => ['min' => 0],
+                'help'     => 'El sistema contará los turnos descubiertos del período y aplicará este monto como descuento por cada uno. Dejar en 0 para no aplicar descuento.',
+            ])
             ->add('observaciones', TextareaType::class, [
                 'label'    => 'Observaciones',
                 'required' => false,

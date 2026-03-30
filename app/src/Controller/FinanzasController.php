@@ -207,12 +207,13 @@ class FinanzasController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $factura = $this->finanzasService->generarFactura(
-                mandante:      $form->get('mandante')->getData(),
-                anio:          $form->get('anio')->getData(),
-                mes:           $form->get('mes')->getData(),
-                montoNeto:     (float) $form->get('montoNeto')->getData(),
-                creadoPor:     $this->getUser(),
-                numeroFactura: $form->get('numeroFactura')->getData(),
+                mandante:                      $form->get('mandante')->getData(),
+                anio:                          $form->get('anio')->getData(),
+                mes:                           $form->get('mes')->getData(),
+                montoNeto:                     (float) $form->get('montoNeto')->getData(),
+                creadoPor:                     $this->getUser(),
+                numeroFactura:                 $form->get('numeroFactura')->getData(),
+                descuentoPorTurnoDescubierto:  (float) ($form->get('descuentoPorTurnoDescubierto')->getData() ?? 0),
             );
 
             if ($form->get('porcentajeIva')->getData() !== null) {
