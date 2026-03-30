@@ -135,6 +135,9 @@ class TurnoRepository extends ServiceEntityRepository
      */
     public function reportePorPaciente(int $anio): array
     {
+        $desde = new \DateTime("{$anio}-01-01");
+        $hasta = new \DateTime("{$anio}-12-31");
+
         return $this->createQueryBuilder('t')
             ->select(
                 'IDENTITY(t.paciente) as paciente_id',
@@ -145,8 +148,9 @@ class TurnoRepository extends ServiceEntityRepository
                 'COUNT(t.id) as total',
             )
             ->leftJoin('t.paciente', 'p')
-            ->where('YEAR(t.fecha) = :anio')
-            ->setParameter('anio', $anio)
+            ->where('t.fecha BETWEEN :desde AND :hasta')
+            ->setParameter('desde', $desde)
+            ->setParameter('hasta', $hasta)
             ->groupBy('t.paciente, p.nombres, p.apellidos, t.estado, t.tipoTurno')
             ->orderBy('p.apellidos', 'ASC')
             ->addOrderBy('p.nombres', 'ASC')
