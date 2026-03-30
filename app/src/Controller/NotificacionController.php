@@ -13,7 +13,6 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;
-use Symfony\Component\Security\Csrf\CsrfTokenManagerInterface;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 #[Route('/notificaciones', name: 'app_notificacion_')]
@@ -24,7 +23,6 @@ class NotificacionController extends AbstractController
         private readonly NotificacionRepository $repository,
         private readonly NotificacionService $service,
         private readonly EntityManagerInterface $em,
-        private readonly CsrfTokenManagerInterface $csrfTokenManager,
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -110,7 +108,6 @@ class NotificacionController extends AbstractController
         return $this->json([
             'count'          => $this->repository->countNoLeidasByUser($user),
             'notificaciones' => $data,
-            'csrfToken'      => $this->csrfTokenManager->getToken('notif_leer')->getValue(),
         ]);
     }
 }

@@ -118,6 +118,7 @@
     const badge = document.getElementById('notif-badge');
     const list  = document.getElementById('notif-list');
     const bell  = document.getElementById('bellDropdown');
+    const csrfNotifLeer = '{{ csrf_token('notif_leer') }}';
     if (!bell) return;
 
     function iconClass(tipo) {
@@ -169,7 +170,7 @@
                         <div class="flex-shrink-0 d-flex flex-column align-items-end gap-1">
                             <span class="text-muted" style="font-size:.7rem">${n.creadoEn}</span>
                             <form method="post" action="/notificaciones/${n.id}/leer" style="margin:0">
-                                <input type="hidden" name="_token" value="${data.csrfToken}">
+                                <input type="hidden" name="_token" value="${csrfNotifLeer}">
                                 <button type="submit" class="btn btn-primary btn-sm py-0 px-2" style="font-size:.7rem">
                                     ${n.url ? 'Ver' : 'Leída'}
                                 </button>
