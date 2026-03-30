@@ -13,6 +13,13 @@ security:
         dev:
             pattern: ^/(_(profiler|wdt)|css|images|js)/
             security: false
+        api:
+            pattern: ^/api/
+            stateless: true
+            custom_authenticators:
+                - App\Security\ApiTokenAuthenticator
+            entry_point: App\Security\ApiAuthenticationEntryPoint
+            access_denied_handler: App\Security\ApiAccessDeniedHandler
         main:
             lazy: true
             provider: app_user_provider
@@ -34,6 +41,7 @@ security:
     access_control:
         - { path: ^/login, roles: PUBLIC_ACCESS }
         - { path: ^/reset-password, roles: PUBLIC_ACCESS }
+        - { path: ^/api/, roles: ROLE_API }
         - { path: ^/, roles: ROLE_USER }
 
     role_hierarchy:
