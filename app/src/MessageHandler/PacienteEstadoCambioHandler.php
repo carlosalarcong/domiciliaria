@@ -6,10 +6,12 @@ namespace App\MessageHandler;
 
 use App\Message\PacienteEstadoCambioMessage;
 use App\Repository\UserRepository;
+use App\Service\NotificacionService;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Mime\Email;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[AsMessageHandler]
 final class PacienteEstadoCambioHandler
@@ -18,6 +20,8 @@ final class PacienteEstadoCambioHandler
         private readonly UserRepository $userRepository,
         private readonly MailerInterface $mailer,
         private readonly LoggerInterface $logger,
+        private readonly NotificacionService $notificacionService,
+        private readonly UrlGeneratorInterface $urlGenerator,
     ) {}
 
     public function __invoke(PacienteEstadoCambioMessage $message): void
@@ -55,6 +59,15 @@ final class PacienteEstadoCambioHandler
         $destinatarios = array_merge(
             $this->userRepository->findByRol('ROLE_ADMIN'),
             $this->userRepository->findByRol('ROLE_COORDINADOR'),
+        );
+
+        $url = $this->urlGenerator->generate('app_paciente_show', ['id' => $message->pacienteId], UrlGeneratorInterface::ABSOLUTE_PATH);
+        $this->notificacionService->crearParaVarios(
+            $destinatarios,
+            'paciente_estado',
+            "Cambio de estado — {$message->pacienteNombre}",
+            "{$estadoAnteriorLabel} → {$estadoNuevoLabel}",
+            $url,
         );
 
         foreach ($destinatarios as $usuario) {

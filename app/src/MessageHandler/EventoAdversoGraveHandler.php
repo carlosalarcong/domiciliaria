@@ -6,10 +6,12 @@ namespace App\MessageHandler;
 
 use App\Message\EventoAdversoGraveMessage;
 use App\Repository\UserRepository;
+use App\Service\NotificacionService;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Mime\Email;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 
 #[AsMessageHandler]
 final class EventoAdversoGraveHandler
@@ -18,6 +20,8 @@ final class EventoAdversoGraveHandler
         private readonly UserRepository $userRepository,
         private readonly MailerInterface $mailer,
         private readonly LoggerInterface $logger,
+        private readonly NotificacionService $notificacionService,
+        private readonly UrlGeneratorInterface $urlGenerator,
     ) {}
 
     public function __invoke(EventoAdversoGraveMessage $message): void
@@ -32,6 +36,15 @@ final class EventoAdversoGraveHandler
         $destinatarios = array_merge(
             $this->userRepository->findByRol('ROLE_ADMIN'),
             $this->userRepository->findByRol('ROLE_COORDINADOR'),
+        );
+
+        $url = $this->urlGenerator->generate('app_evento_show', ['id' => $message->eventoId], UrlGeneratorInterface::ABSOLUTE_PATH);
+        $this->notificacionService->crearParaVarios(
+            $destinatarios,
+            'evento_grave',
+            "Evento {$message->gravedad} — {$message->pacienteNombre}",
+            "{$message->tipo} · {$message->fecha}",
+            $url,
         );
 
         foreach ($destinatarios as $usuario) {
