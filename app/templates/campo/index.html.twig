@@ -1,0 +1,127 @@
+{% extends 'base_campo.html.twig' %}
+{% block title %}Mis Turnos Hoy{% endblock %}
+{% block header_title %}Mis Turnos — {{ hoy|date('d/m') }}{% endblock %}
+
+{% block content %}
+
+{# ── Sin trabajador vinculado ── #}
+{% if trabajador is null %}
+<div class="text-center py-5">
+    <div style="font-size:3.5rem">🔗</div>
+    <h5 class="mt-3 fw-bold">Sin perfil de trabajador</h5>
+    <p class="text-muted px-4">Tu usuario no está vinculado a un perfil de personal. Contacta al administrador.</p>
+</div>
+
+{# ── Sin turnos hoy ── #}
+{% elseif turnos is empty %}
+<div class="text-center py-5">
+    <div style="font-size:3.5rem">✅</div>
+    <h5 class="mt-3 fw-bold">Sin turnos hoy</h5>
+    <p class="text-muted px-4">No tienes turnos asignados para el día de hoy.</p>
+</div>
+
+{% else %}
+
+{# ── KPI strip ── #}
+<div class="d-flex gap-2 mb-4">
+    <div class="flex-fill text-center bg-white rounded-3 py-3 shadow-sm">
+        <div class="fw-bold fs-4">{{ turnos|length }}</div>
+        <div class="text-muted" style="font-size:.75rem">Total</div>
+    </div>
+    <div class="flex-fill text-center bg-white rounded-3 py-3 shadow-sm">
+        <div class="fw-bold fs-4 text-warning">{{ enCurso }}</div>
+        <div class="text-muted" style="font-size:.75rem">En curso</div>
+    </div>
+    <div class="flex-fill text-center bg-white rounded-3 py-3 shadow-sm">
+        <div class="fw-bold fs-4 text-success">{{ completados }}</div>
+        <div class="text-muted" style="font-size:.75rem">Completados</div>
+    </div>
+    <div class="flex-fill text-center bg-white rounded-3 py-3 shadow-sm">
+        <div class="fw-bold fs-4 {{ (turnos|length - completados) > 0 ? 'text-danger' : 'text-muted' }}">
+            {{ turnos|length - completados }}
+        </div>
+        <div class="text-muted" style="font-size:.75rem">Pendientes</div>
+    </div>
+</div>
+
+{# ── Lista de turnos ── #}
+{% for turno in turnos %}
+    {% set completado = turno.registroTermino is not null %}
+    {% set iniciado   = turno.registroInicio is not null and not completado %}
+    {% set pendiente  = turno.registroInicio is null %}
+
+    <a href="{{ path('app_campo_turno', {id: turno.id}) }}" class="turno-card">
+        {# Barra de color superior #}
+        <div class="turno-card-status
+            {{ completado ? 'bg-success' : (iniciado ? 'bg-warning' : 'bg-secondary') }}">
+        </div>
+
+        <div class="turno-card-body">
+            {# Hora + estado #}
+            <div class="d-flex justify-content-between align-items-start mb-2">
+                <span class="time-badge">
+                    <i class="bi bi-clock me-1"></i>
+                    {{ turno.horaInicio ? turno.horaInicio|date('H:i') : '—' }}
+                    {% if turno.horaTermino %}
+                        → {{ turno.horaTermino|date('H:i') }}
+                    {% endif %}
+                </span>
+                {% if completado %}
+                    <span class="estado-pill bg-success text-white">
+                        <i class="bi bi-check-circle-fill me-1"></i>Completado
+                    </span>
+                {% elseif iniciado %}
+                    <span class="estado-pill bg-warning text-dark">
+                        <i class="bi bi-play-circle-fill me-1"></i>En curso
+                    </span>
+                {% else %}
+                    <span class="estado-pill bg-light text-muted border">
+                        <i class="bi bi-hourglass me-1"></i>Pendiente
+                    </span>
+                {% endif %}
+            </div>
+
+            {# Paciente #}
+            <div class="fw-bold fs-5 mb-1">
+                {{ turno.paciente ? turno.paciente.nombreCompleto : 'Sin paciente asignado' }}
+            </div>
+
+            {# Dirección #}
+            {% if turno.paciente and turno.paciente.direccion %}
+            <div class="text-muted small d-flex align-items-center gap-1">
+                <i class="bi bi-geo-alt"></i>
+                {{ turno.paciente.direccion }}, {{ turno.paciente.comuna }}
+            </div>
+            {% endif %}
+
+            {# Tipo de turno #}
+            <div class="mt-2">
+                <span class="badge bg-light text-dark border" style="font-size:.75rem">
+                    {{ turno.tipoTurno.etiqueta() }}
+                </span>
+            </div>
+
+            {# Acción rápida ── solo botón de iniciar si está pendiente #}
+            {% if pendiente %}
+            <div class="mt-3" onclick="event.preventDefault()">
+                <form method="post" action="{{ path('app_campo_turno_iniciar', {id: turno.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('campo_' ~ turno.id) }}">
+                    <button type="submit" class="btn-campo btn-iniciar">
+                        <i class="bi bi-play-circle-fill"></i> Iniciar turno
+                    </button>
+                </form>
+            </div>
+            {% elseif iniciado %}
+            <div class="mt-3 text-muted small d-flex align-items-center gap-1">
+                <i class="bi bi-clock-history text-warning"></i>
+                Iniciado a las {{ turno.registroInicio|date('H:i') }} — toca para finalizar
+            </div>
+            {% endif %}
+        </div>
+    </a>
+{% endfor %}
+{% endif %}
+
+{# Espacio extra al final #}
+<div style="height: 1rem"></div>
+{% endblock %}
