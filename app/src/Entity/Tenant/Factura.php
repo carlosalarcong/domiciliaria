@@ -38,8 +38,17 @@ class Factura
     #[ORM\Column(type: 'integer')]
     private int $totalTurnos = 0;
 
+    #[ORM\Column(type: 'integer')]
+    private int $turnosDescubiertos = 0;
+
     #[ORM\Column(type: 'decimal', precision: 12, scale: 2)]
     private string $montoNeto = '0.00';
+
+    #[ORM\Column(type: 'decimal', precision: 12, scale: 2)]
+    private string $montoDescuento = '0.00';
+
+    #[ORM\Column(type: 'string', length: 255, nullable: true)]
+    private ?string $descripcionDescuento = null;
 
     #[ORM\Column(type: 'decimal', precision: 5, scale: 2)]
     private string $porcentajeIva = '19.00';
@@ -100,8 +109,19 @@ class Factura
     public function getTotalTurnos(): int { return $this->totalTurnos; }
     public function setTotalTurnos(int $t): static { $this->totalTurnos = $t; return $this; }
 
+    public function getTurnosDescubiertos(): int { return $this->turnosDescubiertos; }
+    public function setTurnosDescubiertos(int $t): static { $this->turnosDescubiertos = $t; return $this; }
+
     public function getMontoNeto(): string { return $this->montoNeto; }
     public function setMontoNeto(string $m): static { $this->montoNeto = $m; return $this; }
+
+    public function getMontoDescuento(): string { return $this->montoDescuento; }
+    public function setMontoDescuento(string $m): static { $this->montoDescuento = $m; return $this; }
+
+    public function getDescripcionDescuento(): ?string { return $this->descripcionDescuento; }
+    public function setDescripcionDescuento(?string $d): static { $this->descripcionDescuento = $d; return $this; }
+
+    public function tieneDescuento(): bool { return (float) $this->montoDescuento > 0; }
 
     public function getPorcentajeIva(): string { return $this->porcentajeIva; }
     public function setPorcentajeIva(string $p): static { $this->porcentajeIva = $p; return $this; }
@@ -133,9 +153,11 @@ class Factura
 
     public function recalcularIva(): void
     {
-        $neto  = (float) $this->montoNeto;
-        $iva   = round($neto * ((float) $this->porcentajeIva / 100), 2);
+        $neto      = (float) $this->montoNeto;
+        $descuento = (float) $this->montoDescuento;
+        $base      = max(0.0, $neto - $descuento);
+        $iva       = round($base * ((float) $this->porcentajeIva / 100), 2);
         $this->montoIva   = number_format($iva, 2, '.', '');
-        $this->montoTotal = number_format($neto + $iva, 2, '.', '');
+        $this->montoTotal = number_format($base + $iva, 2, '.', '');
     }
 }

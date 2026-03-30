@@ -12,6 +12,7 @@ use App\Repository\PacienteRepository;
 use App\Service\PacienteService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 class PacienteServiceTest extends TestCase
 {
@@ -20,9 +21,10 @@ class PacienteServiceTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->em   = $this->createMock(EntityManagerInterface::class);
-        $repo       = $this->createMock(PacienteRepository::class);
-        $this->service = new PacienteService($this->em, $repo);
+        $this->em      = $this->createMock(EntityManagerInterface::class);
+        $repo          = $this->createMock(PacienteRepository::class);
+        $bus           = $this->createMock(MessageBusInterface::class);
+        $this->service = new PacienteService($this->em, $repo, $bus);
     }
 
     public function testRegistrarPersistePaciente(): void

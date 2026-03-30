@@ -144,6 +144,7 @@ class FinanzasService
         float $montoNeto,
         User $creadoPor,
         ?string $numeroFactura = null,
+        float $descuentoPorTurnoDescubierto = 0.0,
     ): Factura {
         $factura = new Factura($anio, $mes);
         $factura->setMandante($mandante)
@@ -151,11 +152,36 @@ class FinanzasService
                 ->setMontoNeto(number_format($montoNeto, 2, '.', ''))
                 ->setCreadoPor($creadoPor);
 
-        // Calcular totales del período (turnos completados de pacientes del mandante)
+        // Calcular totales del período (turnos del mandante)
         $desde  = new \DateTime("{$anio}-{$mes}-01");
         $hasta  = (clone $desde)->modify('last day of this month');
         $turnos = $this->turnoRepository->findByMandanteYRango($mandante, $desde, $hasta);
-        $factura->setTotalTurnos(count(array_filter($turnos, fn($t) => $t->getEstado() === EstadoTurno::COMPLETADO)));
+
+        $completados  = 0;
+        $descubiertos = 0;
+        foreach ($turnos as $turno) {
+            if ($turno->getEstado() === EstadoTurno::COMPLETADO) {
+                $completados++;
+            } elseif ($turno->getEstado() === EstadoTurno::DESCUBIERTO) {
+                $descubiertos++;
+            }
+        }
+
+        $factura->setTotalTurnos($completados)
+                ->setTurnosDescubiertos($descubiertos);
+
+        // Descuento automático por turnos descubiertos
+        if ($descubiertos > 0 && $descuentoPorTurnoDescubierto > 0.0) {
+            $montoDescuento = $descubiertos * $descuentoPorTurnoDescubierto;
+            $factura->setMontoDescuento(number_format($montoDescuento, 2, '.', ''))
+                    ->setDescripcionDescuento(sprintf(
+                        'Descuento por %d turno%s descubierto%s ($%s c/u)',
+                        $descubiertos,
+                        $descubiertos > 1 ? 's' : '',
+                        $descubiertos > 1 ? 's' : '',
+                        number_format($descuentoPorTurnoDescubierto, 0, ',', '.'),
+                    ));
+        }
 
         $factura->recalcularIva();
         $this->em->persist($factura);
