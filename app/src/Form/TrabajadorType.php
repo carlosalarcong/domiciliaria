@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Form;
 
-use App\Entity\Trabajador;
-use App\Entity\User;
+use App\Entity\Tenant\Trabajador;
+use App\Entity\Tenant\User;
 use App\Enum\EstadoTrabajador;
 use App\Enum\PerfilTrabajador;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
