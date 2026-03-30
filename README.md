@@ -142,6 +142,7 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 ### Fase 5 — Eventos Adversos
 - Registro de incidentes clínicos con 8 tipos y 4 niveles de gravedad (leve/moderado/grave/crítico)
 - Ciclo de vida: `Abierto` → `En proceso` → `Cerrado`
+- **Asignación de responsable**: campo `responsable` (admin/coordinador) en el evento; al asignar o cambiar responsable se envía notificación in-app y email automáticamente
 - **Timeline de seguimiento** con notas cronológicas por autor
 - **Notificación automática** por email a admins/coordinadores en eventos Grave o Crítico (Messenger)
 - Index con contadores de estado y filtros por gravedad/estado
@@ -164,6 +165,10 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 - Ciclo de vida: `Borrador` → `Emitida` → `Pagada` (con fecha de vencimiento automática)
 - Dashboard de finanzas con resumen de montos por estado (liquidaciones y facturas)
 - Listas paginadas con filtros por año y estado
+- **Reportes financieros** (`/finanzas/reportes`): tres vistas con gráficos (Chart.js):
+  - **Por mandante**: tabla neto/total/cobrado/pendiente por mandante + gráfico doughnut de distribución
+  - **Por trabajador**: tabla liquidaciones/total/pagado/pendiente + gráfico de barras horizontal (top 8)
+  - **Flujo mensual**: gráfico de líneas ingresos vs egresos + tabla mes a mes con saldo acumulado
 - Permisos granulares: `FINANZAS_VER` y `FINANZAS_EDITAR` (FinanzasVoter)
 
 #### Cómo se llena el módulo de Finanzas
@@ -224,6 +229,23 @@ Todas las respuestas son JSON. Los errores de autenticación devuelven `401`, lo
 docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console app:api:generar-token demo 'Sistema ERP' --permisos=pacientes,turnos"
 ```
 El token se muestra una sola vez — almacenarlo de forma segura. El sistema guarda únicamente su hash SHA-256.
+
+### Notificaciones in-app
+
+Bell con badge en el header que se actualiza cada 60 segundos. Al hacer clic despliega las últimas 5 notificaciones no leídas con botón de acción directo.
+
+**Eventos que generan notificación in-app** (además del email existente):
+
+| Evento | Destinatarios |
+|--------|--------------|
+| Turno descubierto | Admins y coordinadores |
+| Evento adverso grave/crítico | Admins y coordinadores |
+| Cambio de estado de paciente | Admins y coordinadores |
+| Responsable asignado a evento | El responsable asignado |
+
+- Panel completo en `/notificaciones` con historial reciente y botón "Marcar todas como leídas"
+- Notificaciones con color e ícono según tipo, fondo resaltado mientras no se lean
+- Endpoint JSON `/notificaciones/count` y `/notificaciones/recientes` para el header
 
 ### Importación masiva desde CSV
 
@@ -338,6 +360,10 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 - [x] **Fase 9** — API REST pública con autenticación por token y permisos granulares
 - [x] **Fase 10** — Importación masiva de pacientes y trabajadores desde CSV
 - [x] **Fase 11** — Notificación por cambio de estado de paciente y descuento automático en factura por turnos descubiertos
+- [x] **Fase 12** — Dashboard con datos reales (KPIs, turnos del día, alertas activas)
+- [x] **Fase 13** — Asignación de responsable en evento adverso con notificación automática
+- [x] **Fase 14** — Reportes financieros con gráficos (por mandante, por trabajador, flujo mensual)
+- [x] **Fase 15** — Notificaciones in-app con badge/bell en el header
 
 ## Notas técnicas
 
