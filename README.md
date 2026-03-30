@@ -194,6 +194,51 @@ Después se puede **Emitir** (genera fecha de vencimiento a 30 días) y **Marcar
 
 Los datos de prueba (`doctrine:fixtures:load`) incluyen liquidaciones y facturas de ejemplo en distintos estados.
 
+### Exportación CSV masiva
+
+- **Exportar pacientes** (`/pacientes/exportar`): descarga el listado completo de pacientes en formato CSV compatible con Excel (UTF-8 BOM, separador `;`), respetando los mismos filtros activos de la vista de listado (estado, mandante, tipo de servicio). Incluye 17 columnas: datos personales, servicio, mandante, fechas, dirección, y datos del tutor.
+- **Exportar turnos** (`/turnos/exportar`): descarga turnos filtrados por rango de fechas (`desde`/`hasta`, por defecto el mes actual). Incluye 12 columnas: fecha, horario, paciente, trabajador, tipo, estado, asistencia e incidencias.
+- **Exportar facturas** (`/finanzas/facturas/exportar`): descarga facturas filtradas por año y estado. Incluye 12 columnas: número, mandante, período, montos (neto, IVA, total), estado y fechas de emisión/vencimiento/pago.
+
+### API REST pública
+
+Endpoints disponibles bajo `/api/v1/`, autenticados mediante el header `X-API-KEY`. Cada token tiene permisos granulares por recurso.
+
+| Endpoint | Permiso requerido | Descripción |
+|----------|------------------|-------------|
+| `GET /api/v1/pacientes` | `pacientes` | Listado paginado con filtros por estado, mandante y tipo de servicio |
+| `GET /api/v1/pacientes/{id}` | `pacientes` | Detalle de un paciente con ficha clínica completa |
+| `GET /api/v1/turnos` | `turnos` | Turnos filtrados por rango de fechas (`?desde=&hasta=`) |
+| `GET /api/v1/trabajadores` | `trabajadores` | Listado de personal con perfil, estado, email y teléfono |
+| `GET /api/v1/trabajadores/{id}` | `trabajadores` | Detalle de un trabajador |
+| `GET /api/v1/liquidaciones` | `liquidaciones` | Liquidaciones filtradas por año y mes |
+| `GET /api/v1/facturas` | `facturas` | Facturas filtradas por año y estado |
+
+Todas las respuestas son JSON. Los errores de autenticación devuelven `401`, los de autorización `403`. Los datos sensibles como RUT son retornados ya descifrados.
+
+**Generar un token de API:**
+```bash
+docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console app:api:generar-token demo 'Sistema ERP' --permisos=pacientes,turnos"
+```
+El token se muestra una sola vez — almacenarlo de forma segura. El sistema guarda únicamente su hash SHA-256.
+
+### Importación masiva desde CSV
+
+Permite cargar pacientes y trabajadores en lote desde un archivo CSV (separador `;`, codificación UTF-8). Accesible desde `/import` exclusivamente para `ROLE_ADMIN`.
+
+**Características:**
+- Detección de duplicados por RUT (sin importar el formato: con/sin puntos, con/sin guión)
+- Validación fila por fila: campos obligatorios, tipo de servicio, perfil y mandante
+- Reporte detallado al finalizar: cantidad importada, omitida (ya existía) y filas con error con número de línea y motivo
+- Las filas válidas se importan aunque otras filas del mismo archivo tengan errores
+- Plantillas CSV descargables con columnas y ejemplo incluido
+
+**Columnas para pacientes:** `nombres`, `apellidos`, `rut`, `fecha_nacimiento`, `tipo_servicio`, `estado`, `mandante`, `fecha_ingreso`, `fecha_termino`, `direccion`, `comuna`, `region`, `telefono`, `tutor_nombre`, `tutor_telefono`, `tutor_relacion`
+
+**Columnas para trabajadores:** `nombres`, `apellidos`, `rut`, `perfil`, `email`, `telefono`, `direccion`, `estado`, `fecha_ingreso`
+
+---
+
 ## Estructura del proyecto
 
 ```
@@ -210,7 +255,8 @@ domiciliaria/
 │   │   │                           # UserController, MandanteController,
 │   │   │                           # PacienteController, TurnoController,
 │   │   │                           # TrabajadorController, EventoAdversoController,
-│   │   │                           # FinanzasController
+│   │   │                           # FinanzasController, ImportController
+│   │   ├── Controller/Api/         # ApiController (7 endpoints REST v1)
 │   │   ├── Entity/                 # User, Paciente, Mandante, Trabajador,
 │   │   │                           # Turno, DisponibilidadTrabajador, ...
 │   │   ├── Enum/                   # TipoTurno, EstadoTurno, TipoServicio, ...
@@ -228,13 +274,16 @@ domiciliaria/
 
 ## Roles y permisos
 
-| Rol | Turnos | Personal | Pacientes | Finanzas | Usuarios |
-|-----|--------|----------|-----------|----------|----------|
-| ROLE_ADMIN | ✅ CRUD | ✅ CRUD | ✅ | ✅ | ✅ |
-| ROLE_COORDINADOR | ✅ Crear/Editar | 👁 Ver | ✅ | ✅ | ❌ |
-| ROLE_ENFERMERA | 👁 Ver | 👁 Ver | ✅ | ❌ | ❌ |
-| ROLE_TENS | 👁 Ver | 👁 Ver | ❌ | ❌ | ❌ |
-| ROLE_VISUALIZADOR | 👁 Ver | 👁 Ver | ❌ | ❌ | ❌ |
+| Rol | Turnos | Personal | Pacientes | Finanzas | Usuarios | Exportar | Importar |
+|-----|--------|----------|-----------|----------|----------|----------|----------|
+| ROLE_ADMIN | ✅ CRUD | ✅ CRUD | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ROLE_COORDINADOR | ✅ Crear/Editar | 👁 Ver | ✅ | ✅ | ❌ | ✅ | ❌ |
+| ROLE_ENFERMERA | 👁 Ver | 👁 Ver | ✅ | ❌ | ❌ | ❌ | ❌ |
+| ROLE_TENS | 👁 Ver | 👁 Ver | ❌ | ❌ | ❌ | ❌ | ❌ |
+| ROLE_VISUALIZADOR | 👁 Ver | 👁 Ver | ❌ | ❌ | ❌ | ❌ | ❌ |
+| ROLE_API | — | — | — | — | — | — | — |
+
+> Los tokens de API tienen roles propios: `ROLE_API_PACIENTES`, `ROLE_API_TURNOS`, `ROLE_API_TRABAJADORES`, `ROLE_API_LIQUIDACIONES`, `ROLE_API_FACTURAS`. Se asignan al generar el token.
 
 ## Comandos útiles
 
@@ -265,6 +314,12 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 
 # Multi-tenant: recargar fixtures de un tenant (ID del tenant)
 docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console tenant:fixtures:load 1 --no-interaction"
+
+# API: generar token para un tenant (subdominio, nombre descriptivo, permisos opcionales)
+docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console app:api:generar-token demo 'Sistema ERP' --permisos=pacientes,turnos,trabajadores"
+
+# API: generar token con fecha de expiración
+docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console app:api:generar-token demo 'Token temporal' --permisos=pacientes --expires=2026-12-31"
 ```
 
 ## Fases del proyecto
@@ -276,6 +331,9 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 - [x] **Fase 5** — Módulo de Eventos Adversos
 - [x] **Fase 6** — Módulo de Finanzas y Facturación
 - [x] **Fase 7** — Arquitectura multi-tenant (hakam/multi-tenancy-bundle, BD aislada por clínica)
+- [x] **Fase 8** — Exportación CSV masiva de pacientes, turnos y facturas
+- [x] **Fase 9** — API REST pública con autenticación por token y permisos granulares
+- [x] **Fase 10** — Importación masiva de pacientes y trabajadores desde CSV
 
 ## Notas técnicas
 
