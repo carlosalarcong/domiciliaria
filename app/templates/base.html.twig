@@ -93,12 +93,43 @@
         .badge-rol-enfermera { background: #38a169; }
         .badge-rol-tens { background: #3182ce; }
         .badge-rol-visualizador { background: #718096; }
+
+        /* ── Sidebar overlay (mobile) ── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.45);
+            z-index: 1039;
+        }
+        .sidebar-overlay.show { display: block; }
+
+        /* ── Mobile responsive ── */
+        @media (max-width: 991.98px) {
+            .sidebar {
+                transform: translateX(calc(-1 * var(--sidebar-width)));
+            }
+            .sidebar.sidebar-open {
+                transform: translateX(0);
+                box-shadow: 4px 0 24px rgba(0,0,0,.35);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .top-header {
+                padding: 0 1rem;
+            }
+            .page-content {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
 
 {% if app.user %}
     {% include 'partials/sidebar.html.twig' %}
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <div class="main-content">
         {% include 'partials/header.html.twig' %}
         <div class="page-content">
@@ -113,6 +144,24 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 {% block javascripts %}{% endblock %}
 {% if app.user %}
+<script>
+(function () {
+    const toggle  = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (!toggle || !sidebar || !overlay) return;
+
+    function openSidebar()  { sidebar.classList.add('sidebar-open');    overlay.classList.add('show'); }
+    function closeSidebar() { sidebar.classList.remove('sidebar-open'); overlay.classList.remove('show'); }
+
+    toggle.addEventListener('click', () => sidebar.classList.contains('sidebar-open') ? closeSidebar() : openSidebar());
+    overlay.addEventListener('click', closeSidebar);
+
+    // Cerrar al navegar (links del sidebar)
+    sidebar.querySelectorAll('.sidebar-link').forEach(a => a.addEventListener('click', closeSidebar));
+})();
+</script>
+{% endif %}
 <script>
 (function () {
     const badge = document.getElementById('notif-badge');
