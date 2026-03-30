@@ -118,7 +118,7 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 - Gestión de usuarios con roles (`ROLE_ADMIN`, `ROLE_COORDINADOR`, `ROLE_ENFERMERA`, `ROLE_TENS`, `ROLE_VISUALIZADOR`)
 - Voters para permisos granulares
 - Audit log automático (Gedmo Loggable)
-- Dashboard principal
+- Dashboard con datos reales: 4 KPIs en tiempo real (pacientes activos, turnos del día con badge de descubiertos, eventos abiertos, trabajadores activos), tabla de turnos de hoy ordenada por urgencia, y panel de alertas activas (turnos descubiertos próximos 7 días, eventos graves/críticos sin cerrar, facturas vencidas)
 
 ### Fase 2 — Pacientes
 - CRUD de mandantes (empresas/entidades contratantes)
