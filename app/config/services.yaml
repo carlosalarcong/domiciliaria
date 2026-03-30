@@ -52,6 +52,10 @@ services:
         alias: doctrine.orm.tenant_entity_manager
         public: false
 
+    Gedmo\Loggable\LoggableListener:
+        alias: stof_doctrine_extensions.listener.loggable
+        public: false
+
     App\Service\TrabajadorService:
         arguments:
             $uploadDir: '%app.upload_dir%'
