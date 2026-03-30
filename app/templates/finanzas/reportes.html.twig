@@ -1,0 +1,421 @@
+{% extends 'base.html.twig' %}
+{% block title %}Reportes Financieros{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Reportes Financieros</h4>
+        <small class="text-muted">Análisis por mandante, trabajador y flujo mensual</small>
+    </div>
+    <a href="{{ path('app_finanzas_index') }}" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-left me-1"></i>Volver
+    </a>
+</div>
+
+{# ── Filtros ── #}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-center">
+            <div class="col-auto">
+                <select name="anio" class="form-select form-select-sm" onchange="this.form.submit()">
+                    {% for a in aniosDisponibles %}
+                        <option value="{{ a }}" {{ a == anio ? 'selected' : '' }}>{{ a }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-auto">
+                <div class="btn-group btn-group-sm" role="group">
+                    <a href="{{ path('app_finanzas_reportes', {anio: anio, tipo: 'mandante'}) }}"
+                       class="btn {{ tipo == 'mandante' ? 'btn-primary' : 'btn-outline-primary' }}">
+                        <i class="bi bi-building me-1"></i>Por mandante
+                    </a>
+                    <a href="{{ path('app_finanzas_reportes', {anio: anio, tipo: 'trabajador'}) }}"
+                       class="btn {{ tipo == 'trabajador' ? 'btn-primary' : 'btn-outline-primary' }}">
+                        <i class="bi bi-people me-1"></i>Por trabajador
+                    </a>
+                    <a href="{{ path('app_finanzas_reportes', {anio: anio, tipo: 'flujo'}) }}"
+                       class="btn {{ tipo == 'flujo' ? 'btn-primary' : 'btn-outline-primary' }}">
+                        <i class="bi bi-graph-up me-1"></i>Flujo mensual
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ══════════════════════════════════════════════════════════════
+   REPORTE 1: POR MANDANTE
+══════════════════════════════════════════════════════════════ #}
+{% if tipo == 'mandante' %}
+
+    {% if reporteMandante is empty %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center text-muted py-5">
+                <i class="bi bi-building fs-1 opacity-25 d-block mb-2"></i>
+                No hay facturas registradas para {{ anio }}.
+            </div>
+        </div>
+    {% else %}
+        {# Totales generales #}
+        {% set totalNeto     = reporteMandante|map(r => r.suma_neto)|reduce((carry, val) => carry + val, 0) %}
+        {% set totalImporte  = reporteMandante|map(r => r.suma_total)|reduce((carry, val) => carry + val, 0) %}
+        {% set totalPagado   = reporteMandante|map(r => r.suma_pagado)|reduce((carry, val) => carry + val, 0) %}
+        {% set totalPendiente= reporteMandante|map(r => r.suma_pendiente)|reduce((carry, val) => carry + val, 0) %}
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center py-3">
+                    <div class="fw-bold fs-4 text-primary">{{ totalImporte|number_format(0, ',', '.') }}</div>
+                    <div class="small text-muted">Total facturado {{ anio }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center py-3">
+                    <div class="fw-bold fs-4 text-success">{{ totalPagado|number_format(0, ',', '.') }}</div>
+                    <div class="small text-muted">Total cobrado</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center py-3">
+                    <div class="fw-bold fs-4 text-warning">{{ totalPendiente|number_format(0, ',', '.') }}</div>
+                    <div class="small text-muted">Por cobrar</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center py-3">
+                    <div class="fw-bold fs-4">{{ reporteMandante|length }}</div>
+                    <div class="small text-muted">Mandantes activos</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 fw-semibold py-3">
+                        <i class="bi bi-building me-2 text-primary"></i>Facturación por mandante — {{ anio }}
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3">Mandante</th>
+                                        <th class="text-end">Neto</th>
+                                        <th class="text-end">Total</th>
+                                        <th class="text-end">Cobrado</th>
+                                        <th class="text-end pe-3">Pendiente</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for row in reporteMandante %}
+                                <tr>
+                                    <td class="ps-3 fw-semibold">{{ row.nombre }}</td>
+                                    <td class="text-end text-muted small">{{ row.suma_neto|number_format(0, ',', '.') }}</td>
+                                    <td class="text-end fw-semibold">{{ row.suma_total|number_format(0, ',', '.') }}</td>
+                                    <td class="text-end text-success">{{ row.suma_pagado|number_format(0, ',', '.') }}</td>
+                                    <td class="text-end pe-3 {{ row.suma_pendiente > 0 ? 'text-warning fw-semibold' : 'text-muted' }}">
+                                        {{ row.suma_pendiente|number_format(0, ',', '.') }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                                <tfoot class="table-light fw-bold">
+                                    <tr>
+                                        <td class="ps-3">Total</td>
+                                        <td class="text-end">{{ totalNeto|number_format(0, ',', '.') }}</td>
+                                        <td class="text-end">{{ totalImporte|number_format(0, ',', '.') }}</td>
+                                        <td class="text-end text-success">{{ totalPagado|number_format(0, ',', '.') }}</td>
+                                        <td class="text-end pe-3 text-warning">{{ totalPendiente|number_format(0, ',', '.') }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0 fw-semibold py-3">
+                        <i class="bi bi-pie-chart me-2 text-primary"></i>Distribución por mandante
+                    </div>
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <canvas id="chartMandante" height="280"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+{# ══════════════════════════════════════════════════════════════
+   REPORTE 2: POR TRABAJADOR
+══════════════════════════════════════════════════════════════ #}
+{% elseif tipo == 'trabajador' %}
+
+    {% if reporteTrabajador is empty %}
+        <div class="card border-0 shadow-sm">
+            <div class="card-body text-center text-muted py-5">
+                <i class="bi bi-people fs-1 opacity-25 d-block mb-2"></i>
+                No hay liquidaciones registradas para {{ anio }}.
+            </div>
+        </div>
+    {% else %}
+        {% set totalEgresos  = reporteTrabajador|map(r => r.suma_total)|reduce((carry, val) => carry + val, 0) %}
+        {% set totalPagadoL  = reporteTrabajador|map(r => r.suma_pagado)|reduce((carry, val) => carry + val, 0) %}
+        {% set totalPendienteL = reporteTrabajador|map(r => r.suma_pendiente)|reduce((carry, val) => carry + val, 0) %}
+
+        <div class="row g-3 mb-4">
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center py-3">
+                    <div class="fw-bold fs-4 text-danger">{{ totalEgresos|number_format(0, ',', '.') }}</div>
+                    <div class="small text-muted">Total liquidado {{ anio }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center py-3">
+                    <div class="fw-bold fs-4 text-success">{{ totalPagadoL|number_format(0, ',', '.') }}</div>
+                    <div class="small text-muted">Total pagado</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center py-3">
+                    <div class="fw-bold fs-4 text-warning">{{ totalPendienteL|number_format(0, ',', '.') }}</div>
+                    <div class="small text-muted">Por pagar</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card border-0 shadow-sm text-center py-3">
+                    <div class="fw-bold fs-4">{{ reporteTrabajador|length }}</div>
+                    <div class="small text-muted">Trabajadores con liquidación</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="card border-0 shadow-sm">
+                    <div class="card-header bg-white border-0 fw-semibold py-3">
+                        <i class="bi bi-people me-2 text-danger"></i>Costo de personal — {{ anio }}
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th class="ps-3">Trabajador</th>
+                                        <th class="text-center">Liquidaciones</th>
+                                        <th class="text-end">Total</th>
+                                        <th class="text-end">Pagado</th>
+                                        <th class="text-end pe-3">Pendiente</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for row in reporteTrabajador %}
+                                <tr>
+                                    <td class="ps-3 fw-semibold">{{ row.nombre }}</td>
+                                    <td class="text-center text-muted small">{{ row.total_liquidaciones }}</td>
+                                    <td class="text-end fw-semibold">{{ row.suma_total|number_format(0, ',', '.') }}</td>
+                                    <td class="text-end text-success">{{ row.suma_pagado|number_format(0, ',', '.') }}</td>
+                                    <td class="text-end pe-3 {{ row.suma_pendiente > 0 ? 'text-warning fw-semibold' : 'text-muted' }}">
+                                        {{ row.suma_pendiente|number_format(0, ',', '.') }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                                </tbody>
+                                <tfoot class="table-light fw-bold">
+                                    <tr>
+                                        <td class="ps-3">Total</td>
+                                        <td></td>
+                                        <td class="text-end">{{ totalEgresos|number_format(0, ',', '.') }}</td>
+                                        <td class="text-end text-success">{{ totalPagadoL|number_format(0, ',', '.') }}</td>
+                                        <td class="text-end pe-3 text-warning">{{ totalPendienteL|number_format(0, ',', '.') }}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white border-0 fw-semibold py-3">
+                        <i class="bi bi-bar-chart me-2 text-danger"></i>Top trabajadores por costo
+                    </div>
+                    <div class="card-body d-flex align-items-center justify-content-center">
+                        <canvas id="chartTrabajador" height="280"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% endif %}
+
+{# ══════════════════════════════════════════════════════════════
+   REPORTE 3: FLUJO MENSUAL
+══════════════════════════════════════════════════════════════ #}
+{% else %}
+
+    <div class="card border-0 shadow-sm mb-4">
+        <div class="card-header bg-white border-0 fw-semibold py-3">
+            <i class="bi bi-graph-up me-2 text-primary"></i>Ingresos vs Egresos — {{ anio }}
+        </div>
+        <div class="card-body">
+            <canvas id="chartFlujo" height="100"></canvas>
+        </div>
+    </div>
+
+    <div class="card border-0 shadow-sm">
+        <div class="card-header bg-white border-0 fw-semibold py-3">
+            <i class="bi bi-table me-2 text-primary"></i>Detalle mensual
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th class="ps-3">Mes</th>
+                            <th class="text-end text-success">Ingresos (facturas cobradas)</th>
+                            <th class="text-end text-danger">Egresos (liquidaciones pagadas)</th>
+                            <th class="text-end pe-3">Saldo mensual</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for i in 1..12 %}
+                        {% set ing = flujoIngresos[i] ?? 0 %}
+                        {% set egr = flujoEgresos[i] ?? 0 %}
+                        {% set saldo = ing - egr %}
+                        <tr class="{{ ing == 0 and egr == 0 ? 'text-muted' : '' }}">
+                            <td class="ps-3 fw-semibold">{{ meses[i] }}</td>
+                            <td class="text-end text-success">{{ ing > 0 ? ing|number_format(0, ',', '.') : '—' }}</td>
+                            <td class="text-end text-danger">{{ egr > 0 ? egr|number_format(0, ',', '.') : '—' }}</td>
+                            <td class="text-end pe-3 fw-semibold {{ saldo > 0 ? 'text-success' : (saldo < 0 ? 'text-danger' : 'text-muted') }}">
+                                {{ ing > 0 or egr > 0 ? saldo|number_format(0, ',', '.') : '—' }}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                    <tfoot class="table-light fw-bold">
+                        {% set totalIng = flujoIngresos|reduce((carry, val) => carry + val, 0) %}
+                        {% set totalEgr = flujoEgresos|reduce((carry, val) => carry + val, 0) %}
+                        {% set totalSaldo = totalIng - totalEgr %}
+                        <tr>
+                            <td class="ps-3">Total {{ anio }}</td>
+                            <td class="text-end text-success">{{ totalIng|number_format(0, ',', '.') }}</td>
+                            <td class="text-end text-danger">{{ totalEgr|number_format(0, ',', '.') }}</td>
+                            <td class="text-end pe-3 {{ totalSaldo >= 0 ? 'text-success' : 'text-danger' }}">
+                                {{ totalSaldo|number_format(0, ',', '.') }}
+                            </td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+        </div>
+    </div>
+
+{% endif %}
+{% endblock %}
+
+{% block javascripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+Chart.defaults.font.family = "'Segoe UI', system-ui, sans-serif";
+Chart.defaults.color = '#6c757d';
+
+{% if tipo == 'mandante' and reporteMandante is not empty %}
+new Chart(document.getElementById('chartMandante'), {
+    type: 'doughnut',
+    data: {
+        labels: {{ reporteMandante|map(r => r.nombre)|json_encode|raw }},
+        datasets: [{
+            data: {{ reporteMandante|map(r => r.suma_total|round)|json_encode|raw }},
+            backgroundColor: [
+                '#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6',
+                '#06b6d4','#f97316','#84cc16','#ec4899','#6366f1'
+            ],
+            borderWidth: 2,
+            borderColor: '#fff',
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom', labels: { boxWidth: 12, padding: 10 } },
+            tooltip: {
+                callbacks: {
+                    label: ctx => ' $' + ctx.parsed.toLocaleString('es-CL')
+                }
+            }
+        }
+    }
+});
+{% endif %}
+
+{% if tipo == 'trabajador' and reporteTrabajador is not empty %}
+{% set topTrab = reporteTrabajador|slice(0, 8) %}
+new Chart(document.getElementById('chartTrabajador'), {
+    type: 'bar',
+    data: {
+        labels: {{ topTrab|map(r => r.nombre)|json_encode|raw }},
+        datasets: [{
+            label: 'Total liquidado',
+            data: {{ topTrab|map(r => r.suma_total|round)|json_encode|raw }},
+            backgroundColor: '#ef444480',
+            borderColor: '#ef4444',
+            borderWidth: 1,
+        },{
+            label: 'Pagado',
+            data: {{ topTrab|map(r => r.suma_pagado|round)|json_encode|raw }},
+            backgroundColor: '#10b98180',
+            borderColor: '#10b981',
+            borderWidth: 1,
+        }]
+    },
+    options: {
+        indexAxis: 'y',
+        responsive: true,
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+            x: {
+                ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'k' }
+            }
+        }
+    }
+});
+{% endif %}
+
+{% if tipo == 'flujo' %}
+new Chart(document.getElementById('chartFlujo'), {
+    type: 'line',
+    data: {
+        labels: ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'],
+        datasets: [{
+            label: 'Ingresos',
+            data: [{% for i in 1..12 %}{{ flujoIngresos[i] ?? 0 }}{% if not loop.last %},{% endif %}{% endfor %}],
+            borderColor: '#10b981',
+            backgroundColor: '#10b98120',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+        },{
+            label: 'Egresos',
+            data: [{% for i in 1..12 %}{{ flujoEgresos[i] ?? 0 }}{% if not loop.last %},{% endif %}{% endfor %}],
+            borderColor: '#ef4444',
+            backgroundColor: '#ef444420',
+            fill: true,
+            tension: 0.3,
+            pointRadius: 4,
+        }]
+    },
+    options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        plugins: { legend: { position: 'bottom' } },
+        scales: {
+            y: {
+                ticks: { callback: v => '$' + (v/1000).toFixed(0) + 'k' }
+            }
+        }
+    }
+});
+{% endif %}
+</script>
+{% endblock %}

@@ -36,6 +36,95 @@ class FinanzasController extends AbstractController
         private readonly ExportService $exportService,
     ) {}
 
+    // ─── Reportes ─────────────────────────────────────────────────────────────
+
+    #[Route('/reportes', name: 'reportes', methods: ['GET'])]
+    public function reportes(Request $request): Response
+    {
+        $anio = $request->query->getInt('anio', (int) date('Y'));
+        $tipo = $request->query->get('tipo', 'mandante');
+
+        $meses = ['', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+                      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+        $reporteMandante  = [];
+        $reporteTrabajador = [];
+        $flujoIngresos    = array_fill(1, 12, 0.0);
+        $flujoEgresos     = array_fill(1, 12, 0.0);
+
+        if ($tipo === 'mandante') {
+            $rows = $this->facturaRepository->reportePorMandante($anio);
+            foreach ($rows as $row) {
+                $id = (string) $row['id'];
+                if (!isset($reporteMandante[$id])) {
+                    $reporteMandante[$id] = [
+                        'nombre'           => $row['nombre'],
+                        'total_facturas'   => 0,
+                        'suma_neto'        => 0.0,
+                        'suma_iva'         => 0.0,
+                        'suma_total'       => 0.0,
+                        'suma_pagado'      => 0.0,
+                        'suma_pendiente'   => 0.0,
+                    ];
+                }
+                $reporteMandante[$id]['total_facturas'] += (int) $row['total_facturas'];
+                $reporteMandante[$id]['suma_neto']      += (float) $row['suma_neto'];
+                $reporteMandante[$id]['suma_iva']       += (float) $row['suma_iva'];
+                $reporteMandante[$id]['suma_total']     += (float) $row['suma_total'];
+                if ($row['estado']->value === 'PAGADA') {
+                    $reporteMandante[$id]['suma_pagado'] += (float) $row['suma_total'];
+                } else {
+                    $reporteMandante[$id]['suma_pendiente'] += (float) $row['suma_total'];
+                }
+            }
+            usort($reporteMandante, fn($a, $b) => $b['suma_total'] <=> $a['suma_total']);
+        }
+
+        if ($tipo === 'trabajador') {
+            $rows = $this->liquidacionRepository->reportePorTrabajador($anio);
+            foreach ($rows as $row) {
+                $id = (string) $row['id'];
+                if (!isset($reporteTrabajador[$id])) {
+                    $reporteTrabajador[$id] = [
+                        'nombre'              => trim($row['nombres'] . ' ' . $row['apellidos']),
+                        'total_liquidaciones' => 0,
+                        'suma_total'          => 0.0,
+                        'suma_pagado'         => 0.0,
+                        'suma_pendiente'      => 0.0,
+                    ];
+                }
+                $reporteTrabajador[$id]['total_liquidaciones'] += (int) $row['total_liquidaciones'];
+                $reporteTrabajador[$id]['suma_total']          += (float) $row['suma_total'];
+                if ($row['estado']->value === 'PAGADA') {
+                    $reporteTrabajador[$id]['suma_pagado'] += (float) $row['suma_total'];
+                } else {
+                    $reporteTrabajador[$id]['suma_pendiente'] += (float) $row['suma_total'];
+                }
+            }
+            usort($reporteTrabajador, fn($a, $b) => $b['suma_total'] <=> $a['suma_total']);
+        }
+
+        if ($tipo === 'flujo') {
+            foreach ($this->facturaRepository->reporteFlujoIngresos($anio) as $row) {
+                $flujoIngresos[(int) $row['mes']] = (float) $row['suma_total'];
+            }
+            foreach ($this->liquidacionRepository->reporteFlujoEgresos($anio) as $row) {
+                $flujoEgresos[(int) $row['mes']] = (float) $row['suma_total'];
+            }
+        }
+
+        return $this->render('finanzas/reportes.html.twig', [
+            'anio'              => $anio,
+            'tipo'              => $tipo,
+            'meses'             => $meses,
+            'reporteMandante'   => $reporteMandante,
+            'reporteTrabajador' => $reporteTrabajador,
+            'flujoIngresos'     => $flujoIngresos,
+            'flujoEgresos'      => $flujoEgresos,
+            'aniosDisponibles'  => range((int) date('Y'), (int) date('Y') - 3),
+        ]);
+    }
+
     // ─── Dashboard ────────────────────────────────────────────────────────────
 
     #[Route('', name: 'index', methods: ['GET'])]
