@@ -6,60 +6,68 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
         <h4 class="mb-0 fw-bold">Dashboard</h4>
-        <small class="text-muted">Resumen operativo del sistema</small>
+        <small class="text-muted">{{ "now"|date("d/m/Y") }}</small>
     </div>
     <span class="badge bg-primary fs-6">{{ app.user.rolEtiqueta }}</span>
 </div>
 
-<div class="row g-4 mb-4">
+{# ── KPIs ── #}
+<div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="rounded-3 bg-primary bg-opacity-10 p-3">
                     <i class="bi bi-people-fill text-primary fs-4"></i>
                 </div>
                 <div>
-                    <div class="h4 mb-0 fw-bold">—</div>
+                    <div class="h3 mb-0 fw-bold">{{ pacientesActivos }}</div>
                     <small class="text-muted">Pacientes activos</small>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
-                <div class="rounded-3 bg-success bg-opacity-10 p-3">
-                    <i class="bi bi-calendar-check text-success fs-4"></i>
+                <div class="rounded-3 p-3 {{ turnosDescubiertosHoy > 0 ? 'bg-danger bg-opacity-10' : 'bg-success bg-opacity-10' }}">
+                    <i class="bi bi-calendar-check fs-4 {{ turnosDescubiertosHoy > 0 ? 'text-danger' : 'text-success' }}"></i>
                 </div>
                 <div>
-                    <div class="h4 mb-0 fw-bold">—</div>
-                    <small class="text-muted">Turnos hoy</small>
+                    <div class="h3 mb-0 fw-bold">{{ totalTurnosHoy }}</div>
+                    <small class="text-muted">
+                        Turnos hoy
+                        {% if turnosDescubiertosHoy > 0 %}
+                            <span class="badge bg-danger ms-1">{{ turnosDescubiertosHoy }} desc.</span>
+                        {% elseif totalTurnosHoy > 0 %}
+                            <span class="badge bg-success ms-1">todos cubiertos</span>
+                        {% endif %}
+                    </small>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
-                <div class="rounded-3 bg-danger bg-opacity-10 p-3">
-                    <i class="bi bi-calendar-x text-danger fs-4"></i>
+                <div class="rounded-3 p-3 {{ eventosAbiertosCnt > 0 ? 'bg-warning bg-opacity-10' : 'bg-secondary bg-opacity-10' }}">
+                    <i class="bi bi-exclamation-triangle-fill fs-4 {{ eventosAbiertosCnt > 0 ? 'text-warning' : 'text-secondary' }}"></i>
                 </div>
                 <div>
-                    <div class="h4 mb-0 fw-bold">—</div>
-                    <small class="text-muted">Turnos descubiertos</small>
+                    <div class="h3 mb-0 fw-bold">{{ eventosAbiertosCnt }}</div>
+                    <small class="text-muted">Eventos abiertos</small>
                 </div>
             </div>
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm">
+        <div class="card border-0 shadow-sm h-100">
             <div class="card-body d-flex align-items-center gap-3">
-                <div class="rounded-3 bg-warning bg-opacity-10 p-3">
-                    <i class="bi bi-exclamation-triangle text-warning fs-4"></i>
+                <div class="rounded-3 bg-info bg-opacity-10 p-3">
+                    <i class="bi bi-person-badge-fill text-info fs-4"></i>
                 </div>
                 <div>
-                    <div class="h4 mb-0 fw-bold">—</div>
-                    <small class="text-muted">Eventos este mes</small>
+                    <div class="h3 mb-0 fw-bold">{{ trabajadoresActivos }}</div>
+                    <small class="text-muted">Trabajadores activos</small>
                 </div>
             </div>
         </div>
@@ -67,31 +75,144 @@
 </div>
 
 <div class="row g-4">
+
+    {# ── Turnos de hoy ── #}
     <div class="col-lg-8">
         <div class="card border-0 shadow-sm">
-            <div class="card-header bg-white border-0 pt-3">
-                <h6 class="mb-0 fw-semibold"><i class="bi bi-calendar3 me-2 text-primary"></i>Turnos próximos</h6>
+            <div class="card-header bg-white border-0 pt-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-calendar3 me-2 text-primary"></i>Turnos de hoy
+                </h6>
+                <a href="{{ path('app_turno_index') }}" class="btn btn-sm btn-outline-primary">Ver calendario</a>
             </div>
-            <div class="card-body">
-                <div class="text-center text-muted py-4">
-                    <i class="bi bi-calendar-plus fs-1 opacity-25"></i>
-                    <p class="mt-2">Los turnos aparecerán aquí una vez configurado el módulo de turnos.</p>
-                </div>
+            <div class="card-body p-0">
+                {% if turnosDeHoy is empty %}
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-calendar-plus fs-1 opacity-25"></i>
+                        <p class="mt-2 mb-0">No hay turnos programados para hoy.</p>
+                    </div>
+                {% else %}
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th class="ps-3">Estado</th>
+                                    <th>Paciente</th>
+                                    <th>Trabajador</th>
+                                    <th>Horario</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for turno in turnosDeHoy %}
+                                <tr>
+                                    <td class="ps-3">
+                                        <span class="badge {{ turno.estado.badgeClass }}">{{ turno.estado.etiqueta }}</span>
+                                    </td>
+                                    <td>
+                                        <a href="{{ path('app_paciente_show', {id: turno.paciente.id}) }}" class="text-decoration-none fw-semibold">
+                                            {{ turno.paciente.nombreCompleto }}
+                                        </a>
+                                    </td>
+                                    <td>
+                                        {% if turno.trabajador %}
+                                            {{ turno.trabajador.nombreCompleto }}
+                                        {% else %}
+                                            <span class="text-danger fst-italic">Sin asignar</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-muted small">
+                                        {{ turno.horaInicio|date('H:i') }} – {{ turno.horaTermino|date('H:i') }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
+
+    {# ── Panel de alertas ── #}
     <div class="col-lg-4">
         <div class="card border-0 shadow-sm">
             <div class="card-header bg-white border-0 pt-3">
-                <h6 class="mb-0 fw-semibold"><i class="bi bi-bell me-2 text-warning"></i>Alertas</h6>
+                <h6 class="mb-0 fw-semibold"><i class="bi bi-bell-fill me-2 text-warning"></i>Alertas activas</h6>
             </div>
-            <div class="card-body">
-                <div class="text-center text-muted py-4">
-                    <i class="bi bi-bell-slash fs-1 opacity-25"></i>
-                    <p class="mt-2 small">Sin alertas pendientes.</p>
-                </div>
+            <div class="card-body p-0">
+
+                {# Turnos descubiertos próximos 7 días #}
+                {% if turnosDescubiertos7dias is not empty %}
+                    <div class="px-3 pt-3 pb-1">
+                        <p class="small fw-semibold text-danger mb-2">
+                            <i class="bi bi-calendar-x me-1"></i>Turnos descubiertos — próximos 7 días
+                        </p>
+                        {% for turno in turnosDescubiertos7dias %}
+                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                                <div>
+                                    <div class="small fw-semibold">{{ turno.paciente.nombreCompleto }}</div>
+                                    <div class="text-muted" style="font-size:.75rem">
+                                        {{ turno.fecha|date('d/m/Y') }} · {{ turno.horaInicio|date('H:i') }}–{{ turno.horaTermino|date('H:i') }}
+                                    </div>
+                                </div>
+                                <a href="{{ path('app_turno_show', {id: turno.id}) }}" class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:.75rem">Ver</a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {# Eventos graves/críticos abiertos #}
+                {% if eventosGraves is not empty %}
+                    <div class="px-3 pt-2 pb-1">
+                        <p class="small fw-semibold text-warning mb-2">
+                            <i class="bi bi-exclamation-triangle me-1"></i>Eventos graves sin cerrar
+                        </p>
+                        {% for evento in eventosGraves %}
+                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                                <div>
+                                    <div class="small fw-semibold">{{ evento.paciente.nombreCompleto }}</div>
+                                    <div class="text-muted" style="font-size:.75rem">
+                                        <span class="badge {{ evento.gravedad.badgeClass }} me-1">{{ evento.gravedad.etiqueta }}</span>
+                                        {{ evento.fechaEvento|date('d/m/Y') }}
+                                    </div>
+                                </div>
+                                <a href="{{ path('app_evento_show', {id: evento.id}) }}" class="btn btn-sm btn-outline-warning py-0 px-2" style="font-size:.75rem">Ver</a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {# Facturas vencidas (solo con permiso) #}
+                {% if facturasVencidas is not empty %}
+                    <div class="px-3 pt-2 pb-2">
+                        <p class="small fw-semibold text-danger mb-2">
+                            <i class="bi bi-receipt me-1"></i>Facturas vencidas sin pagar
+                        </p>
+                        {% for factura in facturasVencidas %}
+                            <div class="d-flex justify-content-between align-items-center border-bottom pb-2 mb-2">
+                                <div>
+                                    <div class="small fw-semibold">{{ factura.mandante.nombre }}</div>
+                                    <div class="text-muted" style="font-size:.75rem">
+                                        {{ factura.periodoLabel }} · venció {{ factura.fechaVencimiento|date('d/m/Y') }}
+                                    </div>
+                                </div>
+                                <a href="{{ path('app_finanzas_factura_show', {id: factura.id}) }}" class="btn btn-sm btn-outline-danger py-0 px-2" style="font-size:.75rem">Ver</a>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                {# Sin alertas #}
+                {% if turnosDescubiertos7dias is empty and eventosGraves is empty and facturasVencidas is empty %}
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-check-circle fs-1 opacity-25 text-success"></i>
+                        <p class="mt-2 mb-0 small">Sin alertas activas. Todo en orden.</p>
+                    </div>
+                {% endif %}
+
             </div>
         </div>
     </div>
+
 </div>
 {% endblock %}

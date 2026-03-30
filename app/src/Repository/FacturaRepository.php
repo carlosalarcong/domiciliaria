@@ -47,6 +47,19 @@ class FacturaRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    public function findVencidas(): array
+    {
+        return $this->createQueryBuilder('f')
+            ->leftJoin('f.mandante', 'm')->addSelect('m')
+            ->where('f.estado = :emitida')
+            ->andWhere('f.fechaVencimiento < :hoy')
+            ->setParameter('emitida', EstadoFactura::EMITIDA)
+            ->setParameter('hoy', new \DateTime('today'))
+            ->orderBy('f.fechaVencimiento', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     public function sumMontosByEstado(): array
     {
         $rows = $this->createQueryBuilder('f')
