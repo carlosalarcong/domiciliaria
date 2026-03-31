@@ -81,6 +81,7 @@ Servicios disponibles:
 | Nginx (app web) | http://localhost:8090 |
 | PostgreSQL | localhost:5432 |
 | Redis | localhost:6379 |
+| Mailpit (bandeja de emails dev) | http://localhost:8025 |
 
 ### 3. Instalar dependencias PHP
 
@@ -141,12 +142,32 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 
 ### Fase 5 — Eventos Adversos
 - Registro de incidentes clínicos con 8 tipos y 4 niveles de gravedad (leve/moderado/grave/crítico)
-- Ciclo de vida: `Abierto` → `En proceso` → `Cerrado`
 - **Asignación de responsable**: campo `responsable` (admin/coordinador) en el evento; al asignar o cambiar responsable se envía notificación in-app y email automáticamente
 - **Timeline de seguimiento** con notas cronológicas por autor
 - **Notificación automática** por email a admins/coordinadores en eventos Grave o Crítico (Messenger)
 - Index con contadores de estado y filtros por gravedad/estado
 - Formulario de cierre con observación obligatoria
+
+### Flujo formal de estados en Eventos Adversos
+
+El ciclo de vida pasó de informal a un flujo de tres pasos con trazabilidad completa:
+
+| Estado | Etiqueta visual | Transición |
+|--------|----------------|------------|
+| `ABIERTO` | Registrado (rojo) | → Poner en revisión |
+| `EN_PROCESO` | En revisión (amarillo) | → Cerrar |
+| `CERRADO` | Cerrado (verde) | — (solo lectura) |
+
+**Trazabilidad por transición:**
+- **Revisión**: se registra quién puso el evento en revisión (`revisadoPor`) y en qué momento (`revisadoEn`)
+- **Cierre**: se registra quién cerró el evento (`cerradoPor`) con fecha de cierre y observación obligatoria
+- Cada transición genera automáticamente una nota en el **timeline de seguimiento**
+- La vista `show` adapta su panel lateral según el estado actual: botón de revisión, formulario de cierre o resumen de cierre
+
+**Alertas in-app inmediatas para eventos graves/críticos:**
+- Al registrar un evento con gravedad `GRAVE` o `CRÍTICO`, se despacha inmediatamente una notificación in-app a todos los admins y coordinadores activos
+- El mensaje aparece en el badge del bell en el próximo ciclo de polling (60 s)
+- Icono: alerta triangular amarilla (`bi-exclamation-triangle-fill`)
 
 ### Fase 4 — Personal (documentos, disponibilidad, horas)
 - **Documentos del trabajador**: subida de archivos (PDF, Word, JPG/PNG hasta 10 MB), descarga y eliminación
@@ -155,6 +176,17 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 - **Exportación CSV** de horas trabajadas compatible con Excel (UTF-8 BOM)
 - Vista `trabajador/show` con pestañas: Turnos / Documentos / Disponibilidad
 - Formularios con tema Bootstrap 5 aplicado globalmente
+
+### Historial de turnos y horas por trabajador
+
+La pestaña **Turnos** de la ficha del trabajador fue reemplazada por un historial completo:
+
+- **4 KPIs en tiempo real** (filtrados por el año seleccionado): total horas del año, total turnos del año, promedio de horas por mes y turnos del filtro activo
+- **Filtros de año y mes** con recarga automática al cambiar la selección
+- **Tabla de resumen mensual**: muestra total de turnos y horas por mes del año seleccionado (solo visible cuando no hay filtro de mes activo)
+- **Tabla detalle de turnos**: todos los turnos del período con fecha, tipo, paciente, estado, horas y registro de inicio/fin de asistencia
+- **Total de horas al pie** de la tabla de detalle
+- Los turnos en estado `DESCUBIERTO` no se cuentan en el cálculo de horas (no generan horas trabajadas)
 
 ### Fase 6 — Finanzas y Facturación
 - **Liquidaciones mensuales**: generación automática a partir de turnos completados, con tarifas configurables por tipo de concepto (día, noche, 24h, visita, reemplazo)
@@ -236,16 +268,58 @@ Bell con badge en el header que se actualiza cada 60 segundos. Al hacer clic des
 
 **Eventos que generan notificación in-app** (además del email existente):
 
-| Evento | Destinatarios |
-|--------|--------------|
-| Turno descubierto | Admins y coordinadores |
-| Evento adverso grave/crítico | Admins y coordinadores |
-| Cambio de estado de paciente | Admins y coordinadores |
-| Responsable asignado a evento | El responsable asignado |
+| Evento | Destinatarios | Icono |
+|--------|--------------|-------|
+| Turno descubierto | Admins y coordinadores | `bi-calendar-x` rojo |
+| Evento adverso grave/crítico | Admins y coordinadores | `bi-exclamation-triangle-fill` amarillo |
+| Cambio de estado de paciente | Admins y coordinadores | `bi-person-fill` azul |
+| Responsable asignado a evento | El responsable asignado | `bi-person-check-fill` primario |
+| Documento próximo a vencer | Admins y coordinadores | `bi-file-earmark-x-fill` rojo |
 
 - Panel completo en `/notificaciones` con historial reciente y botón "Marcar todas como leídas"
 - Notificaciones con color e ícono según tipo, fondo resaltado mientras no se lean
 - Endpoint JSON `/notificaciones/count` y `/notificaciones/recientes` para el header
+
+### Notificaciones por email y alertas de vencimiento de documentos
+
+#### Emails automáticos
+
+Todos los handlers de Messenger envían además un email HTML cuando se cumplen las condiciones. En desarrollo los emails se capturan en **Mailpit** (`http://localhost:8025`) sin salir al exterior.
+
+| Disparador | Asunto del email | Destinatarios |
+|------------|-----------------|---------------|
+| Turno descubierto (cron 20:00) | `⚠️ Turno descubierto — {paciente}` | Admins y coordinadores |
+| Evento adverso grave/crítico | `🚨 Evento adverso {gravedad} — {paciente}` | Admins y coordinadores |
+| Responsable asignado a evento | `📋 Se te asignó un evento adverso` | El responsable asignado |
+| Cambio de estado de paciente | `🟢/🟡/🔴 Cambio de estado — {paciente}` | Admins y coordinadores |
+| Documento próximo a vencer | `🔴/🟡 Documento por vencer — {trabajador} ({N} días)` | Admins y coordinadores |
+
+Para producción, configurar `MAILER_DSN` en `.env.local`:
+```env
+MAILER_DSN=smtp://usuario:contraseña@smtp.servidor.cl:587
+```
+
+#### Vencimiento de documentos de trabajadores
+
+- Los documentos ahora tienen un campo opcional **Fecha de vencimiento**
+- La tabla de documentos en la ficha del trabajador muestra un **semáforo visual**:
+  - Fila roja + ícono ✗ → documento ya vencido
+  - Fila amarilla + ícono ⚠ → vence en 7 días o menos
+  - Texto azul + ícono 🕐 → vence en 8–30 días
+  - Texto gris → vence en más de 30 días
+
+#### Comando de revisión diaria
+
+```bash
+php bin/console app:revisar-documentos-vencimiento
+```
+
+Revisa todos los documentos con `fechaVencimiento` en los próximos 30 días y despacha notificaciones **solo en los hitos** 30, 15, 7, 3 y 1 día(s) antes del vencimiento. Esto evita spam diario y asegura que los avisos lleguen en momentos significativos.
+
+Configuración recomendada de cron en producción:
+```
+0 7 * * * php /ruta/app/bin/console app:revisar-documentos-vencimiento
+```
 
 ### Importación masiva desde CSV
 
@@ -331,6 +405,9 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 # Procesar cola de mensajes (notificaciones email)
 docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console messenger:consume async -vv"
 
+# Revisar documentos próximos a vencer y despachar alertas (ejecutar diariamente en producción)
+docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console app:revisar-documentos-vencimiento"
+
 # Multi-tenant: crear nueva clínica
 docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console app:tenant:crear 'Nombre Clínica' subdominio"
 
@@ -364,6 +441,10 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 - [x] **Fase 13** — Asignación de responsable en evento adverso con notificación automática
 - [x] **Fase 14** — Reportes financieros con gráficos (por mandante, por trabajador, flujo mensual)
 - [x] **Fase 15** — Notificaciones in-app con badge/bell en el header
+- [x] **Fase 16** — Historial de turnos y horas por trabajador (KPIs, resumen mensual, filtros año/mes)
+- [x] **Fase 17** — Flujo formal de eventos adversos: registrado → revisión → cerrado con trazabilidad completa
+- [x] **Fase 18** — Alertas in-app inmediatas para eventos graves y críticos
+- [x] **Fase 19** — Notificaciones por email con Mailpit en dev, vencimiento de documentos de trabajadores con semáforo visual y comando de revisión diaria
 
 ## Notas técnicas
 
@@ -382,8 +463,23 @@ composer dump-autoload  # regenera autoload_runtime.php
 Todas las entidades marcadas con `#[Gedmo\Loggable]` registran cambios automáticamente en la tabla `ext_log_entries`. Se usa una entidad `LogEntry` personalizada con campo `data` de tipo `json` para compatibilidad con Doctrine DBAL 4.
 
 ### Messenger (notificaciones asíncronas)
-Por defecto el transporte está configurado como `sync` (procesamiento inmediato). Para producción, cambiar a Redis en `.env`:
+
+El routing de mensajes está configurado explícitamente en `config/packages/messenger.yaml`:
+
+| Mensaje | Transporte | Motivo |
+|---------|-----------|--------|
+| `TurnoDescubiertoMessage` | `async` | Procesado por el worker, disparado por cron |
+| `RevisarTurnosDescubiertosMessage` | `async` | Tarea programada diaria |
+| `BackupDatabaseMessage` | `async` | Tarea pesada, no bloquea el request |
+| `DocumentoVencimientoMessage` | `async` | Disparado por comando diario |
+| `EventoAdversoGraveMessage` | sync (sin routing) | Notificación in-app **inmediata** al registrar el evento |
+| `EventoResponsableAsignadoMessage` | sync (sin routing) | Notificación in-app inmediata al asignar responsable |
+| `PacienteEstadoCambioMessage` | sync (sin routing) | Notificación in-app inmediata al cambiar estado |
+
+Para producción, configurar el transporte Redis en `.env.local`:
 ```env
 MESSENGER_TRANSPORT_DSN=redis://redis:6379/messages
 ```
 Y ejecutar el worker: `php bin/console messenger:consume async`
+
+En desarrollo, los mensajes `async` también se procesan en el mismo request si `MESSENGER_TRANSPORT_DSN` no está configurado (fallback a `sync://).
