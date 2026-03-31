@@ -123,11 +123,35 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 
 ### Fase 2 — Pacientes
 - CRUD de mandantes (empresas/entidades contratantes)
-- CRUD de pacientes con ficha clínica completa (5 pestañas)
+- CRUD de pacientes con ficha clínica completa (5 pestañas): Datos, Domicilio, Bitácora, Comunicaciones, Turnos
 - Condición de domicilio (acceso, mascotas, barreras arquitectónicas)
-- Bitácora operativa con Turbo Frames
-- Historial de comunicaciones con Turbo Frames
 - **Notificación automática por cambio de estado**: email a admins/coordinadores cuando un paciente cambia a `Activo`, `Suspendido` o `Dado de baja` (Messenger)
+
+### Bitácora operativa por paciente
+
+Log de novedades libre integrado en la ficha del paciente (pestaña **Bitácora**), sin necesidad de recargar la página gracias a **Turbo Frames**.
+
+**Tipos de entrada:**
+
+| Tipo | Badge | Uso típico |
+|------|-------|-----------|
+| `NOVEDAD` | azul | Observación general del turno, cambio en el estado del paciente |
+| `INCIDENCIA` | rojo | Caída, accidente, reacción adversa, situación fuera de lo normal |
+| `COMUNICACION` | azul primario | Llamado a familia, médico o mandante registrado en la bitácora |
+
+Cada entrada registra: fecha/hora automática (Gedmo Timestampable), tipo, descripción y el usuario que la creó. Las entradas se muestran ordenadas por fecha descendente.
+
+### Historial de comunicaciones con mandante y familia
+
+Registro de todos los contactos con externos (familia, médico, mandante) desde la pestaña **Comunicaciones** de la ficha del paciente, también con **Turbo Frames**.
+
+**Campos por comunicación:**
+- **Tipo**: Familia, Médico, Mandante, Otro
+- **Persona contactada**: nombre libre del interlocutor
+- **Descripción**: resumen del contenido de la comunicación
+- **Fecha/hora** y **usuario** registrados automáticamente
+
+Permite mantener trazabilidad de todos los contactos externos sin salir de la ficha del paciente.
 
 ### Fase 3 — Turnos y Calendario
 - Calendario visual con **FullCalendar** (vistas mensual, semanal y lista, en español)
