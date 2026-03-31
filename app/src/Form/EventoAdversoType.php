@@ -79,7 +79,7 @@ class EventoAdversoType extends AbstractType
                 'class'        => User::class,
                 'choice_label' => fn(User $u) => $u->getNombreCompleto() . ' (' . $u->getRolEtiqueta() . ')',
                 'query_builder' => fn($repo) => $repo->createQueryBuilder('u')
-                    ->where("u.roles LIKE :admin OR u.roles LIKE :coord")
+                    ->where("CAST(u.roles AS string) LIKE :admin OR CAST(u.roles AS string) LIKE :coord")
                     ->setParameter('admin', '%ROLE_ADMIN%')
                     ->setParameter('coord', '%ROLE_COORDINADOR%')
                     ->andWhere('u.activo = true')
