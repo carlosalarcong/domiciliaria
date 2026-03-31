@@ -38,7 +38,7 @@
 
 <div class="row g-3">
 {% for s in suscripciones %}
-    {% set st = stats[s.id|string] ?? {} %}
+    {% set st = stats[s.id ~ ''] ?? {} %}
     <div class="col-md-6 col-lg-4">
         <div class="card border-0 shadow-sm h-100">
             <div class="card-body">
