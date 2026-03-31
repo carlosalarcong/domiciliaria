@@ -24,7 +24,7 @@
         </a>
 
         {% if is_granted('ROLE_TENS') or is_granted('ROLE_ENFERMERA') %}
-        <a href="{{ path('app_campo_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_campo' ? 'active' : '' }}">
+        <a href="{{ path('app_campo_index') }}" class="sidebar-link d-lg-none {{ app.request.attributes.get('_route') starts with 'app_campo' ? 'active' : '' }}">
             <i class="bi bi-phone"></i> Vista de campo
         </a>
         {% endif %}

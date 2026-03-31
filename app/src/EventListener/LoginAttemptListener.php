@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
+use Symfony\Component\Routing\Generator\UrlGeneratorInterface;
 use Symfony\Component\Security\Http\Event\LoginFailureEvent;
 use Symfony\Component\Security\Http\Event\LoginSuccessEvent;
 use Symfony\Contracts\Cache\CacheInterface;
@@ -29,6 +30,7 @@ class LoginAttemptListener
         private readonly CacheInterface        $cache,
         private readonly EntityManagerInterface $em,
         private readonly TenantContext         $tenantContext,
+        private readonly UrlGeneratorInterface $urlGenerator,
     ) {}
 
     #[AsEventListener(event: KernelEvents::REQUEST, priority: 100)]
@@ -88,6 +90,26 @@ class LoginAttemptListener
         $this->cache->delete($key);
 
         $this->registrarAudit('LOGIN_SUCCESS', $event->getUser()->getUserIdentifier(), $request, []);
+
+        // Redirigir automáticamente a vista de campo si es TENS/ENFERMERA en móvil
+        $user = $event->getUser();
+        if ($this->esTrabajadorDeCampo($user) && $this->esMobile($request->headers->get('User-Agent', ''))) {
+            $event->setResponse(new RedirectResponse($this->urlGenerator->generate('app_campo_index')));
+        }
+    }
+
+    private function esTrabajadorDeCampo(UserInterface $user): bool
+    {
+        $roles = $user->getRoles();
+        return in_array('ROLE_TENS', $roles, true) || in_array('ROLE_ENFERMERA', $roles, true);
+    }
+
+    private function esMobile(string $userAgent): bool
+    {
+        return (bool) preg_match(
+            '/Mobile|Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i',
+            $userAgent
+        );
     }
 
     private function registrarAudit(string $evento, ?string $email, $request, array $detalles): void
