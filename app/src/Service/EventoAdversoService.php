@@ -113,7 +113,7 @@ class EventoAdversoService
             eventoId:          (string) $evento->getId(),
             pacienteNombre:    $evento->getPaciente()?->getNombreCompleto() ?? 'Desconocido',
             tipo:              $evento->getTipo()->etiqueta(),
-            gravedad:          $evento->getGravedad()->value,
+            gravedad:          $evento->getGravedad()->etiqueta(),
             fecha:             $evento->getFechaEvento()?->format('d/m/Y') ?? '—',
             responsableEmail:  $responsable->getEmail(),
             responsableNombre: $responsable->getNombreCompleto(),
@@ -126,7 +126,7 @@ class EventoAdversoService
             eventoId:       (string) $evento->getId(),
             pacienteNombre: $evento->getPaciente()?->getNombreCompleto() ?? 'Desconocido',
             tipo:           $evento->getTipo()->etiqueta(),
-            gravedad:       $evento->getGravedad()->value,
+            gravedad:       $evento->getGravedad()->etiqueta(),
             fecha:          $evento->getFechaEvento()?->format('d/m/Y') ?? '—',
             descripcion:    mb_substr($evento->getDescripcion(), 0, 200),
         ));
