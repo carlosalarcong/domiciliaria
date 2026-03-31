@@ -167,6 +167,7 @@ class TrabajadorController extends AbstractController
                     $form->get('tipo')->getData(),
                     $form->get('descripcion')->getData(),
                     $this->getUser(),
+                    $form->get('fechaVencimiento')->getData(),
                 );
                 $this->addFlash('success', 'Documento subido correctamente.');
             } catch (\Throwable $e) {

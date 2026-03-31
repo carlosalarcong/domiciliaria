@@ -76,8 +76,9 @@ class Notificacion
             'turno_descubierto'   => 'bi-calendar-x text-danger',
             'evento_grave'        => 'bi-exclamation-triangle-fill text-warning',
             'paciente_estado'     => 'bi-person-fill text-info',
-            'responsable_asignado'=> 'bi-person-check-fill text-primary',
-            default               => 'bi-bell-fill text-secondary',
+            'responsable_asignado' => 'bi-person-check-fill text-primary',
+            'documento_vencimiento'=> 'bi-file-earmark-x-fill text-danger',
+            default                => 'bi-bell-fill text-secondary',
         };
     }
 }

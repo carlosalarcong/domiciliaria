@@ -292,13 +292,14 @@
                                 <th>Archivo</th>
                                 <th>Descripción</th>
                                 <th>Tamaño</th>
-                                <th>Fecha</th>
+                                <th>Fecha subida</th>
+                                <th>Vencimiento</th>
                                 <th class="pe-4 text-end">Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                         {% for doc in documentos %}
-                        <tr>
+                        <tr class="{{ doc.estaVencido() ? 'table-danger' : (doc.venceEn(7) ? 'table-warning' : '') }}">
                             <td class="ps-4">
                                 <span class="badge {{ doc.tipo.badgeClass() }}">{{ doc.tipo.etiqueta() }}</span>
                             </td>
@@ -309,6 +310,27 @@
                             <td class="text-muted small">{{ doc.descripcion ?? '—' }}</td>
                             <td class="text-muted small">{{ doc.tamanoFormateado }}</td>
                             <td class="text-muted small">{{ doc.creadoEn|date('d/m/Y') }}</td>
+                            <td class="small">
+                                {% if doc.fechaVencimiento %}
+                                    {% if doc.estaVencido() %}
+                                        <span class="text-danger fw-semibold">
+                                            <i class="bi bi-x-circle-fill me-1"></i>{{ doc.fechaVencimiento|date('d/m/Y') }}
+                                        </span>
+                                    {% elseif doc.venceEn(7) %}
+                                        <span class="text-warning fw-semibold">
+                                            <i class="bi bi-exclamation-triangle-fill me-1"></i>{{ doc.fechaVencimiento|date('d/m/Y') }}
+                                        </span>
+                                    {% elseif doc.venceEn(30) %}
+                                        <span class="text-info">
+                                            <i class="bi bi-clock me-1"></i>{{ doc.fechaVencimiento|date('d/m/Y') }}
+                                        </span>
+                                    {% else %}
+                                        <span class="text-muted">{{ doc.fechaVencimiento|date('d/m/Y') }}</span>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="text-muted">—</span>
+                                {% endif %}
+                            </td>
                             <td class="pe-4 text-end">
                                 <div class="btn-group btn-group-sm">
                                     <a href="{{ path('app_trabajador_documento_descargar', {id: trabajador.id, docId: doc.id}) }}"
@@ -328,7 +350,7 @@
                             </td>
                         </tr>
                         {% else %}
-                        <tr><td colspan="6" class="text-center text-muted py-4">
+                        <tr><td colspan="7" class="text-center text-muted py-4">
                             <i class="bi bi-file-earmark fs-1 opacity-25 d-block mb-2"></i>
                             Sin documentos subidos.
                         </td></tr>
