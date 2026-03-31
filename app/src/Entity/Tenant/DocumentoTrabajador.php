@@ -42,6 +42,9 @@ class DocumentoTrabajador
     #[ORM\Column(length: 500, nullable: true)]
     private ?string $descripcion = null;
 
+    #[ORM\Column(type: 'date', nullable: true)]
+    private ?\DateTimeInterface $fechaVencimiento = null;
+
     #[ORM\Column(type: 'datetime_immutable')]
     #[Gedmo\Timestampable(on: 'create')]
     private ?\DateTimeImmutable $creadoEn = null;
@@ -72,6 +75,21 @@ class DocumentoTrabajador
 
     public function getDescripcion(): ?string { return $this->descripcion; }
     public function setDescripcion(?string $d): static { $this->descripcion = $d; return $this; }
+
+    public function getFechaVencimiento(): ?\DateTimeInterface { return $this->fechaVencimiento; }
+    public function setFechaVencimiento(?\DateTimeInterface $f): static { $this->fechaVencimiento = $f; return $this; }
+
+    public function estaVencido(): bool
+    {
+        return $this->fechaVencimiento !== null && $this->fechaVencimiento < new \DateTime('today');
+    }
+
+    public function venceEn(int $dias): bool
+    {
+        if ($this->fechaVencimiento === null) return false;
+        $limite = new \DateTime("+{$dias} days");
+        return $this->fechaVencimiento <= $limite && !$this->estaVencido();
+    }
 
     public function getCreadoEn(): ?\DateTimeImmutable { return $this->creadoEn; }
 

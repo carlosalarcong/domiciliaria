@@ -33,11 +33,7 @@ final class TurnoDescubiertoHandler
             'tipo'     => $message->tipoTurno,
         ]);
 
-        // Notificar a admins y coordinadores
-        $destinatarios = array_merge(
-            $this->userRepository->findByRol('ROLE_ADMIN'),
-            $this->userRepository->findByRol('ROLE_COORDINADOR'),
-        );
+        $destinatarios = $this->userRepository->findActivosByRoles(['ROLE_ADMIN', 'ROLE_COORDINADOR']);
 
         $url = $this->urlGenerator->generate('app_turno_show', ['id' => $message->turnoId], UrlGeneratorInterface::ABSOLUTE_PATH);
         $this->notificacionService->crearParaVarios(

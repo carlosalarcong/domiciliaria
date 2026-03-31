@@ -30,6 +30,7 @@ class TrabajadorService
         TipoDocumento $tipo,
         ?string $descripcion,
         User $subidoPor,
+        ?\DateTimeInterface $fechaVencimiento = null,
     ): DocumentoTrabajador {
         $extension     = $archivo->guessExtension() ?? $archivo->getClientOriginalExtension();
         $nombreSeguro  = bin2hex(random_bytes(16)) . '.' . $extension;
@@ -45,6 +46,7 @@ class TrabajadorService
             ->setExtension($extension)
             ->setTamanoBytes($archivo->getSize() ?: 0)
             ->setDescripcion($descripcion)
+            ->setFechaVencimiento($fechaVencimiento)
             ->setSubidoPor($subidoPor);
 
         $this->em->persist($doc);

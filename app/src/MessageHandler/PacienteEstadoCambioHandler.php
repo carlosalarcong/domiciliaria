@@ -56,10 +56,7 @@ final class PacienteEstadoCambioHandler
             $estadoNuevoLabel,
         );
 
-        $destinatarios = array_merge(
-            $this->userRepository->findByRol('ROLE_ADMIN'),
-            $this->userRepository->findByRol('ROLE_COORDINADOR'),
-        );
+        $destinatarios = $this->userRepository->findActivosByRoles(['ROLE_ADMIN', 'ROLE_COORDINADOR']);
 
         $url = $this->urlGenerator->generate('app_paciente_show', ['id' => $message->pacienteId], UrlGeneratorInterface::ABSOLUTE_PATH);
         $this->notificacionService->crearParaVarios(
