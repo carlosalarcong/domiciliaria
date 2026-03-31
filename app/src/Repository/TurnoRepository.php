@@ -222,19 +222,16 @@ class TurnoRepository extends ServiceEntityRepository
 
     /**
      * Resumen de horas trabajadas por mes en un año dado, para un trabajador.
-     * Devuelve array: [['anio'=>2026,'mes'=>3,'total_turnos'=>10,'total_horas'=>120], ...]
+     * Devuelve array: [['anio_mes'=>'2026-03','total_turnos'=>10,'total_horas'=>120], ...]
+     * ordenado descendentemente por mes.
      */
     public function resumenHorasPorMes(Trabajador $trabajador, int $anio): array
     {
         $desde = new \DateTime("{$anio}-01-01");
         $hasta = new \DateTime("{$anio}-12-31");
 
-        $rows = $this->createQueryBuilder('t')
-            ->select(
-                'SUBSTRING(t.fecha, 1, 7) as anio_mes',
-                'COUNT(t.id) as total_turnos',
-                't.tipoTurno as tipo'
-            )
+        /** @var Turno[] $turnos */
+        $turnos = $this->createQueryBuilder('t')
             ->where('t.trabajador = :trabajador')
             ->andWhere('t.fecha BETWEEN :desde AND :hasta')
             ->andWhere('t.estado != :desc')
@@ -242,22 +239,23 @@ class TurnoRepository extends ServiceEntityRepository
             ->setParameter('desde', $desde)
             ->setParameter('hasta', $hasta)
             ->setParameter('desc', EstadoTurno::DESCUBIERTO)
-            ->groupBy('anio_mes, t.tipoTurno')
-            ->orderBy('anio_mes', 'DESC')
+            ->orderBy('t.fecha', 'DESC')
             ->getQuery()
             ->getResult();
 
-        // Agrupar por mes y sumar horas según tipo de turno
+        // Agrupar en PHP por año-mes
         $resumen = [];
-        foreach ($rows as $row) {
-            $key = $row['anio_mes'];
+        foreach ($turnos as $turno) {
+            $key = $turno->getFecha()->format('Y-m');
             if (!isset($resumen[$key])) {
                 $resumen[$key] = ['anio_mes' => $key, 'total_turnos' => 0, 'total_horas' => 0];
             }
-            $tipo  = $row['tipo'] instanceof TipoTurno ? $row['tipo'] : TipoTurno::from($row['tipo']);
-            $resumen[$key]['total_turnos'] += (int) $row['total_turnos'];
-            $resumen[$key]['total_horas']  += (int) $row['total_turnos'] * $tipo->duracionHoras();
+            $resumen[$key]['total_turnos']++;
+            $resumen[$key]['total_horas'] += $turno->getTipoTurno()->duracionHoras();
         }
+
+        // Ordenar descendente por mes
+        krsort($resumen);
 
         return array_values($resumen);
     }
