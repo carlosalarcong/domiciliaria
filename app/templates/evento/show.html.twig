@@ -91,8 +91,35 @@
             </ul>
         </div>
 
-        {# Cerrar evento #}
-        {% if evento.estado.value != 'CERRADO' %}
+        {# ── Flujo de estado ── #}
+
+        {# PASO 1: Registrado → poner en revisión #}
+        {% if evento.estado.puedePonerEnRevision() %}
+        <div class="card border-0 shadow-sm border-start border-warning border-4">
+            <div class="card-body">
+                <h6 class="fw-semibold text-warning mb-1"><i class="bi bi-search me-2"></i>Poner en revisión</h6>
+                <p class="text-muted small mb-3">Asigna el evento al flujo de revisión para su análisis y cierre.</p>
+                <form method="post" action="{{ path('app_evento_en_revision', {id: evento.id}) }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token('en_revision_' ~ evento.id) }}">
+                    <button type="submit" class="btn btn-warning btn-sm w-100"
+                            onclick="return confirm('¿Poner este evento en revisión?')">
+                        <i class="bi bi-arrow-right-circle me-1"></i>Poner en revisión
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        {# PASO 2: En revisión → cerrar #}
+        {% elseif evento.estado.puedeCerrar() %}
+        <div class="card border-0 shadow-sm border-start border-primary border-4 mb-3">
+            <div class="card-body py-2 px-3">
+                <div class="text-muted small">
+                    <i class="bi bi-person-check me-1"></i>
+                    En revisión por <strong>{{ evento.revisadoPor ? evento.revisadoPor.nombreCompleto : '—' }}</strong>
+                    {% if evento.revisadoEn %}· {{ evento.revisadoEn|date('d/m/Y H:i') }}{% endif %}
+                </div>
+            </div>
+        </div>
         <div class="card border-0 shadow-sm border-start border-success border-4">
             <div class="card-body">
                 <h6 class="fw-semibold text-success mb-3"><i class="bi bi-check-circle me-2"></i>Cerrar evento</h6>
@@ -109,13 +136,27 @@
                 </form>
             </div>
         </div>
+
+        {# PASO 3: Cerrado — solo lectura #}
         {% else %}
+        <div class="card border-0 shadow-sm border-start border-primary border-4 mb-3">
+            <div class="card-body py-2 px-3">
+                <div class="text-muted small">
+                    <i class="bi bi-person-check me-1"></i>
+                    Revisado por <strong>{{ evento.revisadoPor ? evento.revisadoPor.nombreCompleto : '—' }}</strong>
+                    {% if evento.revisadoEn %}· {{ evento.revisadoEn|date('d/m/Y H:i') }}{% endif %}
+                </div>
+            </div>
+        </div>
         <div class="card border-0 shadow-sm border-start border-success border-4">
             <div class="card-body">
                 <h6 class="fw-semibold text-success mb-2"><i class="bi bi-check-circle-fill me-2"></i>Evento cerrado</h6>
-                <p class="text-muted small mb-1">{{ evento.fechaCierre|date('d/m/Y') }}</p>
+                <ul class="list-unstyled small text-muted mb-0">
+                    <li><i class="bi bi-person me-1"></i>{{ evento.cerradoPor ? evento.cerradoPor.nombreCompleto : '—' }}</li>
+                    <li><i class="bi bi-calendar me-1"></i>{{ evento.fechaCierre ? evento.fechaCierre|date('d/m/Y') : '—' }}</li>
+                </ul>
                 {% if evento.observacionCierre %}
-                <p class="mb-0 small">{{ evento.observacionCierre }}</p>
+                <p class="mb-0 small mt-2 border-top pt-2">{{ evento.observacionCierre }}</p>
                 {% endif %}
             </div>
         </div>

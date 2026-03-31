@@ -117,6 +117,24 @@ class EventoAdversoController extends AbstractController
         ]);
     }
 
+    #[Route('/{id}/en-revision', name: 'en_revision', methods: ['POST'])]
+    public function enRevision(Request $request, EventoAdverso $evento): Response
+    {
+        if (!$this->isCsrfTokenValid('en_revision_' . $evento->getId(), $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$evento->getEstado()->puedePonerEnRevision()) {
+            $this->addFlash('warning', 'El evento no puede ponerse en revisión en su estado actual.');
+            return $this->redirectToRoute('app_evento_show', ['id' => $evento->getId()]);
+        }
+
+        $this->service->ponerEnRevision($evento, $this->getUser());
+        $this->addFlash('success', 'Evento puesto en revisión.');
+
+        return $this->redirectToRoute('app_evento_show', ['id' => $evento->getId()]);
+    }
+
     #[Route('/{id}/cerrar', name: 'cerrar', methods: ['POST'])]
     public function cerrar(Request $request, EventoAdverso $evento): Response
     {

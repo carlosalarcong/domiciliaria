@@ -47,16 +47,33 @@ class EventoAdversoService
         return $evento;
     }
 
+    public function ponerEnRevision(EventoAdverso $evento, User $autor): EventoAdverso
+    {
+        if (!$evento->getEstado()->puedePonerEnRevision()) {
+            throw new \LogicException('Solo se puede poner en revisión un evento en estado Registrado.');
+        }
+
+        $evento->setEstado(EstadoEvento::EN_PROCESO)
+               ->setRevisadoPor($autor)
+               ->setRevisadoEn(new \DateTimeImmutable());
+
+        $seguimiento = new SeguimientoEvento();
+        $seguimiento->setEvento($evento)
+                    ->setNota('Evento puesto en revisión por ' . $autor->getNombreCompleto() . '.')
+                    ->setCreadoPor($autor);
+
+        $this->em->persist($seguimiento);
+        $this->em->flush();
+
+        return $evento;
+    }
+
     public function agregarSeguimiento(EventoAdverso $evento, string $nota, User $autor): SeguimientoEvento
     {
         $seguimiento = new SeguimientoEvento();
         $seguimiento->setEvento($evento)
                     ->setNota($nota)
                     ->setCreadoPor($autor);
-
-        if ($evento->getEstado() === EstadoEvento::ABIERTO) {
-            $evento->setEstado(EstadoEvento::EN_PROCESO);
-        }
 
         $this->em->persist($seguimiento);
         $this->em->flush();
@@ -66,11 +83,15 @@ class EventoAdversoService
 
     public function cerrar(EventoAdverso $evento, string $observacion, User $autor): EventoAdverso
     {
+        if (!$evento->getEstado()->puedeCerrar()) {
+            throw new \LogicException('Solo se puede cerrar un evento que está en revisión.');
+        }
+
         $evento->setEstado(EstadoEvento::CERRADO)
                ->setFechaCierre(new \DateTime())
-               ->setObservacionCierre($observacion);
+               ->setObservacionCierre($observacion)
+               ->setCerradoPor($autor);
 
-        // Agregar seguimiento de cierre
         $seguimiento = new SeguimientoEvento();
         $seguimiento->setEvento($evento)
                     ->setNota('Evento cerrado. ' . $observacion)
