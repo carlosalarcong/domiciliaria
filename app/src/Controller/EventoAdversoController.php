@@ -10,6 +10,7 @@ use App\Enum\GravedadEvento;
 use App\Form\EventoAdversoType;
 use App\Form\SeguimientoEventoType;
 use App\Repository\EventoAdversoRepository;
+use App\Repository\UserRepository;
 use App\Service\EventoAdversoService;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -26,7 +27,13 @@ class EventoAdversoController extends AbstractController
         private readonly EventoAdversoRepository $repository,
         private readonly EventoAdversoService $service,
         private readonly PaginatorInterface $paginator,
+        private readonly UserRepository $userRepository,
     ) {}
+
+    private function responsables(): array
+    {
+        return $this->userRepository->findActivosByRoles(['ROLE_ADMIN', 'ROLE_COORDINADOR']);
+    }
 
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(Request $request): Response
@@ -55,7 +62,7 @@ class EventoAdversoController extends AbstractController
     public function new(Request $request): Response
     {
         $evento = new EventoAdverso();
-        $form   = $this->createForm(EventoAdversoType::class, $evento);
+        $form   = $this->createForm(EventoAdversoType::class, $evento, ['responsables' => $this->responsables()]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
