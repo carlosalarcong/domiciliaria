@@ -1,0 +1,98 @@
+{% extends 'base.html.twig' %}
+{% block title %}Integraciones{% endblock %}
+{% block page_title %}Integraciones{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Integraciones externas</h4>
+        <small class="text-muted">Webhooks outbound hacia ERP, RRHH, remuneraciones y otros sistemas</small>
+    </div>
+    <a href="{{ path('app_integracion_nueva') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-2"></i>Nueva integración
+    </a>
+</div>
+
+{% if suscripciones is empty %}
+<div class="card border-0 shadow-sm">
+    <div class="card-body text-center py-5 text-muted">
+        <i class="bi bi-plug fs-1 opacity-25 d-block mb-3"></i>
+        <h5 class="fw-semibold">Sin integraciones configuradas</h5>
+        <p class="mb-4">Conecta sistemas externos para recibir eventos en tiempo real.</p>
+        <a href="{{ path('app_integracion_nueva') }}" class="btn btn-primary">
+            <i class="bi bi-plus-lg me-2"></i>Crear primera integración
+        </a>
+    </div>
+</div>
+{% else %}
+
+{# ── Cómo funciona ── #}
+<div class="alert alert-info border-0 shadow-sm mb-4 d-flex gap-3 align-items-start">
+    <i class="bi bi-info-circle-fill fs-5 flex-shrink-0 mt-1"></i>
+    <div class="small">
+        <strong>¿Cómo funciona?</strong> Cuando ocurre un evento en el sistema (turno completado, liquidación pagada, etc.)
+        se envía un <code>POST</code> automático al endpoint configurado con el payload JSON firmado via
+        <code>HMAC-SHA256</code> en el header <code>X-Signature</code>. Los envíos fallidos se reintentan hasta 3 veces.
+    </div>
+</div>
+
+<div class="row g-3">
+{% for s in suscripciones %}
+    {% set st = stats[s.id|string] ?? {} %}
+    <div class="col-md-6 col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div>
+                        <h6 class="fw-bold mb-1">{{ s.nombre }}</h6>
+                        <div class="text-muted small text-truncate" style="max-width:220px" title="{{ s.url }}">
+                            <i class="bi bi-link-45deg"></i> {{ s.url }}
+                        </div>
+                    </div>
+                    {% if s.activo %}
+                        <span class="badge bg-success-subtle text-success border border-success-subtle">Activa</span>
+                    {% else %}
+                        <span class="badge bg-secondary-subtle text-secondary border">Inactiva</span>
+                    {% endif %}
+                </div>
+
+                {# Eventos suscritos #}
+                <div class="mb-3 d-flex flex-wrap gap-1">
+                {% for evento in s.eventos %}
+                    <span class="badge bg-light text-dark border" style="font-size:.7rem">{{ evento.etiqueta() }}</span>
+                {% endfor %}
+                </div>
+
+                {# Stats entregas #}
+                <div class="d-flex gap-2 mb-3">
+                    <div class="flex-fill text-center bg-success-subtle rounded py-2">
+                        <div class="fw-bold text-success">{{ st['entregado'] ?? 0 }}</div>
+                        <div style="font-size:.7rem" class="text-muted">entregados</div>
+                    </div>
+                    <div class="flex-fill text-center bg-warning-subtle rounded py-2">
+                        <div class="fw-bold text-warning">{{ st['pendiente'] ?? 0 }}</div>
+                        <div style="font-size:.7rem" class="text-muted">pendientes</div>
+                    </div>
+                    <div class="flex-fill text-center bg-danger-subtle rounded py-2">
+                        <div class="fw-bold text-danger">{{ st['fallido'] ?? 0 }}</div>
+                        <div style="font-size:.7rem" class="text-muted">fallidos</div>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2">
+                    <a href="{{ path('app_integracion_show', {id: s.id}) }}"
+                       class="btn btn-outline-primary btn-sm flex-fill">
+                        <i class="bi bi-list-ul me-1"></i>Log
+                    </a>
+                    <a href="{{ path('app_integracion_editar', {id: s.id}) }}"
+                       class="btn btn-outline-secondary btn-sm flex-fill">
+                        <i class="bi bi-pencil me-1"></i>Editar
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+</div>
+{% endif %}
+{% endblock %}
