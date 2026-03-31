@@ -80,12 +80,13 @@ class NotificacionController extends AbstractController
     #[Route('/count', name: 'count', methods: ['GET'])]
     public function count(): JsonResponse
     {
-        /** @var \App\Entity\Tenant\User $user */
-        $user = $this->getUser();
-
-        return $this->json([
-            'count' => $this->repository->countNoLeidasByUser($user),
-        ]);
+        try {
+            /** @var \App\Entity\Tenant\User $user */
+            $user = $this->getUser();
+            return $this->json(['count' => $this->repository->countNoLeidasByUser($user)]);
+        } catch (\Throwable) {
+            return $this->json(['count' => 0]);
+        }
     }
 
     /** Endpoint JSON para el dropdown del header (últimas 5 no leídas) */
