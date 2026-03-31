@@ -33,10 +33,7 @@ final class EventoAdversoGraveHandler
             'tipo'      => $message->tipo,
         ]);
 
-        $destinatarios = array_merge(
-            $this->userRepository->findByRol('ROLE_ADMIN'),
-            $this->userRepository->findByRol('ROLE_COORDINADOR'),
-        );
+        $destinatarios = $this->userRepository->findActivosByRoles(['ROLE_ADMIN', 'ROLE_COORDINADOR']);
 
         $url = $this->urlGenerator->generate('app_evento_show', ['id' => $message->eventoId], UrlGeneratorInterface::ABSOLUTE_PATH);
         $this->notificacionService->crearParaVarios(
@@ -70,7 +67,7 @@ final class EventoAdversoGraveHandler
                         htmlspecialchars($message->gravedad),
                         htmlspecialchars($message->pacienteNombre),
                         htmlspecialchars($message->tipo),
-                        $message->gravedad === 'CRITICO' ? '#dc3545' : '#fd7e14',
+                        $message->gravedad === 'Crítico' ? '#dc3545' : '#fd7e14',
                         htmlspecialchars($message->gravedad),
                         htmlspecialchars($message->fecha),
                         htmlspecialchars($message->descripcion),
