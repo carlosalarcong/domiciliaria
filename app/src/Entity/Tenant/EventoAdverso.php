@@ -94,6 +94,17 @@ class EventoAdverso
     #[ORM\JoinColumn(nullable: true)]
     private ?User $creadoPor = null;
 
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?User $revisadoPor = null;
+
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $revisadoEn = null;
+
+    #[ORM\ManyToOne(targetEntity: User::class)]
+    #[ORM\JoinColumn(nullable: true)]
+    private ?User $cerradoPor = null;
+
     #[ORM\OneToMany(targetEntity: SeguimientoEvento::class, mappedBy: 'evento', cascade: ['persist', 'remove'])]
     private Collection $seguimientos;
 
@@ -150,6 +161,15 @@ class EventoAdverso
 
     public function getCreadoPor(): ?User { return $this->creadoPor; }
     public function setCreadoPor(?User $u): static { $this->creadoPor = $u; return $this; }
+
+    public function getRevisadoPor(): ?User { return $this->revisadoPor; }
+    public function setRevisadoPor(?User $u): static { $this->revisadoPor = $u; return $this; }
+
+    public function getRevisadoEn(): ?\DateTimeImmutable { return $this->revisadoEn; }
+    public function setRevisadoEn(?\DateTimeImmutable $dt): static { $this->revisadoEn = $dt; return $this; }
+
+    public function getCerradoPor(): ?User { return $this->cerradoPor; }
+    public function setCerradoPor(?User $u): static { $this->cerradoPor = $u; return $this; }
 
     /** @return Collection<int, SeguimientoEvento> */
     public function getSeguimientos(): Collection { return $this->seguimientos; }

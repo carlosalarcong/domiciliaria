@@ -77,13 +77,8 @@ class EventoAdversoType extends AbstractType
             ->add('responsable', EntityType::class, [
                 'label'        => 'Responsable de seguimiento',
                 'class'        => User::class,
+                'choices'      => $options['responsables'],
                 'choice_label' => fn(User $u) => $u->getNombreCompleto() . ' (' . $u->getRolEtiqueta() . ')',
-                'query_builder' => fn($repo) => $repo->createQueryBuilder('u')
-                    ->where("u.roles LIKE :admin OR u.roles LIKE :coord")
-                    ->setParameter('admin', '%ROLE_ADMIN%')
-                    ->setParameter('coord', '%ROLE_COORDINADOR%')
-                    ->andWhere('u.activo = true')
-                    ->orderBy('u.apellido', 'ASC'),
                 'placeholder'  => '— Sin responsable asignado —',
                 'required'     => false,
             ])
@@ -92,6 +87,9 @@ class EventoAdversoType extends AbstractType
 
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setDefaults(['data_class' => \App\Entity\Tenant\EventoAdverso::class]);
+        $resolver->setDefaults([
+            'data_class'   => EventoAdverso::class,
+            'responsables' => [],
+        ]);
     }
 }

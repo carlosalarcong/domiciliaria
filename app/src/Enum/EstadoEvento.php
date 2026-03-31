@@ -13,8 +13,8 @@ enum EstadoEvento: string
     public function etiqueta(): string
     {
         return match ($this) {
-            self::ABIERTO    => 'Abierto',
-            self::EN_PROCESO => 'En proceso',
+            self::ABIERTO    => 'Registrado',
+            self::EN_PROCESO => 'En revisión',
             self::CERRADO    => 'Cerrado',
         };
     }
@@ -27,4 +27,8 @@ enum EstadoEvento: string
             self::CERRADO    => 'bg-success',
         };
     }
+
+    public function puedePonerEnRevision(): bool { return $this === self::ABIERTO; }
+    public function puedeCerrar(): bool          { return $this === self::EN_PROCESO; }
+    public function estaCerrado(): bool          { return $this === self::CERRADO; }
 }
