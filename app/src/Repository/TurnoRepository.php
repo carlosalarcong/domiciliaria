@@ -9,6 +9,7 @@ use App\Entity\Tenant\Paciente;
 use App\Entity\Tenant\Trabajador;
 use App\Entity\Tenant\Turno;
 use App\Enum\EstadoTurno;
+use App\Enum\TipoTurno;
 use Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository;
 use Doctrine\Persistence\ManagerRegistry;
 
@@ -188,5 +189,76 @@ class TurnoRepository extends ServiceEntityRepository
         }
 
         return $eventos;
+    }
+
+    /**
+     * Historial paginado de turnos de un trabajador, con filtro opcional por año y mes.
+     *
+     * @return Turno[]
+     */
+    public function findHistorialByTrabajador(
+        Trabajador $trabajador,
+        ?int $anio = null,
+        ?int $mes  = null,
+    ): array {
+        $qb = $this->createQueryBuilder('t')
+            ->leftJoin('t.paciente', 'p')
+            ->addSelect('p')
+            ->where('t.trabajador = :trabajador')
+            ->setParameter('trabajador', $trabajador)
+            ->orderBy('t.fecha', 'DESC')
+            ->addOrderBy('t.horaInicio', 'DESC');
+
+        if ($anio !== null) {
+            $qb->andWhere('t.fecha BETWEEN :desde AND :hasta')
+               ->setParameter('desde', new \DateTime("{$anio}-" . ($mes ?? '01') . "-01"))
+               ->setParameter('hasta', $mes !== null
+                   ? (new \DateTime("{$anio}-{$mes}-01"))->modify('last day of this month')
+                   : new \DateTime("{$anio}-12-31"));
+        }
+
+        return $qb->getQuery()->getResult();
+    }
+
+    /**
+     * Resumen de horas trabajadas por mes en un año dado, para un trabajador.
+     * Devuelve array: [['anio'=>2026,'mes'=>3,'total_turnos'=>10,'total_horas'=>120], ...]
+     */
+    public function resumenHorasPorMes(Trabajador $trabajador, int $anio): array
+    {
+        $desde = new \DateTime("{$anio}-01-01");
+        $hasta = new \DateTime("{$anio}-12-31");
+
+        $rows = $this->createQueryBuilder('t')
+            ->select(
+                'SUBSTRING(t.fecha, 1, 7) as anio_mes',
+                'COUNT(t.id) as total_turnos',
+                't.tipoTurno as tipo'
+            )
+            ->where('t.trabajador = :trabajador')
+            ->andWhere('t.fecha BETWEEN :desde AND :hasta')
+            ->andWhere('t.estado != :desc')
+            ->setParameter('trabajador', $trabajador)
+            ->setParameter('desde', $desde)
+            ->setParameter('hasta', $hasta)
+            ->setParameter('desc', EstadoTurno::DESCUBIERTO)
+            ->groupBy('anio_mes, t.tipoTurno')
+            ->orderBy('anio_mes', 'DESC')
+            ->getQuery()
+            ->getResult();
+
+        // Agrupar por mes y sumar horas según tipo de turno
+        $resumen = [];
+        foreach ($rows as $row) {
+            $key = $row['anio_mes'];
+            if (!isset($resumen[$key])) {
+                $resumen[$key] = ['anio_mes' => $key, 'total_turnos' => 0, 'total_horas' => 0];
+            }
+            $tipo  = $row['tipo'] instanceof TipoTurno ? $row['tipo'] : TipoTurno::from($row['tipo']);
+            $resumen[$key]['total_turnos'] += (int) $row['total_turnos'];
+            $resumen[$key]['total_horas']  += (int) $row['total_turnos'] * $tipo->duracionHoras();
+        }
+
+        return array_values($resumen);
     }
 }
