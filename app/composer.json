@@ -16,6 +16,7 @@
         "gedmo/doctrine-extensions": "^3.22",
         "hakam/multi-tenancy-bundle": "^3.0",
         "knplabs/knp-paginator-bundle": "^6.10",
+        "nelmio/security-bundle": "^3.9",
         "predis/predis": "^3.4",
         "scheb/2fa-backup-code": "^7.13",
         "scheb/2fa-bundle": "^7.13",
