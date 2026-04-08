@@ -16,6 +16,7 @@ use App\Enum\EstadoTurno;
 use App\Enum\TipoConcepto;
 use App\Enum\TipoTurno;
 use App\Repository\LiquidacionMensualRepository;
+use App\Repository\TarifaRepository;
 use App\Repository\TurnoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -25,6 +26,7 @@ class FinanzasService
         private readonly EntityManagerInterface $em,
         private readonly TurnoRepository $turnoRepository,
         private readonly LiquidacionMensualRepository $liquidacionRepository,
+        private readonly TarifaRepository $tarifaRepository,
     ) {}
 
     // ─── Liquidaciones ───────────────────────────────────────────────────────
@@ -32,12 +34,13 @@ class FinanzasService
     /**
      * Genera (o regenera) la liquidación mensual de un trabajador
      * a partir de sus turnos completados en el período.
+     * Las tarifas se resuelven automáticamente desde la BD según el concepto,
+     * la fecha del turno y el mandante del paciente.
      */
     public function generarLiquidacion(
         Trabajador $trabajador,
         int $anio,
         int $mes,
-        array $tarifas,
         User $creadoPor,
     ): LiquidacionMensual {
         // Buscar o crear
@@ -68,10 +71,23 @@ class FinanzasService
                 continue;
             }
 
-            $concepto   = $this->tipoTurnoAConcepto($turno->getTipoTurno(), $turno->isEsReemplazo());
-            $horas      = (float) $turno->getTipoTurno()->duracionHoras();
-            $valorUnitario = $tarifas[$concepto->value] ?? 0.0;
-            $subtotal   = $horas * $valorUnitario;
+            $concepto  = $this->tipoTurnoAConcepto($turno->getTipoTurno(), $turno->isEsReemplazo());
+            $horas     = (float) $turno->getTipoTurno()->duracionHoras();
+            $mandante  = $turno->getPaciente()?->getMandante();
+            $fecha     = $turno->getFecha() ?? new \DateTimeImmutable();
+
+            $tarifa = $this->tarifaRepository->findTarifaVigente($concepto, $fecha, $mandante);
+
+            if ($tarifa === null) {
+                throw new \RuntimeException(sprintf(
+                    'No existe tarifa configurada para "%s" vigente en %s. Configure una tarifa general o específica para el mandante en Configuración → Tarifas.',
+                    $concepto->etiqueta(),
+                    $fecha->format('d/m/Y'),
+                ));
+            }
+
+            $valorUnitario = (float) $tarifa->getValorUnitario();
+            $subtotal      = $horas * $valorUnitario;
 
             $item = new ItemLiquidacion();
             $item->setLiquidacion($liquidacion)
@@ -144,6 +160,7 @@ class FinanzasService
         float $montoNeto,
         User $creadoPor,
         ?string $numeroFactura = null,
+        float $descuentoPorTurnoDescubierto = 0.0,
     ): Factura {
         $factura = new Factura($anio, $mes);
         $factura->setMandante($mandante)
@@ -151,11 +168,36 @@ class FinanzasService
                 ->setMontoNeto(number_format($montoNeto, 2, '.', ''))
                 ->setCreadoPor($creadoPor);
 
-        // Calcular totales del período (turnos completados de pacientes del mandante)
+        // Calcular totales del período (turnos del mandante)
         $desde  = new \DateTime("{$anio}-{$mes}-01");
         $hasta  = (clone $desde)->modify('last day of this month');
         $turnos = $this->turnoRepository->findByMandanteYRango($mandante, $desde, $hasta);
-        $factura->setTotalTurnos(count(array_filter($turnos, fn($t) => $t->getEstado() === EstadoTurno::COMPLETADO)));
+
+        $completados  = 0;
+        $descubiertos = 0;
+        foreach ($turnos as $turno) {
+            if ($turno->getEstado() === EstadoTurno::COMPLETADO) {
+                $completados++;
+            } elseif ($turno->getEstado() === EstadoTurno::DESCUBIERTO) {
+                $descubiertos++;
+            }
+        }
+
+        $factura->setTotalTurnos($completados)
+                ->setTurnosDescubiertos($descubiertos);
+
+        // Descuento automático por turnos descubiertos
+        if ($descubiertos > 0 && $descuentoPorTurnoDescubierto > 0.0) {
+            $montoDescuento = $descubiertos * $descuentoPorTurnoDescubierto;
+            $factura->setMontoDescuento(number_format($montoDescuento, 2, '.', ''))
+                    ->setDescripcionDescuento(sprintf(
+                        'Descuento por %d turno%s descubierto%s ($%s c/u)',
+                        $descubiertos,
+                        $descubiertos > 1 ? 's' : '',
+                        $descubiertos > 1 ? 's' : '',
+                        number_format($descuentoPorTurnoDescubierto, 0, ',', '.'),
+                    ));
+        }
 
         $factura->recalcularIva();
         $this->em->persist($factura);

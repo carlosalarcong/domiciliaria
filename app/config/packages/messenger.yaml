@@ -16,5 +16,11 @@ framework:
             sync: 'sync://'
 
         routing:
+            # Procesados por worker (cron diario o no urgente)
             App\Message\TurnoDescubiertoMessage: async
             App\Message\RevisarTurnosDescubiertosMessage: async
+            App\Message\BackupDatabaseMessage: async
+            App\Message\DocumentoVencimientoMessage: async
+            # Notificaciones síncronas: in-app inmediata (evento grave, responsable asignado, cambio estado)
+            # EventoAdversoGraveMessage, EventoResponsableAsignadoMessage y PacienteEstadoCambioMessage
+            # sin routing → sync por defecto

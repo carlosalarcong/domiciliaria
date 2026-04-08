@@ -1,0 +1,169 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ suscripcion.nombre }} — Log{% endblock %}
+{% block page_title %}Integraciones{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">{{ suscripcion.nombre }}</h4>
+        <small class="text-muted">
+            <i class="bi bi-link-45deg"></i> {{ suscripcion.url }}
+            &nbsp;·&nbsp;
+            {% if suscripcion.activo %}
+                <span class="text-success"><i class="bi bi-circle-fill" style="font-size:.5rem"></i> Activa</span>
+            {% else %}
+                <span class="text-muted"><i class="bi bi-circle" style="font-size:.5rem"></i> Inactiva</span>
+            {% endif %}
+        </small>
+    </div>
+    <div class="d-flex gap-2">
+        <a href="{{ path('app_integracion_editar', {id: suscripcion.id}) }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-pencil me-1"></i>Editar
+        </a>
+        <a href="{{ path('app_integracion_index') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-arrow-left me-1"></i>Volver
+        </a>
+    </div>
+</div>
+
+{# Eventos suscritos #}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-2">
+        <div class="d-flex flex-wrap gap-2 align-items-center">
+            <span class="text-muted small fw-semibold me-1">Escucha:</span>
+            {% for evento in suscripcion.eventos %}
+                <span class="badge bg-primary-subtle text-primary border border-primary-subtle">
+                    {{ evento.etiqueta() }}
+                </span>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+
+{# Filtros #}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-2">
+        <form method="get" class="d-flex gap-2 align-items-center flex-wrap">
+            <span class="text-muted small">Filtrar:</span>
+            {% for estado in estados %}
+            <a href="{{ path('app_integracion_show', {id: suscripcion.id, estado: estado}) }}"
+               class="btn btn-sm {{ filtroEstado == estado ? 'btn-primary' : 'btn-outline-secondary' }}">
+                {% if estado == 'entregado' %}<i class="bi bi-check-circle me-1 text-success"></i>
+                {% elseif estado == 'fallido' %}<i class="bi bi-x-circle me-1 text-danger"></i>
+                {% else %}<i class="bi bi-clock me-1 text-warning"></i>{% endif %}
+                {{ estado|capitalize }}
+            </a>
+            {% endfor %}
+            {% if filtroEstado %}
+            <a href="{{ path('app_integracion_show', {id: suscripcion.id}) }}" class="btn btn-sm btn-outline-secondary">
+                <i class="bi bi-x"></i> Todos
+            </a>
+            {% endif %}
+        </form>
+    </div>
+</div>
+
+{# Log de deliveries #}
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        {% if pagination.items is empty %}
+        <div class="text-center text-muted py-5">
+            <i class="bi bi-inbox fs-1 opacity-25 d-block mb-2"></i>
+            Sin entregas registradas.
+        </div>
+        {% else %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size:.875rem">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3" style="width:150px">Fecha</th>
+                        <th>Evento</th>
+                        <th style="width:110px">Estado</th>
+                        <th style="width:80px">HTTP</th>
+                        <th style="width:70px">Intentos</th>
+                        <th class="pe-3 text-end" style="width:110px">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for delivery in pagination %}
+                <tr>
+                    <td class="ps-3 text-muted small">{{ delivery.creadoEn|date('d/m/Y H:i:s') }}</td>
+                    <td>
+                        <span class="badge bg-light text-dark border">{{ delivery.webhookEvento.etiqueta() }}</span>
+                    </td>
+                    <td>
+                        {% if delivery.estado == 'entregado' %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">
+                                <i class="bi bi-check-circle me-1"></i>Entregado
+                            </span>
+                        {% elseif delivery.estado == 'fallido' %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                                <i class="bi bi-x-circle me-1"></i>Fallido
+                            </span>
+                        {% else %}
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">
+                                <i class="bi bi-clock me-1"></i>Pendiente
+                            </span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center">
+                        {% if delivery.codigoRespuesta %}
+                            <code class="small {{ delivery.codigoRespuesta < 300 ? 'text-success' : 'text-danger' }}">
+                                {{ delivery.codigoRespuesta }}
+                            </code>
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center text-muted small">{{ delivery.intentos }}</td>
+                    <td class="text-end pe-3">
+                        {% if delivery.estado != 'entregado' %}
+                        <form method="post"
+                              action="{{ path('app_integracion_delivery_reintentar', {id: delivery.id}) }}"
+                              class="d-inline">
+                            <input type="hidden" name="_token"
+                                   value="{{ csrf_token('wh_retry_' ~ delivery.id) }}">
+                            <button type="submit" class="btn btn-sm btn-outline-primary py-0 px-2"
+                                    style="font-size:.75rem">
+                                <i class="bi bi-arrow-repeat me-1"></i>Reintentar
+                            </button>
+                        </form>
+                        {% endif %}
+
+                        {% if delivery.respuestaBody %}
+                        <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 ms-1"
+                                style="font-size:.75rem"
+                                data-bs-toggle="modal" data-bs-target="#modalBody{{ loop.index }}">
+                            <i class="bi bi-eye"></i>
+                        </button>
+
+                        {# Modal respuesta #}
+                        <div class="modal fade" id="modalBody{{ loop.index }}" tabindex="-1">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content border-0 shadow">
+                                    <div class="modal-header border-0">
+                                        <h6 class="modal-title fw-bold">Respuesta del endpoint</h6>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <pre class="bg-light p-3 rounded small mb-0" style="max-height:300px;overflow-y:auto">{{ delivery.respuestaBody }}</pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="px-3 py-2 border-top d-flex justify-content-between align-items-center">
+            <small class="text-muted">{{ pagination.totalItemCount }} entregas</small>
+            <div>{{ knp_pagination_render(pagination) }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

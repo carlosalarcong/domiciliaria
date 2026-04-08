@@ -12,14 +12,17 @@ use App\Entity\Tenant\User;
 use App\Enum\EstadoPaciente;
 use App\Enum\TipoBitacora;
 use App\Enum\TipoComunicacion;
+use App\Message\PacienteEstadoCambioMessage;
 use App\Repository\PacienteRepository;
 use Doctrine\ORM\EntityManagerInterface;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 class PacienteService
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly PacienteRepository $pacienteRepository,
+        private readonly MessageBusInterface $bus,
     ) {}
 
     public function registrar(Paciente $paciente): Paciente
@@ -63,6 +66,13 @@ class PacienteService
         $paciente->setEstado($nuevoEstado);
         $this->em->flush();
 
+        $this->bus->dispatch(new PacienteEstadoCambioMessage(
+            pacienteId:     (string) $paciente->getId(),
+            pacienteNombre: $paciente->getNombreCompleto(),
+            estadoAnterior: $estadoAnterior->value,
+            estadoNuevo:    $nuevoEstado->value,
+        ));
+
         return $paciente;
     }
 
@@ -71,6 +81,8 @@ class PacienteService
         if ($paciente->getEstado() === EstadoPaciente::DADO_DE_BAJA) {
             throw new \LogicException('El paciente ya está dado de baja.');
         }
+
+        $estadoAnterior = $paciente->getEstado();
 
         $paciente->setEstado(EstadoPaciente::DADO_DE_BAJA);
         $paciente->setFechaTermino(new \DateTime());
@@ -84,6 +96,13 @@ class PacienteService
 
         $this->em->persist($entrada);
         $this->em->flush();
+
+        $this->bus->dispatch(new PacienteEstadoCambioMessage(
+            pacienteId:     (string) $paciente->getId(),
+            pacienteNombre: $paciente->getNombreCompleto(),
+            estadoAnterior: $estadoAnterior->value,
+            estadoNuevo:    EstadoPaciente::DADO_DE_BAJA->value,
+        ));
 
         return $paciente;
     }

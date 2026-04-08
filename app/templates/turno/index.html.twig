@@ -45,6 +45,15 @@
 </div>
 {% endblock %}
 
+{% block stylesheets %}
+<style>
+@media (max-width: 767.98px) {
+    .fc .fc-toolbar-title { font-size: 1rem; }
+    .fc .fc-button { padding: .25rem .5rem; font-size: .8rem; }
+}
+</style>
+{% endblock %}
+
 {% block javascripts %}
 {{ parent() }}
 {# FullCalendar vía CDN #}
@@ -57,20 +66,33 @@ document.addEventListener('DOMContentLoaded', function () {
     const modalBody  = document.getElementById('turnoModalBody');
     const modalFooter = document.getElementById('turnoModalFooter');
 
+    const isMobile = () => window.innerWidth < 768;
+
+    const toolbarDesktop = {
+        left:   'prev,next today',
+        center: 'title',
+        right:  'dayGridMonth,timeGridWeek,listWeek',
+    };
+    const toolbarMobile = {
+        left:   'prev,next',
+        center: 'title',
+        right:  'today listWeek',
+    };
+
     const calendar = new FullCalendar.Calendar(calendarEl, {
         locale: 'es',
-        initialView: 'dayGridMonth',
-        headerToolbar: {
-            left:   'prev,next today',
-            center: 'title',
-            right:  'dayGridMonth,timeGridWeek,listWeek',
-        },
+        initialView: isMobile() ? 'listWeek' : 'dayGridMonth',
+        headerToolbar: isMobile() ? toolbarMobile : toolbarDesktop,
         buttonText: {
             today:   'Hoy',
             month:   'Mes',
             week:    'Semana',
             day:     'Día',
             list:    'Lista',
+        },
+        windowResize: function () {
+            calendar.changeView(isMobile() ? 'listWeek' : 'dayGridMonth');
+            calendar.setOption('headerToolbar', isMobile() ? toolbarMobile : toolbarDesktop);
         },
         events: {
             url:    '{{ path('app_turno_api_eventos') }}',

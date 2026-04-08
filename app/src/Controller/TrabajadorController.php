@@ -13,6 +13,7 @@ use App\Form\TrabajadorType;
 use App\Repository\DisponibilidadTrabajadorRepository;
 use App\Repository\DocumentoTrabajadorRepository;
 use App\Repository\TrabajadorRepository;
+use App\Repository\TurnoRepository;
 use App\Service\TrabajadorService;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
@@ -36,6 +37,7 @@ class TrabajadorController extends AbstractController
         private readonly TrabajadorService $trabajadorService,
         private readonly DocumentoTrabajadorRepository $documentoRepository,
         private readonly DisponibilidadTrabajadorRepository $disponibilidadRepository,
+        private readonly TurnoRepository $turnoRepository,
     ) {}
 
     #[Route('', name: 'index', methods: ['GET'])]
@@ -71,14 +73,25 @@ class TrabajadorController extends AbstractController
     #[Route('/{id}', name: 'show', methods: ['GET'])]
     public function show(Trabajador $trabajador, Request $request): Response
     {
-        $tab          = $request->query->get('tab', 'turnos');
-        $documentos   = $this->documentoRepository->findByTrabajador($trabajador);
+        $tab              = $request->query->get('tab', 'turnos');
+        $documentos       = $this->documentoRepository->findByTrabajador($trabajador);
         $disponibilidades = $this->disponibilidadRepository->findByTrabajadorOrdenado($trabajador);
 
-        $formDoc   = $this->createForm(DocumentoTrabajadorType::class, null, [
+        $anioActual = (int) date('Y');
+        $anioFiltro = $request->query->getInt('anio', $anioActual);
+        $mesFiltro  = $request->query->getInt('mes', 0) ?: null;
+
+        $historial      = $this->turnoRepository->findHistorialByTrabajador($trabajador, $anioFiltro, $mesFiltro);
+        $resumenMensual = $this->turnoRepository->resumenHorasPorMes($trabajador, $anioFiltro);
+
+        // KPIs del año filtrado
+        $totalHorasAnio  = array_sum(array_column($resumenMensual, 'total_horas'));
+        $totalTurnosAnio = array_sum(array_column($resumenMensual, 'total_turnos'));
+
+        $formDoc  = $this->createForm(DocumentoTrabajadorType::class, null, [
             'action' => $this->generateUrl('app_trabajador_documento_subir', ['id' => $trabajador->getId()]),
         ]);
-        $formDisp  = $this->createForm(DisponibilidadTrabajadorType::class, new DisponibilidadTrabajador(), [
+        $formDisp = $this->createForm(DisponibilidadTrabajadorType::class, new DisponibilidadTrabajador(), [
             'action' => $this->generateUrl('app_trabajador_disponibilidad_nueva', ['id' => $trabajador->getId()]),
         ]);
 
@@ -89,6 +102,13 @@ class TrabajadorController extends AbstractController
             'disponibilidades' => $disponibilidades,
             'formDoc'          => $formDoc,
             'formDisp'         => $formDisp,
+            'historial'        => $historial,
+            'resumenMensual'   => $resumenMensual,
+            'totalHorasAnio'   => $totalHorasAnio,
+            'totalTurnosAnio'  => $totalTurnosAnio,
+            'anioFiltro'       => $anioFiltro,
+            'mesFiltro'        => $mesFiltro,
+            'anios'            => range($anioActual, max($anioActual - 4, 2024)),
         ]);
     }
 
@@ -147,6 +167,7 @@ class TrabajadorController extends AbstractController
                     $form->get('tipo')->getData(),
                     $form->get('descripcion')->getData(),
                     $this->getUser(),
+                    $form->get('fechaVencimiento')->getData(),
                 );
                 $this->addFlash('success', 'Documento subido correctamente.');
             } catch (\Throwable $e) {

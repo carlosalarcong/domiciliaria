@@ -27,4 +27,26 @@ class DocumentoTrabajadorRepository extends ServiceEntityRepository
             ->getQuery()
             ->getResult();
     }
+
+    /**
+     * Documentos que vencen en los próximos $dias días (sin contar los ya vencidos).
+     *
+     * @return DocumentoTrabajador[]
+     */
+    public function findProximosAVencer(int $dias = 30): array
+    {
+        $hoy   = new \DateTime('today');
+        $hasta = new \DateTime("+{$dias} days");
+
+        return $this->createQueryBuilder('d')
+            ->join('d.trabajador', 't')
+            ->where('d.fechaVencimiento IS NOT NULL')
+            ->andWhere('d.fechaVencimiento >= :hoy')
+            ->andWhere('d.fechaVencimiento <= :hasta')
+            ->setParameter('hoy', $hoy)
+            ->setParameter('hasta', $hasta)
+            ->orderBy('d.fechaVencimiento', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
 }

@@ -1,0 +1,255 @@
+{% extends 'base_campo.html.twig' %}
+
+{% set paciente   = turno.paciente %}
+{% set completado = turno.registroTermino is not null %}
+{% set iniciado   = turno.registroInicio is not null and not completado %}
+{% set pendiente  = turno.registroInicio is null %}
+
+{% block title %}
+    Turno — {{ paciente ? paciente.nombreCompleto : 'Sin paciente' }}
+{% endblock %}
+
+{% block header_title %}
+    <a href="{{ path('app_campo_index') }}" class="text-white text-decoration-none me-1">
+        <i class="bi bi-chevron-left"></i>
+    </a>
+    Detalle del turno
+{% endblock %}
+
+{% block content %}
+
+{# ── Status hero ── #}
+<div class="rounded-3 text-white text-center py-4 mb-3
+    {{ completado ? 'bg-success' : (iniciado ? 'bg-warning' : 'bg-secondary') }}"
+    style="background: {{ completado ? '#16a34a' : (iniciado ? '#d97706' : '#475569') }} !important">
+    {% if completado %}
+        <i class="bi bi-check-circle-fill" style="font-size:2.5rem"></i>
+        <div class="fw-bold fs-5 mt-2">Turno Completado</div>
+        <div class="opacity-75 small">
+            {{ turno.registroInicio|date('H:i') }} → {{ turno.registroTermino|date('H:i') }}
+        </div>
+    {% elseif iniciado %}
+        <i class="bi bi-play-circle-fill" style="font-size:2.5rem"></i>
+        <div class="fw-bold fs-5 mt-2">Turno en Curso</div>
+        <div class="opacity-75 small">Iniciado a las {{ turno.registroInicio|date('H:i') }}</div>
+    {% else %}
+        <i class="bi bi-hourglass-split" style="font-size:2.5rem"></i>
+        <div class="fw-bold fs-5 mt-2">Turno Pendiente</div>
+        <div class="opacity-75 small">
+            {{ turno.horaInicio ? turno.horaInicio|date('H:i') : '—' }}
+            {% if turno.horaTermino %} → {{ turno.horaTermino|date('H:i') }}{% endif %}
+        </div>
+    {% endif %}
+</div>
+
+{# ── Acción principal ── #}
+{% if pendiente %}
+<form method="post" action="{{ path('app_campo_turno_iniciar', {id: turno.id}) }}" class="mb-3">
+    <input type="hidden" name="_token" value="{{ csrf_token('campo_' ~ turno.id) }}">
+    <button type="submit" class="btn-campo btn-iniciar">
+        <i class="bi bi-play-circle-fill" style="font-size:1.3rem"></i>
+        Iniciar turno ahora
+    </button>
+</form>
+{% elseif iniciado %}
+<form method="post" action="{{ path('app_campo_turno_terminar', {id: turno.id}) }}" class="mb-3"
+      onsubmit="return confirm('¿Confirmas que el turno ha finalizado?')">
+    <input type="hidden" name="_token" value="{{ csrf_token('campo_' ~ turno.id) }}">
+    <button type="submit" class="btn-campo btn-terminar">
+        <i class="bi bi-stop-circle-fill" style="font-size:1.3rem"></i>
+        Finalizar turno
+    </button>
+</form>
+{% endif %}
+
+{# ── Paciente ── #}
+{% if paciente %}
+<div class="bg-white rounded-3 shadow-sm mb-3">
+    <div class="px-3 py-2 border-bottom" style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#718096">
+        Paciente
+    </div>
+
+    <div class="info-row">
+        <i class="bi bi-person-fill"></i>
+        <div>
+            <div class="label">Nombre</div>
+            <div class="value fw-bold fs-5">{{ paciente.nombreCompleto }}</div>
+            {% if paciente.fechaNacimiento %}
+                <div class="text-muted small">{{ paciente.getEdad() }} años</div>
+            {% endif %}
+        </div>
+    </div>
+
+    {% if paciente.direccion %}
+    <div class="info-row">
+        <i class="bi bi-geo-alt-fill text-danger"></i>
+        <div>
+            <div class="label">Dirección</div>
+            <div class="value">{{ paciente.direccion }}, {{ paciente.comuna }}</div>
+            <a href="https://maps.google.com/?q={{ (paciente.direccion ~ ' ' ~ paciente.comuna ~ ' ' ~ paciente.region)|url_encode }}"
+               target="_blank" rel="noopener"
+               class="btn btn-sm btn-outline-primary mt-2 rounded-pill" style="font-size:.8rem">
+                <i class="bi bi-map me-1"></i>Ver en mapa
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if paciente.telefono %}
+    <div class="info-row">
+        <i class="bi bi-telephone-fill text-success"></i>
+        <div>
+            <div class="label">Teléfono paciente</div>
+            <a href="tel:{{ paciente.telefono }}" class="value text-decoration-none fs-5 fw-semibold text-success">
+                {{ paciente.telefono }}
+            </a>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if paciente.tutorNombre %}
+    <div class="info-row">
+        <i class="bi bi-people-fill text-primary"></i>
+        <div>
+            <div class="label">Tutor / Contacto de emergencia</div>
+            <div class="value">{{ paciente.tutorNombre }} ({{ paciente.tutorRelacion }})</div>
+            {% if paciente.tutorTelefono %}
+            <a href="tel:{{ paciente.tutorTelefono }}" class="btn btn-sm btn-outline-success mt-1 rounded-pill" style="font-size:.8rem">
+                <i class="bi bi-telephone me-1"></i>{{ paciente.tutorTelefono }}
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if paciente.telefonoEmergencia and paciente.telefonoEmergencia != paciente.tutorTelefono %}
+    <div class="info-row">
+        <i class="bi bi-telephone-x-fill text-danger"></i>
+        <div>
+            <div class="label">Emergencia</div>
+            <a href="tel:{{ paciente.telefonoEmergencia }}" class="value text-decoration-none text-danger fw-semibold">
+                {{ paciente.telefonoEmergencia }}
+            </a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+{# ── Clínico ── #}
+{% if paciente.diagnosticos or paciente.medicamentos or paciente.observaciones %}
+<div class="bg-white rounded-3 shadow-sm mb-3">
+    <div class="px-3 py-2 border-bottom" style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#718096">
+        Información clínica
+    </div>
+
+    {% if paciente.diagnosticos %}
+    <div class="info-row">
+        <i class="bi bi-clipboard2-pulse-fill text-danger"></i>
+        <div>
+            <div class="label">Diagnósticos</div>
+            <div class="value" style="white-space:pre-line;font-size:.9rem">{{ paciente.diagnosticos }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if paciente.medicamentos %}
+    <div class="info-row">
+        <i class="bi bi-capsule-pill text-warning"></i>
+        <div>
+            <div class="label">Medicamentos</div>
+            <div class="value" style="white-space:pre-line;font-size:.9rem">{{ paciente.medicamentos }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if paciente.observaciones %}
+    <div class="info-row">
+        <i class="bi bi-sticky-fill text-info"></i>
+        <div>
+            <div class="label">Observaciones</div>
+            <div class="value" style="white-space:pre-line;font-size:.9rem">{{ paciente.observaciones }}</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endif %}
+
+{# ── Turno ── #}
+<div class="bg-white rounded-3 shadow-sm mb-3">
+    <div class="px-3 py-2 border-bottom" style="font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#718096">
+        Detalles del turno
+    </div>
+
+    <div class="info-row">
+        <i class="bi bi-calendar3"></i>
+        <div>
+            <div class="label">Fecha</div>
+            <div class="value">{{ turno.fecha|date('d/m/Y') }}</div>
+        </div>
+    </div>
+
+    <div class="info-row">
+        <i class="bi bi-clock"></i>
+        <div>
+            <div class="label">Horario programado</div>
+            <div class="value">
+                {{ turno.horaInicio ? turno.horaInicio|date('H:i') : '—' }}
+                {% if turno.horaTermino %} → {{ turno.horaTermino|date('H:i') }}{% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="info-row">
+        <i class="bi bi-tag-fill"></i>
+        <div>
+            <div class="label">Tipo de turno</div>
+            <div class="value">{{ turno.tipoTurno.etiqueta() }}</div>
+        </div>
+    </div>
+
+    {% if turno.esReemplazo %}
+    <div class="info-row">
+        <i class="bi bi-arrow-repeat text-warning"></i>
+        <div>
+            <div class="label">Turno de reemplazo</div>
+            <div class="value">
+                {{ turno.motivoReemplazo ? turno.motivoReemplazo.value : '' }}
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if turno.observaciones %}
+    <div class="info-row">
+        <i class="bi bi-chat-text-fill text-muted"></i>
+        <div>
+            <div class="label">Observaciones del turno</div>
+            <div class="value" style="white-space:pre-line;font-size:.9rem">{{ turno.observaciones }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if turno.registroInicio %}
+    <div class="info-row">
+        <i class="bi bi-play-fill text-success"></i>
+        <div>
+            <div class="label">Registro de inicio</div>
+            <div class="value text-success">{{ turno.registroInicio|date('H:i:s') }}</div>
+        </div>
+    </div>
+    {% endif %}
+
+    {% if turno.registroTermino %}
+    <div class="info-row">
+        <i class="bi bi-stop-fill text-danger"></i>
+        <div>
+            <div class="label">Registro de término</div>
+            <div class="value text-danger">{{ turno.registroTermino|date('H:i:s') }}</div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div style="height: 1rem"></div>
+{% endblock %}

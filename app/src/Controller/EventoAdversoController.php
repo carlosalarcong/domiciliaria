@@ -10,6 +10,7 @@ use App\Enum\GravedadEvento;
 use App\Form\EventoAdversoType;
 use App\Form\SeguimientoEventoType;
 use App\Repository\EventoAdversoRepository;
+use App\Repository\UserRepository;
 use App\Service\EventoAdversoService;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -26,7 +27,13 @@ class EventoAdversoController extends AbstractController
         private readonly EventoAdversoRepository $repository,
         private readonly EventoAdversoService $service,
         private readonly PaginatorInterface $paginator,
+        private readonly UserRepository $userRepository,
     ) {}
+
+    private function responsables(): array
+    {
+        return $this->userRepository->findActivosByRoles(['ROLE_ADMIN', 'ROLE_COORDINADOR']);
+    }
 
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(Request $request): Response
@@ -55,7 +62,7 @@ class EventoAdversoController extends AbstractController
     public function new(Request $request): Response
     {
         $evento = new EventoAdverso();
-        $form   = $this->createForm(EventoAdversoType::class, $evento);
+        $form   = $this->createForm(EventoAdversoType::class, $evento, ['responsables' => $this->responsables()]);
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
@@ -101,10 +108,11 @@ class EventoAdversoController extends AbstractController
         }
 
         $form = $this->createForm(EventoAdversoType::class, $evento);
+        $responsableAnterior = $evento->getResponsable();
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
-            $this->service->actualizar($evento);
+            $this->service->actualizar($evento, $responsableAnterior);
             $this->addFlash('success', 'Evento actualizado correctamente.');
 
             return $this->redirectToRoute('app_evento_show', ['id' => $evento->getId()]);
@@ -114,6 +122,24 @@ class EventoAdversoController extends AbstractController
             'evento' => $evento,
             'form'   => $form,
         ]);
+    }
+
+    #[Route('/{id}/en-revision', name: 'en_revision', methods: ['POST'])]
+    public function enRevision(Request $request, EventoAdverso $evento): Response
+    {
+        if (!$this->isCsrfTokenValid('en_revision_' . $evento->getId(), $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        if (!$evento->getEstado()->puedePonerEnRevision()) {
+            $this->addFlash('warning', 'El evento no puede ponerse en revisión en su estado actual.');
+            return $this->redirectToRoute('app_evento_show', ['id' => $evento->getId()]);
+        }
+
+        $this->service->ponerEnRevision($evento, $this->getUser());
+        $this->addFlash('success', 'Evento puesto en revisión.');
+
+        return $this->redirectToRoute('app_evento_show', ['id' => $evento->getId()]);
     }
 
     #[Route('/{id}/cerrar', name: 'cerrar', methods: ['POST'])]

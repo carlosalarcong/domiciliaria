@@ -81,6 +81,7 @@ Servicios disponibles:
 | Nginx (app web) | http://localhost:8090 |
 | PostgreSQL | localhost:5432 |
 | Redis | localhost:6379 |
+| Mailpit (bandeja de emails dev) | http://localhost:8025 |
 
 ### 3. Instalar dependencias PHP
 
@@ -118,14 +119,39 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 - Gestión de usuarios con roles (`ROLE_ADMIN`, `ROLE_COORDINADOR`, `ROLE_ENFERMERA`, `ROLE_TENS`, `ROLE_VISUALIZADOR`)
 - Voters para permisos granulares
 - Audit log automático (Gedmo Loggable)
-- Dashboard principal
+- Dashboard con datos reales: 4 KPIs en tiempo real (pacientes activos, turnos del día con badge de descubiertos, eventos abiertos, trabajadores activos), tabla de turnos de hoy ordenada por urgencia, y panel de alertas activas (turnos descubiertos próximos 7 días, eventos graves/críticos sin cerrar, facturas vencidas)
 
 ### Fase 2 — Pacientes
 - CRUD de mandantes (empresas/entidades contratantes)
-- CRUD de pacientes con ficha clínica completa (5 pestañas)
+- CRUD de pacientes con ficha clínica completa (5 pestañas): Datos, Domicilio, Bitácora, Comunicaciones, Turnos
 - Condición de domicilio (acceso, mascotas, barreras arquitectónicas)
-- Bitácora operativa con Turbo Frames
-- Historial de comunicaciones con Turbo Frames
+- **Notificación automática por cambio de estado**: email a admins/coordinadores cuando un paciente cambia a `Activo`, `Suspendido` o `Dado de baja` (Messenger)
+
+### Bitácora operativa por paciente
+
+Log de novedades libre integrado en la ficha del paciente (pestaña **Bitácora**), sin necesidad de recargar la página gracias a **Turbo Frames**.
+
+**Tipos de entrada:**
+
+| Tipo | Badge | Uso típico |
+|------|-------|-----------|
+| `NOVEDAD` | azul | Observación general del turno, cambio en el estado del paciente |
+| `INCIDENCIA` | rojo | Caída, accidente, reacción adversa, situación fuera de lo normal |
+| `COMUNICACION` | azul primario | Llamado a familia, médico o mandante registrado en la bitácora |
+
+Cada entrada registra: fecha/hora automática (Gedmo Timestampable), tipo, descripción y el usuario que la creó. Las entradas se muestran ordenadas por fecha descendente.
+
+### Historial de comunicaciones con mandante y familia
+
+Registro de todos los contactos con externos (familia, médico, mandante) desde la pestaña **Comunicaciones** de la ficha del paciente, también con **Turbo Frames**.
+
+**Campos por comunicación:**
+- **Tipo**: Familia, Médico, Mandante, Otro
+- **Persona contactada**: nombre libre del interlocutor
+- **Descripción**: resumen del contenido de la comunicación
+- **Fecha/hora** y **usuario** registrados automáticamente
+
+Permite mantener trazabilidad de todos los contactos externos sin salir de la ficha del paciente.
 
 ### Fase 3 — Turnos y Calendario
 - Calendario visual con **FullCalendar** (vistas mensual, semanal y lista, en español)
@@ -140,11 +166,32 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 
 ### Fase 5 — Eventos Adversos
 - Registro de incidentes clínicos con 8 tipos y 4 niveles de gravedad (leve/moderado/grave/crítico)
-- Ciclo de vida: `Abierto` → `En proceso` → `Cerrado`
+- **Asignación de responsable**: campo `responsable` (admin/coordinador) en el evento; al asignar o cambiar responsable se envía notificación in-app y email automáticamente
 - **Timeline de seguimiento** con notas cronológicas por autor
 - **Notificación automática** por email a admins/coordinadores en eventos Grave o Crítico (Messenger)
 - Index con contadores de estado y filtros por gravedad/estado
 - Formulario de cierre con observación obligatoria
+
+### Flujo formal de estados en Eventos Adversos
+
+El ciclo de vida pasó de informal a un flujo de tres pasos con trazabilidad completa:
+
+| Estado | Etiqueta visual | Transición |
+|--------|----------------|------------|
+| `ABIERTO` | Registrado (rojo) | → Poner en revisión |
+| `EN_PROCESO` | En revisión (amarillo) | → Cerrar |
+| `CERRADO` | Cerrado (verde) | — (solo lectura) |
+
+**Trazabilidad por transición:**
+- **Revisión**: se registra quién puso el evento en revisión (`revisadoPor`) y en qué momento (`revisadoEn`)
+- **Cierre**: se registra quién cerró el evento (`cerradoPor`) con fecha de cierre y observación obligatoria
+- Cada transición genera automáticamente una nota en el **timeline de seguimiento**
+- La vista `show` adapta su panel lateral según el estado actual: botón de revisión, formulario de cierre o resumen de cierre
+
+**Alertas in-app inmediatas para eventos graves/críticos:**
+- Al registrar un evento con gravedad `GRAVE` o `CRÍTICO`, se despacha inmediatamente una notificación in-app a todos los admins y coordinadores activos
+- El mensaje aparece en el badge del bell en el próximo ciclo de polling (60 s)
+- Icono: alerta triangular amarilla (`bi-exclamation-triangle-fill`)
 
 ### Fase 4 — Personal (documentos, disponibilidad, horas)
 - **Documentos del trabajador**: subida de archivos (PDF, Word, JPG/PNG hasta 10 MB), descarga y eliminación
@@ -154,14 +201,30 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 - Vista `trabajador/show` con pestañas: Turnos / Documentos / Disponibilidad
 - Formularios con tema Bootstrap 5 aplicado globalmente
 
+### Historial de turnos y horas por trabajador
+
+La pestaña **Turnos** de la ficha del trabajador fue reemplazada por un historial completo:
+
+- **4 KPIs en tiempo real** (filtrados por el año seleccionado): total horas del año, total turnos del año, promedio de horas por mes y turnos del filtro activo
+- **Filtros de año y mes** con recarga automática al cambiar la selección
+- **Tabla de resumen mensual**: muestra total de turnos y horas por mes del año seleccionado (solo visible cuando no hay filtro de mes activo)
+- **Tabla detalle de turnos**: todos los turnos del período con fecha, tipo, paciente, estado, horas y registro de inicio/fin de asistencia
+- **Total de horas al pie** de la tabla de detalle
+- Los turnos en estado `DESCUBIERTO` no se cuentan en el cálculo de horas (no generan horas trabajadas)
+
 ### Fase 6 — Finanzas y Facturación
 - **Liquidaciones mensuales**: generación automática a partir de turnos completados, con tarifas configurables por tipo de concepto (día, noche, 24h, visita, reemplazo)
 - Ciclo de vida: `Borrador` → `Aprobada` → `Pagada`
 - **Exportación CSV** de liquidación por trabajador (UTF-8 BOM, compatible Excel)
 - **Facturas a mandantes**: creación con monto neto, IVA configurable y número de factura
+- **Descuento automático por turnos descubiertos**: al crear la factura se puede ingresar un monto por turno descubierto y el sistema cuenta los turnos en estado `DESCUBIERTO` del período y aplica el descuento antes del IVA
 - Ciclo de vida: `Borrador` → `Emitida` → `Pagada` (con fecha de vencimiento automática)
 - Dashboard de finanzas con resumen de montos por estado (liquidaciones y facturas)
 - Listas paginadas con filtros por año y estado
+- **Reportes financieros** (`/finanzas/reportes`): tres vistas con gráficos (Chart.js):
+  - **Por mandante**: tabla neto/total/cobrado/pendiente por mandante + gráfico doughnut de distribución
+  - **Por trabajador**: tabla liquidaciones/total/pagado/pendiente + gráfico de barras horizontal (top 8)
+  - **Flujo mensual**: gráfico de líneas ingresos vs egresos + tabla mes a mes con saldo acumulado
 - Permisos granulares: `FINANZAS_VER` y `FINANZAS_EDITAR` (FinanzasVoter)
 
 #### Cómo se llena el módulo de Finanzas
@@ -182,8 +245,9 @@ Después se puede **Aprobar** y luego **Marcar como pagada** ingresando la fecha
 1. Ir a **Finanzas → Nueva factura**
 2. Seleccionar mandante, año y mes
 3. Ingresar el monto neto manualmente (lo que se le cobra al mandante)
-4. El IVA (19% por defecto, configurable) se calcula automáticamente
-5. Opcionalmente ingresar número de factura y observaciones
+4. Opcionalmente ingresar el **descuento por turno descubierto** — el sistema cuenta los turnos en estado `DESCUBIERTO` del período y calcula el descuento total automáticamente (`N turnos × monto`). El IVA se aplica sobre el monto ya descontado
+5. El IVA (19% por defecto, configurable) se calcula automáticamente
+6. Opcionalmente ingresar número de factura y observaciones
 
 Después se puede **Emitir** (genera fecha de vencimiento a 30 días) y **Marcar como pagada**.
 
@@ -193,6 +257,110 @@ Después se puede **Emitir** (genera fecha de vencimiento a 30 días) y **Marcar
 3. Ese turno ya aparecerá en el cálculo al generar la liquidación del período
 
 Los datos de prueba (`doctrine:fixtures:load`) incluyen liquidaciones y facturas de ejemplo en distintos estados.
+
+### Exportación CSV masiva
+
+- **Exportar pacientes** (`/pacientes/exportar`): descarga el listado completo de pacientes en formato CSV compatible con Excel (UTF-8 BOM, separador `;`), respetando los mismos filtros activos de la vista de listado (estado, mandante, tipo de servicio). Incluye 17 columnas: datos personales, servicio, mandante, fechas, dirección, y datos del tutor.
+- **Exportar turnos** (`/turnos/exportar`): descarga turnos filtrados por rango de fechas (`desde`/`hasta`, por defecto el mes actual). Incluye 12 columnas: fecha, horario, paciente, trabajador, tipo, estado, asistencia e incidencias.
+- **Exportar facturas** (`/finanzas/facturas/exportar`): descarga facturas filtradas por año y estado. Incluye 12 columnas: número, mandante, período, montos (neto, IVA, total), estado y fechas de emisión/vencimiento/pago.
+
+### API REST pública
+
+Endpoints disponibles bajo `/api/v1/`, autenticados mediante el header `X-API-KEY`. Cada token tiene permisos granulares por recurso.
+
+| Endpoint | Permiso requerido | Descripción |
+|----------|------------------|-------------|
+| `GET /api/v1/pacientes` | `pacientes` | Listado paginado con filtros por estado, mandante y tipo de servicio |
+| `GET /api/v1/pacientes/{id}` | `pacientes` | Detalle de un paciente con ficha clínica completa |
+| `GET /api/v1/turnos` | `turnos` | Turnos filtrados por rango de fechas (`?desde=&hasta=`) |
+| `GET /api/v1/trabajadores` | `trabajadores` | Listado de personal con perfil, estado, email y teléfono |
+| `GET /api/v1/trabajadores/{id}` | `trabajadores` | Detalle de un trabajador |
+| `GET /api/v1/liquidaciones` | `liquidaciones` | Liquidaciones filtradas por año y mes |
+| `GET /api/v1/facturas` | `facturas` | Facturas filtradas por año y estado |
+
+Todas las respuestas son JSON. Los errores de autenticación devuelven `401`, los de autorización `403`. Los datos sensibles como RUT son retornados ya descifrados.
+
+**Generar un token de API:**
+```bash
+docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console app:api:generar-token demo 'Sistema ERP' --permisos=pacientes,turnos"
+```
+El token se muestra una sola vez — almacenarlo de forma segura. El sistema guarda únicamente su hash SHA-256.
+
+### Notificaciones in-app
+
+Bell con badge en el header que se actualiza cada 60 segundos. Al hacer clic despliega las últimas 5 notificaciones no leídas con botón de acción directo.
+
+**Eventos que generan notificación in-app** (además del email existente):
+
+| Evento | Destinatarios | Icono |
+|--------|--------------|-------|
+| Turno descubierto | Admins y coordinadores | `bi-calendar-x` rojo |
+| Evento adverso grave/crítico | Admins y coordinadores | `bi-exclamation-triangle-fill` amarillo |
+| Cambio de estado de paciente | Admins y coordinadores | `bi-person-fill` azul |
+| Responsable asignado a evento | El responsable asignado | `bi-person-check-fill` primario |
+| Documento próximo a vencer | Admins y coordinadores | `bi-file-earmark-x-fill` rojo |
+
+- Panel completo en `/notificaciones` con historial reciente y botón "Marcar todas como leídas"
+- Notificaciones con color e ícono según tipo, fondo resaltado mientras no se lean
+- Endpoint JSON `/notificaciones/count` y `/notificaciones/recientes` para el header
+
+### Notificaciones por email y alertas de vencimiento de documentos
+
+#### Emails automáticos
+
+Todos los handlers de Messenger envían además un email HTML cuando se cumplen las condiciones. En desarrollo los emails se capturan en **Mailpit** (`http://localhost:8025`) sin salir al exterior.
+
+| Disparador | Asunto del email | Destinatarios |
+|------------|-----------------|---------------|
+| Turno descubierto (cron 20:00) | `⚠️ Turno descubierto — {paciente}` | Admins y coordinadores |
+| Evento adverso grave/crítico | `🚨 Evento adverso {gravedad} — {paciente}` | Admins y coordinadores |
+| Responsable asignado a evento | `📋 Se te asignó un evento adverso` | El responsable asignado |
+| Cambio de estado de paciente | `🟢/🟡/🔴 Cambio de estado — {paciente}` | Admins y coordinadores |
+| Documento próximo a vencer | `🔴/🟡 Documento por vencer — {trabajador} ({N} días)` | Admins y coordinadores |
+
+Para producción, configurar `MAILER_DSN` en `.env.local`:
+```env
+MAILER_DSN=smtp://usuario:contraseña@smtp.servidor.cl:587
+```
+
+#### Vencimiento de documentos de trabajadores
+
+- Los documentos ahora tienen un campo opcional **Fecha de vencimiento**
+- La tabla de documentos en la ficha del trabajador muestra un **semáforo visual**:
+  - Fila roja + ícono ✗ → documento ya vencido
+  - Fila amarilla + ícono ⚠ → vence en 7 días o menos
+  - Texto azul + ícono 🕐 → vence en 8–30 días
+  - Texto gris → vence en más de 30 días
+
+#### Comando de revisión diaria
+
+```bash
+php bin/console app:revisar-documentos-vencimiento
+```
+
+Revisa todos los documentos con `fechaVencimiento` en los próximos 30 días y despacha notificaciones **solo en los hitos** 30, 15, 7, 3 y 1 día(s) antes del vencimiento. Esto evita spam diario y asegura que los avisos lleguen en momentos significativos.
+
+Configuración recomendada de cron en producción:
+```
+0 7 * * * php /ruta/app/bin/console app:revisar-documentos-vencimiento
+```
+
+### Importación masiva desde CSV
+
+Permite cargar pacientes y trabajadores en lote desde un archivo CSV (separador `;`, codificación UTF-8). Accesible desde `/import` exclusivamente para `ROLE_ADMIN`.
+
+**Características:**
+- Detección de duplicados por RUT (sin importar el formato: con/sin puntos, con/sin guión)
+- Validación fila por fila: campos obligatorios, tipo de servicio, perfil y mandante
+- Reporte detallado al finalizar: cantidad importada, omitida (ya existía) y filas con error con número de línea y motivo
+- Las filas válidas se importan aunque otras filas del mismo archivo tengan errores
+- Plantillas CSV descargables con columnas y ejemplo incluido
+
+**Columnas para pacientes:** `nombres`, `apellidos`, `rut`, `fecha_nacimiento`, `tipo_servicio`, `estado`, `mandante`, `fecha_ingreso`, `fecha_termino`, `direccion`, `comuna`, `region`, `telefono`, `tutor_nombre`, `tutor_telefono`, `tutor_relacion`
+
+**Columnas para trabajadores:** `nombres`, `apellidos`, `rut`, `perfil`, `email`, `telefono`, `direccion`, `estado`, `fecha_ingreso`
+
+---
 
 ## Estructura del proyecto
 
@@ -210,7 +378,8 @@ domiciliaria/
 │   │   │                           # UserController, MandanteController,
 │   │   │                           # PacienteController, TurnoController,
 │   │   │                           # TrabajadorController, EventoAdversoController,
-│   │   │                           # FinanzasController
+│   │   │                           # FinanzasController, ImportController
+│   │   ├── Controller/Api/         # ApiController (7 endpoints REST v1)
 │   │   ├── Entity/                 # User, Paciente, Mandante, Trabajador,
 │   │   │                           # Turno, DisponibilidadTrabajador, ...
 │   │   ├── Enum/                   # TipoTurno, EstadoTurno, TipoServicio, ...
@@ -228,13 +397,16 @@ domiciliaria/
 
 ## Roles y permisos
 
-| Rol | Turnos | Personal | Pacientes | Finanzas | Usuarios |
-|-----|--------|----------|-----------|----------|----------|
-| ROLE_ADMIN | ✅ CRUD | ✅ CRUD | ✅ | ✅ | ✅ |
-| ROLE_COORDINADOR | ✅ Crear/Editar | 👁 Ver | ✅ | ✅ | ❌ |
-| ROLE_ENFERMERA | 👁 Ver | 👁 Ver | ✅ | ❌ | ❌ |
-| ROLE_TENS | 👁 Ver | 👁 Ver | ❌ | ❌ | ❌ |
-| ROLE_VISUALIZADOR | 👁 Ver | 👁 Ver | ❌ | ❌ | ❌ |
+| Rol | Turnos | Personal | Pacientes | Finanzas | Usuarios | Exportar | Importar |
+|-----|--------|----------|-----------|----------|----------|----------|----------|
+| ROLE_ADMIN | ✅ CRUD | ✅ CRUD | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ROLE_COORDINADOR | ✅ Crear/Editar | 👁 Ver | ✅ | ✅ | ❌ | ✅ | ❌ |
+| ROLE_ENFERMERA | 👁 Ver | 👁 Ver | ✅ | ❌ | ❌ | ❌ | ❌ |
+| ROLE_TENS | 👁 Ver | 👁 Ver | ❌ | ❌ | ❌ | ❌ | ❌ |
+| ROLE_VISUALIZADOR | 👁 Ver | 👁 Ver | ❌ | ❌ | ❌ | ❌ | ❌ |
+| ROLE_API | — | — | — | — | — | — | — |
+
+> Los tokens de API tienen roles propios: `ROLE_API_PACIENTES`, `ROLE_API_TURNOS`, `ROLE_API_TRABAJADORES`, `ROLE_API_LIQUIDACIONES`, `ROLE_API_FACTURAS`. Se asignan al generar el token.
 
 ## Comandos útiles
 
@@ -257,6 +429,9 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 # Procesar cola de mensajes (notificaciones email)
 docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console messenger:consume async -vv"
 
+# Revisar documentos próximos a vencer y despachar alertas (ejecutar diariamente en producción)
+docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console app:revisar-documentos-vencimiento"
+
 # Multi-tenant: crear nueva clínica
 docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console app:tenant:crear 'Nombre Clínica' subdominio"
 
@@ -265,6 +440,12 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 
 # Multi-tenant: recargar fixtures de un tenant (ID del tenant)
 docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console tenant:fixtures:load 1 --no-interaction"
+
+# API: generar token para un tenant (subdominio, nombre descriptivo, permisos opcionales)
+docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console app:api:generar-token demo 'Sistema ERP' --permisos=pacientes,turnos,trabajadores"
+
+# API: generar token con fecha de expiración
+docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console app:api:generar-token demo 'Token temporal' --permisos=pacientes --expires=2026-12-31"
 ```
 
 ## Fases del proyecto
@@ -276,8 +457,24 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 - [x] **Fase 5** — Módulo de Eventos Adversos
 - [x] **Fase 6** — Módulo de Finanzas y Facturación
 - [x] **Fase 7** — Arquitectura multi-tenant (hakam/multi-tenancy-bundle, BD aislada por clínica)
+- [x] **Fase 8** — Exportación CSV masiva de pacientes, turnos y facturas
+- [x] **Fase 9** — API REST pública con autenticación por token y permisos granulares
+- [x] **Fase 10** — Importación masiva de pacientes y trabajadores desde CSV
+- [x] **Fase 11** — Notificación por cambio de estado de paciente y descuento automático en factura por turnos descubiertos
+- [x] **Fase 12** — Dashboard con datos reales (KPIs, turnos del día, alertas activas)
+- [x] **Fase 13** — Asignación de responsable en evento adverso con notificación automática
+- [x] **Fase 14** — Reportes financieros con gráficos (por mandante, por trabajador, flujo mensual)
+- [x] **Fase 15** — Notificaciones in-app con badge/bell en el header
+- [x] **Fase 16** — Historial de turnos y horas por trabajador (KPIs, resumen mensual, filtros año/mes)
+- [x] **Fase 17** — Flujo formal de eventos adversos: registrado → revisión → cerrado con trazabilidad completa
+- [x] **Fase 18** — Alertas in-app inmediatas para eventos graves y críticos
+- [x] **Fase 19** — Notificaciones por email con Mailpit en dev, vencimiento de documentos de trabajadores con semáforo visual y comando de revisión diaria
 
 ## Notas técnicas
+
+### Content Security Policy (CSP)
+
+El CSP está configurado en `docker/nginx/default.conf`. Permite cargar scripts, estilos y fuentes desde `cdn.jsdelivr.net` (Bootstrap, Bootstrap Icons, FullCalendar). El `connect-src` también incluye `cdn.jsdelivr.net` para permitir la carga de source maps en DevTools sin warnings.
 
 ### SSL corporativo
 Si el entorno tiene inspección SSL (certificado autofirmado en la cadena), instalar dependencias con `--no-plugins` para evitar que Symfony Flex intente descargar recetas vía HTTPS:
@@ -290,8 +487,23 @@ composer dump-autoload  # regenera autoload_runtime.php
 Todas las entidades marcadas con `#[Gedmo\Loggable]` registran cambios automáticamente en la tabla `ext_log_entries`. Se usa una entidad `LogEntry` personalizada con campo `data` de tipo `json` para compatibilidad con Doctrine DBAL 4.
 
 ### Messenger (notificaciones asíncronas)
-Por defecto el transporte está configurado como `sync` (procesamiento inmediato). Para producción, cambiar a Redis en `.env`:
+
+El routing de mensajes está configurado explícitamente en `config/packages/messenger.yaml`:
+
+| Mensaje | Transporte | Motivo |
+|---------|-----------|--------|
+| `TurnoDescubiertoMessage` | `async` | Procesado por el worker, disparado por cron |
+| `RevisarTurnosDescubiertosMessage` | `async` | Tarea programada diaria |
+| `BackupDatabaseMessage` | `async` | Tarea pesada, no bloquea el request |
+| `DocumentoVencimientoMessage` | `async` | Disparado por comando diario |
+| `EventoAdversoGraveMessage` | sync (sin routing) | Notificación in-app **inmediata** al registrar el evento |
+| `EventoResponsableAsignadoMessage` | sync (sin routing) | Notificación in-app inmediata al asignar responsable |
+| `PacienteEstadoCambioMessage` | sync (sin routing) | Notificación in-app inmediata al cambiar estado |
+
+Para producción, configurar el transporte Redis en `.env.local`:
 ```env
 MESSENGER_TRANSPORT_DSN=redis://redis:6379/messages
 ```
 Y ejecutar el worker: `php bin/console messenger:consume async`
+
+En desarrollo, los mensajes `async` también se procesan en el mismo request si `MESSENGER_TRANSPORT_DSN` no está configurado (fallback a `sync://).

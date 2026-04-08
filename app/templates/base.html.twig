@@ -93,12 +93,43 @@
         .badge-rol-enfermera { background: #38a169; }
         .badge-rol-tens { background: #3182ce; }
         .badge-rol-visualizador { background: #718096; }
+
+        /* ── Sidebar overlay (mobile) ── */
+        .sidebar-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,.45);
+            z-index: 1039;
+        }
+        .sidebar-overlay.show { display: block; }
+
+        /* ── Mobile responsive ── */
+        @media (max-width: 991.98px) {
+            .sidebar {
+                transform: translateX(calc(-1 * var(--sidebar-width)));
+            }
+            .sidebar.sidebar-open {
+                transform: translateX(0);
+                box-shadow: 4px 0 24px rgba(0,0,0,.35);
+            }
+            .main-content {
+                margin-left: 0;
+            }
+            .top-header {
+                padding: 0 1rem;
+            }
+            .page-content {
+                padding: 1rem;
+            }
+        }
     </style>
 </head>
 <body>
 
 {% if app.user %}
     {% include 'partials/sidebar.html.twig' %}
+    <div class="sidebar-overlay" id="sidebarOverlay"></div>
     <div class="main-content">
         {% include 'partials/header.html.twig' %}
         <div class="page-content">
@@ -112,5 +143,104 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 {% block javascripts %}{% endblock %}
+{% if app.user %}
+<script>
+(function () {
+    const toggle  = document.getElementById('sidebarToggle');
+    const sidebar = document.querySelector('.sidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    if (!toggle || !sidebar || !overlay) return;
+
+    function openSidebar()  { sidebar.classList.add('sidebar-open');    overlay.classList.add('show'); }
+    function closeSidebar() { sidebar.classList.remove('sidebar-open'); overlay.classList.remove('show'); }
+
+    toggle.addEventListener('click', () => sidebar.classList.contains('sidebar-open') ? closeSidebar() : openSidebar());
+    overlay.addEventListener('click', closeSidebar);
+
+    // Cerrar al navegar (links del sidebar)
+    sidebar.querySelectorAll('.sidebar-link').forEach(a => a.addEventListener('click', closeSidebar));
+})();
+</script>
+{% endif %}
+{% if app.user %}
+<script>
+(function () {
+    const badge = document.getElementById('notif-badge');
+    const list  = document.getElementById('notif-list');
+    const bell  = document.getElementById('bellDropdown');
+    const csrfNotifLeer = '{{ csrf_token('notif_leer') }}';
+    if (!bell) return;
+
+    function iconClass(tipo) {
+        const map = {
+            turno_descubierto:    'bi-calendar-x text-danger',
+            evento_grave:         'bi-exclamation-triangle-fill text-warning',
+            paciente_estado:      'bi-person-fill text-info',
+            responsable_asignado: 'bi-person-check-fill text-primary',
+        };
+        return map[tipo] ?? 'bi-bell-fill text-secondary';
+    }
+
+    async function cargarNotificaciones() {
+        try {
+            const res  = await fetch('{{ path('app_notificacion_count') }}');
+            const data = await res.json();
+            const n    = data.count ?? 0;
+            if (n > 0) {
+                badge.textContent = n > 99 ? '99+' : n;
+                badge.style.display = '';
+            } else {
+                badge.style.display = 'none';
+            }
+        } catch (_) {}
+    }
+
+    bell.addEventListener('show.bs.dropdown', async () => {
+        list.innerHTML = '<li class="list-group-item text-center text-muted small py-3">Cargando...</li>';
+        try {
+            const res  = await fetch('{{ path('app_notificacion_recientes') }}');
+            const data = await res.json();
+
+            if (data.notificaciones.length === 0) {
+                list.innerHTML = '<li class="list-group-item text-center text-muted small py-3">Sin notificaciones pendientes.</li>';
+                badge.style.display = 'none';
+                return;
+            }
+
+            list.innerHTML = '';
+            data.notificaciones.forEach(n => {
+                const li = document.createElement('li');
+                li.className = 'list-group-item px-3 py-2 bg-primary-subtle';
+                li.innerHTML = `
+                    <div class="d-flex justify-content-between align-items-start gap-2">
+                        <div class="small">
+                            <div class="fw-semibold">${n.titulo}</div>
+                            ${n.cuerpo ? `<div class="text-muted">${n.cuerpo}</div>` : ''}
+                        </div>
+                        <div class="flex-shrink-0 d-flex flex-column align-items-end gap-1">
+                            <span class="text-muted" style="font-size:.7rem">${n.creadoEn}</span>
+                            <form method="post" action="/notificaciones/${n.id}/leer" style="margin:0">
+                                <input type="hidden" name="_token" value="${csrfNotifLeer}">
+                                <button type="submit" class="btn btn-primary btn-sm py-0 px-2" style="font-size:.7rem">
+                                    ${n.url ? 'Ver' : 'Leída'}
+                                </button>
+                            </form>
+                        </div>
+                    </div>`;
+                list.appendChild(li);
+            });
+
+            badge.textContent = data.count > 99 ? '99+' : data.count;
+            badge.style.display = data.count > 0 ? '' : 'none';
+        } catch (_) {
+            list.innerHTML = '<li class="list-group-item text-center text-muted small py-3">Error al cargar.</li>';
+        }
+    });
+
+    cargarNotificaciones();
+    setInterval(cargarNotificaciones, 60000);
+})();
+</script>
+{% endif %}
 </body>
 </html>

@@ -1,0 +1,50 @@
+nelmio_security:
+    # ── Content Security Policy ─────────────────────────────────────────────────
+    csp:
+        enabled: true
+        hosts: []
+        content_types: []
+        enforce:
+            default-src:
+                - 'self'
+            script-src:
+                - 'self'
+                - 'unsafe-inline'          # Requerido para Stimulus/Turbo
+                - 'cdn.jsdelivr.net'
+                - 'cdnjs.cloudflare.com'
+            style-src:
+                - 'self'
+                - 'unsafe-inline'          # Requerido para Bootstrap inline styles
+                - 'cdn.jsdelivr.net'
+                - 'cdnjs.cloudflare.com'
+            img-src:
+                - 'self'
+                - 'data:'                  # Avatares y íconos base64
+            font-src:
+                - 'self'
+                - 'data:'
+                - 'cdn.jsdelivr.net'
+                - 'cdnjs.cloudflare.com'
+            connect-src:
+                - 'self'
+            frame-ancestors:
+                - 'none'                   # Refuerza X-Frame-Options: DENY
+            object-src:
+                - 'none'
+            base-uri:
+                - 'self'
+            form-action:
+                - 'self'
+
+    # ── Clickjacking, Content-Type y Referrer los maneja Nginx ─────────────────
+    # (evita headers duplicados — nginx ya envía X-Frame-Options, nosniff, Referrer-Policy)
+
+    # ── HTTPS forzado (solo en producción) ──────────────────────────────────────
+    # En producción, sobrescribir en config/packages/prod/nelmio_security.yaml:
+    #   nelmio_security:
+    #     forced_ssl:
+    #       enabled: true
+    #       hsts_max_age: 31536000
+    #       hsts_subdomains: true
+    forced_ssl:
+        enabled: false

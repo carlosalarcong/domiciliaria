@@ -41,14 +41,31 @@ class UserRepository extends ServiceEntityRepository implements PasswordUpgrader
             ->getResult();
     }
 
-    /** @return User[] */
+    /**
+     * Filtra en PHP porque roles es JSON y PostgreSQL no acepta LIKE sobre JSON en DQL.
+     *
+     * @return User[]
+     */
     public function findByRol(string $rol): array
     {
-        return $this->createQueryBuilder('u')
-            ->where('u.roles LIKE :rol')
-            ->setParameter('rol', '%' . $rol . '%')
-            ->orderBy('u.apellido', 'ASC')
-            ->getQuery()
-            ->getResult();
+        $todos = $this->findActivos();
+
+        return array_values(array_filter($todos, fn(User $u) => in_array($rol, $u->getRoles(), true)));
+    }
+
+    /**
+     * Devuelve usuarios activos que tengan al menos uno de los roles indicados.
+     *
+     * @param string[] $roles
+     * @return User[]
+     */
+    public function findActivosByRoles(array $roles): array
+    {
+        $todos = $this->findActivos();
+
+        return array_values(array_filter(
+            $todos,
+            fn(User $u) => count(array_intersect($roles, $u->getRoles())) > 0
+        ));
     }
 }

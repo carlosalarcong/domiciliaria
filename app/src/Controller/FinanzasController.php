@@ -8,11 +8,14 @@ use App\Entity\Tenant\Factura;
 use App\Entity\Tenant\LiquidacionMensual;
 use App\Enum\EstadoFactura;
 use App\Enum\EstadoLiquidacion;
-use App\Enum\TipoConcepto;
+use App\Enum\EstadoTurno;
+use App\Enum\TipoTurno;
 use App\Form\FacturaType;
 use App\Form\LiquidacionType;
 use App\Repository\FacturaRepository;
 use App\Repository\LiquidacionMensualRepository;
+use App\Repository\TurnoRepository;
+use App\Service\ExportService;
 use App\Service\FinanzasService;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -31,8 +34,130 @@ class FinanzasController extends AbstractController
         private readonly FinanzasService $finanzasService,
         private readonly LiquidacionMensualRepository $liquidacionRepository,
         private readonly FacturaRepository $facturaRepository,
+        private readonly TurnoRepository $turnoRepository,
         private readonly PaginatorInterface $paginator,
+        private readonly ExportService $exportService,
     ) {}
+
+    // ─── Reportes ─────────────────────────────────────────────────────────────
+
+    #[Route('/reportes', name: 'reportes', methods: ['GET'])]
+    public function reportes(Request $request): Response
+    {
+        $anio = $request->query->getInt('anio', (int) date('Y'));
+        $tipo = $request->query->get('tipo', 'mandante');
+
+        $meses = ['', 'Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun',
+                      'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
+        $reporteMandante  = [];
+        $reporteTrabajador = [];
+        $reportePaciente  = [];
+        $flujoIngresos    = array_fill(1, 12, 0.0);
+        $flujoEgresos     = array_fill(1, 12, 0.0);
+
+        if ($tipo === 'mandante') {
+            $rows = $this->facturaRepository->reportePorMandante($anio);
+            foreach ($rows as $row) {
+                $id = (string) $row['id'];
+                if (!isset($reporteMandante[$id])) {
+                    $reporteMandante[$id] = [
+                        'nombre'           => $row['nombre'],
+                        'total_facturas'   => 0,
+                        'suma_neto'        => 0.0,
+                        'suma_iva'         => 0.0,
+                        'suma_total'       => 0.0,
+                        'suma_pagado'      => 0.0,
+                        'suma_pendiente'   => 0.0,
+                    ];
+                }
+                $reporteMandante[$id]['total_facturas'] += (int) $row['total_facturas'];
+                $reporteMandante[$id]['suma_neto']      += (float) $row['suma_neto'];
+                $reporteMandante[$id]['suma_iva']       += (float) $row['suma_iva'];
+                $reporteMandante[$id]['suma_total']     += (float) $row['suma_total'];
+                if ($row['estado']->value === 'PAGADA') {
+                    $reporteMandante[$id]['suma_pagado'] += (float) $row['suma_total'];
+                } else {
+                    $reporteMandante[$id]['suma_pendiente'] += (float) $row['suma_total'];
+                }
+            }
+            usort($reporteMandante, fn($a, $b) => $b['suma_total'] <=> $a['suma_total']);
+        }
+
+        if ($tipo === 'trabajador') {
+            $rows = $this->liquidacionRepository->reportePorTrabajador($anio);
+            foreach ($rows as $row) {
+                $id = (string) $row['id'];
+                if (!isset($reporteTrabajador[$id])) {
+                    $reporteTrabajador[$id] = [
+                        'nombre'              => trim($row['nombres'] . ' ' . $row['apellidos']),
+                        'total_liquidaciones' => 0,
+                        'suma_total'          => 0.0,
+                        'suma_pagado'         => 0.0,
+                        'suma_pendiente'      => 0.0,
+                    ];
+                }
+                $reporteTrabajador[$id]['total_liquidaciones'] += (int) $row['total_liquidaciones'];
+                $reporteTrabajador[$id]['suma_total']          += (float) $row['suma_total'];
+                if ($row['estado']->value === 'PAGADA') {
+                    $reporteTrabajador[$id]['suma_pagado'] += (float) $row['suma_total'];
+                } else {
+                    $reporteTrabajador[$id]['suma_pendiente'] += (float) $row['suma_total'];
+                }
+            }
+            usort($reporteTrabajador, fn($a, $b) => $b['suma_total'] <=> $a['suma_total']);
+        }
+
+        if ($tipo === 'flujo') {
+            foreach ($this->facturaRepository->reporteFlujoIngresos($anio) as $row) {
+                $flujoIngresos[(int) $row['mes']] = (float) $row['suma_total'];
+            }
+            foreach ($this->liquidacionRepository->reporteFlujoEgresos($anio) as $row) {
+                $flujoEgresos[(int) $row['mes']] = (float) $row['suma_total'];
+            }
+        }
+
+        if ($tipo === 'paciente') {
+            $tipoKeys = array_map(fn(TipoTurno $t) => $t->value, TipoTurno::cases());
+            $rows = $this->turnoRepository->reportePorPaciente($anio);
+            foreach ($rows as $row) {
+                $id = (string) $row['paciente_id'];
+                if (!isset($reportePaciente[$id])) {
+                    $reportePaciente[$id] = [
+                        'nombre'      => trim($row['nombres'] . ' ' . $row['apellidos']),
+                        'total'       => 0,
+                        'por_tipo'    => array_fill_keys($tipoKeys, 0),
+                        'por_estado'  => [],
+                    ];
+                }
+                $count = (int) $row['total'];
+                $tipo_turno = $row['tipo_turno'] instanceof TipoTurno
+                    ? $row['tipo_turno']->value
+                    : (string) $row['tipo_turno'];
+                $estado = $row['estado'] instanceof EstadoTurno
+                    ? $row['estado']->value
+                    : (string) $row['estado'];
+
+                $reportePaciente[$id]['total'] += $count;
+                $reportePaciente[$id]['por_tipo'][$tipo_turno] = ($reportePaciente[$id]['por_tipo'][$tipo_turno] ?? 0) + $count;
+                $reportePaciente[$id]['por_estado'][$estado]   = ($reportePaciente[$id]['por_estado'][$estado] ?? 0) + $count;
+            }
+            usort($reportePaciente, fn($a, $b) => $b['total'] <=> $a['total']);
+        }
+
+        return $this->render('finanzas/reportes.html.twig', [
+            'anio'              => $anio,
+            'tipo'              => $tipo,
+            'meses'             => $meses,
+            'reporteMandante'   => $reporteMandante,
+            'reporteTrabajador' => $reporteTrabajador,
+            'reportePaciente'   => $reportePaciente,
+            'tiposTurno'        => TipoTurno::cases(),
+            'flujoIngresos'     => $flujoIngresos,
+            'flujoEgresos'      => $flujoEgresos,
+            'aniosDisponibles'  => range((int) date('Y'), (int) date('Y') - 3),
+        ]);
+    }
 
     // ─── Dashboard ────────────────────────────────────────────────────────────
 
@@ -81,17 +206,14 @@ class FinanzasController extends AbstractController
             $anio       = $form->get('anio')->getData();
             $mes        = $form->get('mes')->getData();
 
-            $tarifas = [];
-            foreach (TipoConcepto::cases() as $concepto) {
-                $campo = 'tarifa_' . $concepto->value;
-                if ($form->has($campo)) {
-                    $tarifas[$concepto->value] = (float) ($form->get($campo)->getData() ?? 0);
-                }
+            try {
+                $liquidacion = $this->finanzasService->generarLiquidacion(
+                    $trabajador, $anio, $mes, $this->getUser()
+                );
+            } catch (\RuntimeException $e) {
+                $this->addFlash('danger', $e->getMessage());
+                return $this->render('finanzas/liquidacion_nueva.html.twig', ['form' => $form]);
             }
-
-            $liquidacion = $this->finanzasService->generarLiquidacion(
-                $trabajador, $anio, $mes, $tarifas, $this->getUser()
-            );
 
             $this->addFlash('success', "Liquidación generada: {$liquidacion->getPeriodoLabel()}");
 
@@ -173,6 +295,29 @@ class FinanzasController extends AbstractController
         ]);
     }
 
+    #[Route('/facturas/exportar', name: 'facturas_exportar', methods: ['GET'])]
+    public function facturasExportar(Request $request): Response
+    {
+        $anio   = $request->query->getInt('anio', (int) date('Y'));
+        $estado = EstadoFactura::tryFrom($request->query->get('estado', ''));
+
+        $facturas = $this->facturaRepository
+            ->findQueryBuilder($anio, $estado ?: null)
+            ->getQuery()
+            ->getResult();
+
+        $csv      = $this->exportService->exportarFacturasCsv($facturas);
+        $filename = sprintf('facturas_%d.csv', $anio);
+
+        $response = new StreamedResponse(fn() => print($csv));
+        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
+        $response->headers->set('Content-Disposition', HeaderUtils::makeDisposition(
+            HeaderUtils::DISPOSITION_ATTACHMENT, $filename
+        ));
+
+        return $response;
+    }
+
     #[Route('/facturas/nueva', name: 'factura_nueva', methods: ['GET', 'POST'])]
     #[IsGranted('FINANZAS_EDITAR')]
     public function facturaNueva(Request $request): Response
@@ -182,12 +327,13 @@ class FinanzasController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             $factura = $this->finanzasService->generarFactura(
-                mandante:      $form->get('mandante')->getData(),
-                anio:          $form->get('anio')->getData(),
-                mes:           $form->get('mes')->getData(),
-                montoNeto:     (float) $form->get('montoNeto')->getData(),
-                creadoPor:     $this->getUser(),
-                numeroFactura: $form->get('numeroFactura')->getData(),
+                mandante:                      $form->get('mandante')->getData(),
+                anio:                          $form->get('anio')->getData(),
+                mes:                           $form->get('mes')->getData(),
+                montoNeto:                     (float) $form->get('montoNeto')->getData(),
+                creadoPor:                     $this->getUser(),
+                numeroFactura:                 $form->get('numeroFactura')->getData(),
+                descuentoPorTurnoDescubierto:  (float) ($form->get('descuentoPorTurnoDescubierto')->getData() ?? 0),
             );
 
             if ($form->get('porcentajeIva')->getData() !== null) {

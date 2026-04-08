@@ -6,6 +6,7 @@ namespace App\Form;
 
 use App\Enum\TipoDocumento;
 use Symfony\Component\Form\AbstractType;
+use Symfony\Component\Form\Extension\Core\Type\DateType;
 use Symfony\Component\Form\Extension\Core\Type\EnumType;
 use Symfony\Component\Form\Extension\Core\Type\FileType;
 use Symfony\Component\Form\Extension\Core\Type\TextType;
@@ -28,6 +29,11 @@ class DocumentoTrabajadorType extends AbstractType
                 'label'    => 'Descripción',
                 'required' => false,
                 'attr'     => ['placeholder' => 'Ej: Contrato indefinido 2024'],
+            ])
+            ->add('fechaVencimiento', DateType::class, [
+                'label'    => 'Fecha de vencimiento',
+                'widget'   => 'single_text',
+                'required' => false,
             ])
             ->add('archivo', FileType::class, [
                 'label'       => 'Archivo',
@@ -53,6 +59,6 @@ class DocumentoTrabajadorType extends AbstractType
 
     public function configureOptions(OptionsResolver $resolver): void
     {
-        $resolver->setDefaults([]);
+        $resolver->setDefaults(['data_class' => null]);
     }
 }

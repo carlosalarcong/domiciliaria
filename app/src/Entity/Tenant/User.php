@@ -8,6 +8,10 @@ use App\Entity\Tenant\Log\LogEntry;
 use App\Repository\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
+use Scheb\TwoFactorBundle\Model\BackupCodeInterface;
+use Scheb\TwoFactorBundle\Model\Totp\TotpConfiguration;
+use Scheb\TwoFactorBundle\Model\Totp\TotpConfigurationInterface;
+use Scheb\TwoFactorBundle\Model\Totp\TwoFactorInterface as TotpTwoFactorInterface;
 use Symfony\Bridge\Doctrine\Validator\Constraints\UniqueEntity;
 use Symfony\Component\Security\Core\User\PasswordAuthenticatedUserInterface;
 use Symfony\Component\Security\Core\User\UserInterface;
@@ -18,7 +22,7 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Table(name: 'users')]
 #[UniqueEntity(fields: ['email'], message: 'Este email ya está registrado.')]
 #[Gedmo\Loggable(logEntryClass: LogEntry::class)]
-class User implements UserInterface, PasswordAuthenticatedUserInterface
+class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwoFactorInterface, BackupCodeInterface
 {
     #[ORM\Id]
     #[ORM\Column(type: 'uuid', unique: true)]
@@ -52,6 +56,18 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
     #[ORM\Column(type: 'boolean')]
     #[Gedmo\Versioned]
     private bool $activo = true;
+
+    /** TOTP secret para Google Authenticator / Authy */
+    #[ORM\Column(nullable: true)]
+    private ?string $totpSecret = null;
+
+    /** JSON array de códigos de respaldo de un solo uso */
+    #[ORM\Column(type: 'json')]
+    private array $backupCodes = [];
+
+    /** Si el usuario ha activado 2FA (siempre true para ADMIN/COORDINADOR) */
+    #[ORM\Column(type: 'boolean')]
+    private bool $twoFactorEnabled = false;
 
     #[ORM\Column(type: 'datetime_immutable')]
     #[Gedmo\Timestampable(on: 'create')]
@@ -177,5 +193,63 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface
             'ROLE_VISUALIZADOR' => 'Visualizador',
             default => 'Usuario',
         };
+    }
+
+    // ─── TOTP 2FA ────────────────────────────────────────────────────────────
+
+    public function isTotpAuthenticationEnabled(): bool
+    {
+        return $this->totpSecret !== null && ($this->twoFactorEnabled || $this->is2FAForced());
+    }
+
+    public function getTotpAuthenticationUsername(): string
+    {
+        return $this->email ?? '';
+    }
+
+    public function getTotpAuthenticationConfiguration(): ?TotpConfigurationInterface
+    {
+        if ($this->totpSecret === null) {
+            return null;
+        }
+        return new TotpConfiguration($this->totpSecret, TotpConfiguration::ALGORITHM_SHA1, 30, 6);
+    }
+
+    public function getTotpSecret(): ?string { return $this->totpSecret; }
+    public function setTotpSecret(?string $secret): static { $this->totpSecret = $secret; return $this; }
+
+    public function isTwoFactorEnabled(): bool { return $this->twoFactorEnabled; }
+    public function setTwoFactorEnabled(bool $enabled): static { $this->twoFactorEnabled = $enabled; return $this; }
+
+    /** 2FA obligatorio para ADMIN y COORDINADOR */
+    public function is2FAForced(): bool
+    {
+        return in_array($this->getRolPrincipal(), ['ROLE_ADMIN', 'ROLE_COORDINADOR']);
+    }
+
+    // ─── Backup codes ─────────────────────────────────────────────────────────
+
+    public function isBackupCode(string $code): bool
+    {
+        return in_array($code, $this->backupCodes, true);
+    }
+
+    public function invalidateBackupCode(string $code): void
+    {
+        $this->backupCodes = array_values(array_filter($this->backupCodes, fn($c) => $c !== $code));
+    }
+
+    public function getBackupCodes(): array { return $this->backupCodes; }
+
+    public function setBackupCodes(array $codes): static { $this->backupCodes = $codes; return $this; }
+
+    public function generateBackupCodes(int $count = 10): array
+    {
+        $codes = [];
+        for ($i = 0; $i < $count; $i++) {
+            $codes[] = strtoupper(bin2hex(random_bytes(4)));
+        }
+        $this->backupCodes = $codes;
+        return $codes;
     }
 }

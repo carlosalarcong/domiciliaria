@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Form;
 
-use App\Entity\Mandante;
+use App\Entity\Tenant\Mandante;
 use Symfony\Bridge\Doctrine\Form\Type\EntityType;
 use Symfony\Component\Form\AbstractType;
 use Symfony\Component\Form\Extension\Core\Type\IntegerType;
@@ -52,6 +52,16 @@ class FacturaType extends AbstractType
                 'label'    => 'Número de factura',
                 'required' => false,
                 'mapped'   => false,
+            ])
+            ->add('descuentoPorTurnoDescubierto', MoneyType::class, [
+                'label'    => 'Descuento por turno descubierto ($)',
+                'currency' => 'CLP',
+                'divisor'  => 1,
+                'data'     => 0,
+                'mapped'   => false,
+                'required' => false,
+                'attr'     => ['min' => 0],
+                'help'     => 'El sistema contará los turnos descubiertos del período y aplicará este monto como descuento por cada uno. Dejar en 0 para no aplicar descuento.',
             ])
             ->add('observaciones', TextareaType::class, [
                 'label'    => 'Observaciones',

@@ -1,0 +1,165 @@
+{% extends 'base.html.twig' %}
+{% block title %}Auditoría — Cambios de datos{% endblock %}
+{% block page_title %}Auditoría{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Auditoría de cambios</h4>
+        <small class="text-muted">Historial de modificaciones registradas por el sistema</small>
+    </div>
+</div>
+
+{# ── Tabs ── #}
+<ul class="nav nav-tabs mb-4">
+    <li class="nav-item">
+        <a class="nav-link active" href="{{ path('app_auditoria_index') }}">
+            <i class="bi bi-clock-history me-1"></i>Cambios de datos
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="{{ path('app_auditoria_accesos') }}">
+            <i class="bi bi-shield-lock me-1"></i>Accesos y seguridad
+        </a>
+    </li>
+</ul>
+
+{# ── Filtros ── #}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-body py-2">
+        <form method="get" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label small text-muted mb-1">Entidad</label>
+                <select name="entidad" class="form-select form-select-sm">
+                    <option value="">Todas</option>
+                    {% for clase, etiqueta in entityLabels %}
+                        <option value="{{ clase }}" {{ filtroEntidad == clase ? 'selected' : '' }}>{{ etiqueta }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Usuario</label>
+                <input type="text" name="usuario" class="form-control form-control-sm"
+                       placeholder="email o nombre" value="{{ filtroUsuario }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Acción</label>
+                <select name="accion" class="form-select form-select-sm">
+                    <option value="">Todas</option>
+                    <option value="create" {{ filtroAccion == 'create' ? 'selected' : '' }}>Crear</option>
+                    <option value="update" {{ filtroAccion == 'update' ? 'selected' : '' }}>Editar</option>
+                    <option value="remove" {{ filtroAccion == 'remove' ? 'selected' : '' }}>Eliminar</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Desde</label>
+                <input type="date" name="desde" class="form-control form-control-sm" value="{{ filtroDesde }}">
+            </div>
+            <div class="col-md-2">
+                <label class="form-label small text-muted mb-1">Hasta</label>
+                <input type="date" name="hasta" class="form-control form-control-sm" value="{{ filtroHasta }}">
+            </div>
+            <div class="col-md-1 d-flex gap-1">
+                <button type="submit" class="btn btn-primary btn-sm flex-grow-1">
+                    <i class="bi bi-search"></i>
+                </button>
+                <a href="{{ path('app_auditoria_index') }}" class="btn btn-outline-secondary btn-sm">
+                    <i class="bi bi-x"></i>
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+
+{# ── Tabla ── #}
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        {% if pagination.items is empty %}
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-clock-history fs-1 opacity-25 d-block mb-2"></i>
+                No hay registros para los filtros seleccionados.
+            </div>
+        {% else %}
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0" style="font-size:.875rem">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3" style="width:140px">Fecha</th>
+                        <th style="width:180px">Usuario</th>
+                        <th style="width:120px">Entidad</th>
+                        <th style="width:70px">Acción</th>
+                        <th>Campos modificados</th>
+                        <th class="pe-3" style="width:80px">Versión</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for entry in pagination %}
+                <tr>
+                    <td class="ps-3 text-muted small">
+                        {{ entry.loggedAt ? entry.loggedAt|date('d/m/Y H:i:s') : '—' }}
+                    </td>
+                    <td>
+                        <span class="text-truncate d-block" style="max-width:170px" title="{{ entry.username }}">
+                            <i class="bi bi-person-circle me-1 text-muted"></i>{{ entry.username ?? '—' }}
+                        </span>
+                    </td>
+                    <td>
+                        {% set label = entityLabels[entry.objectClass] ?? entry.objectClass|split('\\')|last %}
+                        <span class="badge bg-secondary-subtle text-secondary border">{{ label }}</span>
+                    </td>
+                    <td>
+                        {% if entry.action == 'create' %}
+                            <span class="badge bg-success-subtle text-success border border-success-subtle">crear</span>
+                        {% elseif entry.action == 'update' %}
+                            <span class="badge bg-warning-subtle text-warning border border-warning-subtle">editar</span>
+                        {% elseif entry.action == 'remove' %}
+                            <span class="badge bg-danger-subtle text-danger border border-danger-subtle">eliminar</span>
+                        {% else %}
+                            <span class="badge bg-light text-muted">{{ entry.action }}</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if entry.data %}
+                            <div class="d-flex flex-wrap gap-1">
+                            {% for campo, valor in entry.data %}
+                                <span class="badge bg-light text-dark border small"
+                                      style="font-size:.75rem;font-weight:400"
+                                      title="{{ campo }}: {{ valor is iterable ? valor|json_encode : valor }}">
+                                    <span class="text-muted">{{ campo }}:</span>
+                                    {% if valor is same as(true) or valor == '1' %}
+                                        <span class="text-success">sí</span>
+                                    {% elseif valor is same as(false) or valor == '0' %}
+                                        <span class="text-danger">no</span>
+                                    {% elseif valor is null %}
+                                        <span class="text-muted fst-italic">vacío</span>
+                                    {% elseif valor is iterable %}
+                                        <span class="text-info">[objeto]</span>
+                                    {% elseif valor|slice(0,4) == 'enc:' %}
+                                        <span class="text-muted" title="valor cifrado"><i class="bi bi-lock-fill"></i> cifrado</span>
+                                    {% else %}
+                                        {{ valor|slice(0, 40) }}{{ valor|length > 40 ? '…' : '' }}
+                                    {% endif %}
+                                </span>
+                            {% endfor %}
+                            </div>
+                        {% else %}
+                            <span class="text-muted small fst-italic">sin detalle</span>
+                        {% endif %}
+                    </td>
+                    <td class="pe-3 text-muted small text-center">v{{ entry.version }}</td>
+                </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="px-3 py-2 border-top d-flex justify-content-between align-items-center">
+            <small class="text-muted">
+                {{ pagination.totalItemCount }} registro{{ pagination.totalItemCount != 1 ? 's' : '' }}
+            </small>
+            <div>{{ knp_pagination_render(pagination) }}</div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
