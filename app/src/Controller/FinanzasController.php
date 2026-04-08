@@ -9,7 +9,6 @@ use App\Entity\Tenant\LiquidacionMensual;
 use App\Enum\EstadoFactura;
 use App\Enum\EstadoLiquidacion;
 use App\Enum\EstadoTurno;
-use App\Enum\TipoConcepto;
 use App\Enum\TipoTurno;
 use App\Form\FacturaType;
 use App\Form\LiquidacionType;
@@ -207,17 +206,14 @@ class FinanzasController extends AbstractController
             $anio       = $form->get('anio')->getData();
             $mes        = $form->get('mes')->getData();
 
-            $tarifas = [];
-            foreach (TipoConcepto::cases() as $concepto) {
-                $campo = 'tarifa_' . $concepto->value;
-                if ($form->has($campo)) {
-                    $tarifas[$concepto->value] = (float) ($form->get($campo)->getData() ?? 0);
-                }
+            try {
+                $liquidacion = $this->finanzasService->generarLiquidacion(
+                    $trabajador, $anio, $mes, $this->getUser()
+                );
+            } catch (\RuntimeException $e) {
+                $this->addFlash('danger', $e->getMessage());
+                return $this->render('finanzas/liquidacion_nueva.html.twig', ['form' => $form]);
             }
-
-            $liquidacion = $this->finanzasService->generarLiquidacion(
-                $trabajador, $anio, $mes, $tarifas, $this->getUser()
-            );
 
             $this->addFlash('success', "Liquidación generada: {$liquidacion->getPeriodoLabel()}");
 

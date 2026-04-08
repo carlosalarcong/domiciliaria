@@ -1,0 +1,97 @@
+{% extends 'base.html.twig' %}
+{% block title %}Tarifas{% endblock %}
+{% block content %}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold"><i class="bi bi-tag-fill text-primary me-2"></i>Tarifas</h4>
+        <small class="text-muted">Configuración de valores por tipo de concepto</small>
+    </div>
+    {% if is_granted('FINANZAS_GESTIONAR') %}
+    <a href="{{ path('app_tarifa_new') }}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-lg me-1"></i>Nueva tarifa
+    </a>
+    {% endif %}
+</div>
+
+{% if agrupadas is empty %}
+<div class="alert alert-warning">
+    <i class="bi bi-exclamation-triangle me-2"></i>
+    No hay tarifas configuradas. Las liquidaciones no podrán generarse automáticamente hasta que configure al menos una tarifa general por tipo de concepto.
+    {% if is_granted('FINANZAS_GESTIONAR') %}
+    <a href="{{ path('app_tarifa_new') }}" class="alert-link">Crear primera tarifa</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% for key, grupo in agrupadas %}
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-light d-flex justify-content-between align-items-center py-2">
+        <span class="fw-semibold">
+            {% if key == '__general__' %}
+                <i class="bi bi-globe2 text-secondary me-2"></i>{{ grupo.label }}
+            {% else %}
+                <i class="bi bi-building text-primary me-2"></i>{{ grupo.label }}
+            {% endif %}
+        </span>
+        <small class="text-muted">{{ grupo.tarifas|length }} tarifa{{ grupo.tarifas|length != 1 ? 's' : '' }}</small>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0 small">
+            <thead class="table-light">
+                <tr>
+                    <th>Concepto</th>
+                    <th class="text-end">Valor/hora</th>
+                    <th>Vigencia desde</th>
+                    <th>Vigencia hasta</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    {% if is_granted('FINANZAS_GESTIONAR') %}<th></th>{% endif %}
+                </tr>
+            </thead>
+            <tbody>
+            {% for tarifa in grupo.tarifas %}
+                <tr class="{{ not tarifa.activa ? 'text-muted' : '' }}">
+                    <td>
+                        <span class="badge bg-secondary-subtle text-secondary-emphasis">
+                            {{ tarifa.tipoConcepto.etiqueta() }}
+                        </span>
+                    </td>
+                    <td class="text-end fw-semibold">
+                        ${{ tarifa.valorUnitario|number_format(0, ',', '.') }}
+                    </td>
+                    <td>{{ tarifa.vigenciaDesde|date('d/m/Y') }}</td>
+                    <td>{{ tarifa.vigenciaHasta ? tarifa.vigenciaHasta|date('d/m/Y') : '—' }}</td>
+                    <td class="text-muted">{{ tarifa.descripcion ?? '—' }}</td>
+                    <td>
+                        {% if tarifa.activa %}
+                            <span class="badge bg-success-subtle text-success-emphasis">Activa</span>
+                        {% else %}
+                            <span class="badge bg-secondary-subtle text-secondary-emphasis">Inactiva</span>
+                        {% endif %}
+                    </td>
+                    {% if is_granted('FINANZAS_GESTIONAR') %}
+                    <td class="text-end">
+                        <a href="{{ path('app_tarifa_edit', {id: tarifa.id}) }}" class="btn btn-outline-secondary btn-sm py-0 px-2">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        {% if tarifa.activa %}
+                        <form method="post" action="{{ path('app_tarifa_desactivar', {id: tarifa.id}) }}" class="d-inline"
+                              onsubmit="return confirm('¿Desactivar esta tarifa? El historial se conserva.')">
+                            <input type="hidden" name="_token" value="{{ csrf_token('tarifa_' ~ tarifa.id) }}">
+                            <button type="submit" class="btn btn-outline-warning btn-sm py-0 px-2" title="Desactivar">
+                                <i class="bi bi-slash-circle"></i>
+                            </button>
+                        </form>
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endfor %}
+
+{% endblock %}

@@ -16,6 +16,7 @@ use App\Enum\EstadoTurno;
 use App\Enum\TipoConcepto;
 use App\Enum\TipoTurno;
 use App\Repository\LiquidacionMensualRepository;
+use App\Repository\TarifaRepository;
 use App\Repository\TurnoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
@@ -25,6 +26,7 @@ class FinanzasService
         private readonly EntityManagerInterface $em,
         private readonly TurnoRepository $turnoRepository,
         private readonly LiquidacionMensualRepository $liquidacionRepository,
+        private readonly TarifaRepository $tarifaRepository,
     ) {}
 
     // ─── Liquidaciones ───────────────────────────────────────────────────────
@@ -32,12 +34,13 @@ class FinanzasService
     /**
      * Genera (o regenera) la liquidación mensual de un trabajador
      * a partir de sus turnos completados en el período.
+     * Las tarifas se resuelven automáticamente desde la BD según el concepto,
+     * la fecha del turno y el mandante del paciente.
      */
     public function generarLiquidacion(
         Trabajador $trabajador,
         int $anio,
         int $mes,
-        array $tarifas,
         User $creadoPor,
     ): LiquidacionMensual {
         // Buscar o crear
@@ -68,10 +71,23 @@ class FinanzasService
                 continue;
             }
 
-            $concepto   = $this->tipoTurnoAConcepto($turno->getTipoTurno(), $turno->isEsReemplazo());
-            $horas      = (float) $turno->getTipoTurno()->duracionHoras();
-            $valorUnitario = $tarifas[$concepto->value] ?? 0.0;
-            $subtotal   = $horas * $valorUnitario;
+            $concepto  = $this->tipoTurnoAConcepto($turno->getTipoTurno(), $turno->isEsReemplazo());
+            $horas     = (float) $turno->getTipoTurno()->duracionHoras();
+            $mandante  = $turno->getPaciente()?->getMandante();
+            $fecha     = $turno->getFecha() ?? new \DateTimeImmutable();
+
+            $tarifa = $this->tarifaRepository->findTarifaVigente($concepto, $fecha, $mandante);
+
+            if ($tarifa === null) {
+                throw new \RuntimeException(sprintf(
+                    'No existe tarifa configurada para "%s" vigente en %s. Configure una tarifa general o específica para el mandante en Configuración → Tarifas.',
+                    $concepto->etiqueta(),
+                    $fecha->format('d/m/Y'),
+                ));
+            }
+
+            $valorUnitario = (float) $tarifa->getValorUnitario();
+            $subtotal      = $horas * $valorUnitario;
 
             $item = new ItemLiquidacion();
             $item->setLiquidacion($liquidacion)
