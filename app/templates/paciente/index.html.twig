@@ -7,9 +7,23 @@
         <h4 class="mb-0 fw-bold">Pacientes</h4>
         <small class="text-muted">Registro y seguimiento operativo</small>
     </div>
-    {% if is_granted('PACIENTE_CREAR') %}
-    <a href="{{ path('app_paciente_new') }}" class="btn btn-primary" id="btn-nuevo-paciente"><i class="bi bi-person-plus me-2"></i>Nuevo paciente</a>
-    {% endif %}
+    <div class="d-flex gap-2">
+        {% if is_granted('ROLE_COORDINADOR') %}
+        <a href="{{ path('app_paciente_exportar', {
+                estado:       filtros.estado       ?? '',
+                mandanteId:   filtros.mandanteId   ?? '',
+                tipoServicio: filtros.tipoServicio  ?? ''
+            }) }}"
+           class="btn btn-outline-secondary btn-sm" id="btn-exportar-pacientes">
+            <i class="bi bi-download me-1"></i>Exportar CSV
+        </a>
+        {% endif %}
+        {% if is_granted('PACIENTE_CREAR') %}
+        <a href="{{ path('app_paciente_new') }}" class="btn btn-primary" id="btn-nuevo-paciente">
+            <i class="bi bi-person-plus me-2"></i>Nuevo paciente
+        </a>
+        {% endif %}
+    </div>
 </div>
 
 {# Filtros #}

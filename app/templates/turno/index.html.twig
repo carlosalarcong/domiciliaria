@@ -8,11 +8,19 @@
         <h4 class="mb-0 fw-bold">Calendario de Turnos</h4>
         <small class="text-muted">Vista de turnos por fecha</small>
     </div>
-    {% if is_granted('ROLE_COORDINADOR') %}
-    <a href="{{ path('app_turno_new') }}" class="btn btn-primary" id="btn-nuevo-turno">
-        <i class="bi bi-plus-lg me-2"></i>Nuevo turno
-    </a>
-    {% endif %}
+    <div class="d-flex gap-2">
+        {% if is_granted('ROLE_COORDINADOR') %}
+        <a href="{{ path('app_turno_exportar') }}"
+           class="btn btn-outline-secondary btn-sm" id="btn-exportar-turnos">
+            <i class="bi bi-download me-1"></i>Exportar CSV
+        </a>
+        {% endif %}
+        {% if is_granted('ROLE_COORDINADOR') %}
+        <a href="{{ path('app_turno_new') }}" class="btn btn-primary" id="btn-nuevo-turno">
+            <i class="bi bi-plus-lg me-2"></i>Nuevo turno
+        </a>
+        {% endif %}
+    </div>
 </div>
 
 {# Leyenda #}
