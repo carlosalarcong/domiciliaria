@@ -40,7 +40,7 @@
         <a href="{{ path('app_finanzas_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_finanzas' ? 'active' : '' }}">
             <i class="bi bi-cash-stack"></i> Finanzas
         </a>
-        <a href="{{ path('app_tarifa_index') }}" class="sidebar-link ps-4 {{ app.request.attributes.get('_route') starts with 'app_tarifa' ? 'active' : '' }}" style="font-size: 0.9em;">
+        <a href="{{ path('app_tarifa_index') }}" class="sidebar-link ps-4 {{ app.request.attributes.get('_route') starts with 'app_tarifa' ? 'active' : '' }}" style="font-size: 0.9em;" id="link-tarifas">
             <i class="bi bi-tag"></i> Tarifas
         </a>
         {% endif %}
@@ -61,5 +61,11 @@
             <i class="bi bi-gear-fill"></i> Configuración
         </a>
         {% endif %}
+
+        <div class="sidebar-section mt-3" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem;">Soporte</div>
+        <a href="{{ path('app_help_ayuda') }}"
+           class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_help' ? 'active' : '' }}">
+            <i class="bi bi-question-circle-fill"></i> Centro de ayuda
+        </a>
     </div>
 </nav>

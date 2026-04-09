@@ -1,0 +1,460 @@
+{% extends 'base.html.twig' %}
+{% block title %}Centro de Ayuda{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .quick-card {
+        transition: transform .15s ease, box-shadow .15s ease;
+        cursor: pointer;
+    }
+    .quick-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 .5rem 1rem rgba(0,0,0,.1);
+    }
+    .quick-card .bi {
+        font-size: 1.7rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Centro de ayuda</h4>
+        <small class="text-muted">Guías rápidas, manual del sistema y preguntas frecuentes</small>
+    </div>
+</div>
+
+<ul class="nav nav-tabs mb-4" id="ayuda-tabs" role="tablist">
+    <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="inicio-tab" data-bs-toggle="tab" data-bs-target="#inicio-tab-pane" type="button" role="tab" aria-controls="inicio-tab-pane" aria-selected="true">Inicio rápido</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="manual-tab" data-bs-toggle="tab" data-bs-target="#manual-tab-pane" type="button" role="tab" aria-controls="manual-tab-pane" aria-selected="false">Manual del sistema</button>
+    </li>
+    <li class="nav-item" role="presentation">
+        <button class="nav-link" id="faq-tab" data-bs-toggle="tab" data-bs-target="#faq-tab-pane" type="button" role="tab" aria-controls="faq-tab-pane" aria-selected="false">Preguntas frecuentes</button>
+    </li>
+</ul>
+
+<div class="tab-content" id="ayuda-tabs-content">
+    <div class="tab-pane fade show active" id="inicio-tab-pane" role="tabpanel" aria-labelledby="inicio-tab" tabindex="0">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 fw-semibold py-3">¿Qué quieres hacer?</div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <a href="{{ path('app_paciente_new') }}" class="text-decoration-none text-reset">
+                            <div class="card border quick-card h-100">
+                                <div class="card-body">
+                                    <i class="bi bi-person-plus-fill text-primary d-block mb-2"></i>
+                                    <h6 class="fw-bold mb-1">Registrar paciente</h6>
+                                    <p class="small text-muted mb-0">Crea el expediente de un nuevo paciente con sus datos y servicio requerido</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ path('app_turno_new') }}" class="text-decoration-none text-reset">
+                            <div class="card border quick-card h-100">
+                                <div class="card-body">
+                                    <i class="bi bi-calendar-plus-fill text-success d-block mb-2"></i>
+                                    <h6 class="fw-bold mb-1">Programar turno</h6>
+                                    <p class="small text-muted mb-0">Asigna un turno a un paciente con trabajador y horario</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ path('app_trabajador_new') }}" class="text-decoration-none text-reset">
+                            <div class="card border quick-card h-100">
+                                <div class="card-body">
+                                    <i class="bi bi-person-badge-fill text-info d-block mb-2"></i>
+                                    <h6 class="fw-bold mb-1">Agregar trabajador</h6>
+                                    <p class="small text-muted mb-0">Registra un nuevo miembro del personal clínico</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ path('app_finanzas_liquidacion_nueva') }}" class="text-decoration-none text-reset">
+                            <div class="card border quick-card h-100">
+                                <div class="card-body">
+                                    <i class="bi bi-cash-stack text-warning d-block mb-2"></i>
+                                    <h6 class="fw-bold mb-1">Generar liquidación</h6>
+                                    <p class="small text-muted mb-0">Calcula automáticamente el pago mensual de un trabajador</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ path('app_finanzas_factura_nueva') }}" class="text-decoration-none text-reset">
+                            <div class="card border quick-card h-100">
+                                <div class="card-body">
+                                    <i class="bi bi-receipt text-danger d-block mb-2"></i>
+                                    <h6 class="fw-bold mb-1">Emitir factura</h6>
+                                    <p class="small text-muted mb-0">Genera la factura mensual para un mandante</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4">
+                        <a href="{{ path('app_configuracion_index') }}" class="text-decoration-none text-reset">
+                            <div class="card border quick-card h-100">
+                                <div class="card-body">
+                                    <i class="bi bi-gear-fill text-secondary d-block mb-2"></i>
+                                    <h6 class="fw-bold mb-1">Configurar clínica</h6>
+                                    <p class="small text-muted mb-0">Ajusta los parámetros globales del sistema</p>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-white border-0 py-3">
+                <h6 class="mb-1 fw-semibold"><i class="bi bi-magic me-2 text-primary"></i>Tours interactivos</h6>
+                <small class="text-muted">Recorre cada módulo con una guía paso a paso.</small>
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap gap-2">
+                    <a href="{{ path('app_dashboard') }}?tour=1" class="btn btn-outline-primary btn-sm"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a>
+                    <a href="{{ path('app_paciente_index') }}?tour=1" class="btn btn-outline-success btn-sm"><i class="bi bi-people-fill me-1"></i>Pacientes</a>
+                    <a href="{{ path('app_turno_index') }}?tour=1" class="btn btn-outline-info btn-sm"><i class="bi bi-calendar3 me-1"></i>Turnos</a>
+                    <a href="{{ path('app_trabajador_index') }}?tour=1" class="btn btn-outline-warning btn-sm"><i class="bi bi-person-badge me-1"></i>Personal</a>
+                    <a href="{{ path('app_finanzas_index') }}?tour=1" class="btn btn-outline-danger btn-sm"><i class="bi bi-cash-stack me-1"></i>Finanzas</a>
+                    <a href="{{ path('app_configuracion_index') }}?tour=1" class="btn btn-outline-secondary btn-sm"><i class="bi bi-gear-fill me-1"></i>Configuración</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="manual-tab-pane" role="tabpanel" aria-labelledby="manual-tab" tabindex="0">
+        <input type="text" id="manual-search" class="form-control mb-4" placeholder="Buscar en el manual...">
+
+        <div class="card border-0 shadow-sm mb-3 manual-card">
+            <div class="card-header bg-white border-0 d-flex align-items-center gap-2 py-3" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#manual-dashboard">
+                <i class="bi bi-speedometer2 fs-5 text-primary"></i>
+                <span class="fw-semibold">Dashboard</span>
+                <i class="bi bi-chevron-down ms-auto small text-muted"></i>
+            </div>
+            <div id="manual-dashboard" class="collapse">
+                <div class="card-body pt-0">
+                    <p class="text-muted small">Vista general del estado de la clínica en tiempo real.</p>
+                    <ol class="small">
+                        <li>Consulta los KPIs en las tarjetas superiores (pacientes activos, turnos del día, eventos pendientes).</li>
+                        <li>Revisa el panel de turnos próximos para anticipar cobertura.</li>
+                        <li>Haz clic en cualquier tarjeta KPI para ir directamente al módulo.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-3 manual-card">
+            <div class="card-header bg-white border-0 d-flex align-items-center gap-2 py-3" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#manual-pacientes">
+                <i class="bi bi-people-fill fs-5 text-success"></i>
+                <span class="fw-semibold">Pacientes</span>
+                <i class="bi bi-chevron-down ms-auto small text-muted"></i>
+            </div>
+            <div id="manual-pacientes" class="collapse">
+                <div class="card-body pt-0">
+                    <p class="text-muted small">Registro y seguimiento de todos los pacientes en atención domiciliaria.</p>
+                    <ol class="small">
+                        <li>Haz clic en "Nuevo paciente" e ingresa RUT, nombre, dirección y tipo de servicio requerido.</li>
+                        <li>Asocia al paciente a un mandante (isapre, empresa o particular).</li>
+                        <li>Desde el detalle del paciente puedes ver su historial de turnos y evolución clínica.</li>
+                        <li>Cambia el estado a "Alta" o "Baja" cuando corresponda.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-3 manual-card">
+            <div class="card-header bg-white border-0 d-flex align-items-center gap-2 py-3" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#manual-mandantes">
+                <i class="bi bi-building fs-5 text-info"></i>
+                <span class="fw-semibold">Mandantes</span>
+                <i class="bi bi-chevron-down ms-auto small text-muted"></i>
+            </div>
+            <div id="manual-mandantes" class="collapse">
+                <div class="card-body pt-0">
+                    <p class="text-muted small">Entidades que financian los servicios (isapres, empresas, particulares).</p>
+                    <ol class="small">
+                        <li>Registra el mandante con su RUT y datos de facturación.</li>
+                        <li>Asocia pacientes al mandante desde el formulario de paciente.</li>
+                        <li>Desde el detalle del mandante puedes ver todos sus pacientes y generar facturas del período.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-3 manual-card">
+            <div class="card-header bg-white border-0 d-flex align-items-center gap-2 py-3" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#manual-turnos">
+                <i class="bi bi-calendar3 fs-5 text-warning"></i>
+                <span class="fw-semibold">Turnos</span>
+                <i class="bi bi-chevron-down ms-auto small text-muted"></i>
+            </div>
+            <div id="manual-turnos" class="collapse">
+                <div class="card-body pt-0">
+                    <p class="text-muted small">Programación y control de los turnos de atención.</p>
+                    <ol class="small">
+                        <li>Crea un turno seleccionando paciente, tipo (día/noche/24h), fecha y trabajador.</li>
+                        <li>El calendario muestra el estado de cobertura: verde = cubierto, rojo = sin personal.</li>
+                        <li>Marca el turno como "Completado" al finalizar la jornada.</li>
+                        <li>Un turno sin personal genera automáticamente una notificación al coordinador.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-3 manual-card">
+            <div class="card-header bg-white border-0 d-flex align-items-center gap-2 py-3" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#manual-personal">
+                <i class="bi bi-person-badge fs-5 text-danger"></i>
+                <span class="fw-semibold">Personal</span>
+                <i class="bi bi-chevron-down ms-auto small text-muted"></i>
+            </div>
+            <div id="manual-personal" class="collapse">
+                <div class="card-body pt-0">
+                    <p class="text-muted small">Gestión del equipo clínico y administrativo.</p>
+                    <ol class="small">
+                        <li>Registra al trabajador con su RUT, perfil (TENS, Enfermera, Técnico) y datos de contacto.</li>
+                        <li>Desde el detalle puedes ver todos sus turnos asignados por mes.</li>
+                        <li>El sistema calcula la liquidación automáticamente desde los turnos completados.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-3 manual-card">
+            <div class="card-header bg-white border-0 d-flex align-items-center gap-2 py-3" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#manual-eventos">
+                <i class="bi bi-exclamation-triangle-fill fs-5 text-danger"></i>
+                <span class="fw-semibold">Eventos Adversos</span>
+                <i class="bi bi-chevron-down ms-auto small text-muted"></i>
+            </div>
+            <div id="manual-eventos" class="collapse">
+                <div class="card-body pt-0">
+                    <p class="text-muted small">Registro de incidentes clínicos para auditoría y seguimiento.</p>
+                    <ol class="small">
+                        <li>Registra cualquier anomalía o incidente ocurrido durante la atención.</li>
+                        <li>Clasifica por tipo y severidad.</li>
+                        <li>El coordinador recibe notificación automática ante eventos graves.</li>
+                        <li>Todos los eventos quedan en el historial para auditoría.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-3 manual-card">
+            <div class="card-header bg-white border-0 d-flex align-items-center gap-2 py-3" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#manual-finanzas">
+                <i class="bi bi-cash-stack fs-5 text-success"></i>
+                <span class="fw-semibold">Finanzas</span>
+                <i class="bi bi-chevron-down ms-auto small text-muted"></i>
+            </div>
+            <div id="manual-finanzas" class="collapse">
+                <div class="card-body pt-0">
+                    <p class="text-muted small">Liquidaciones de personal y facturación a mandantes.</p>
+                    <ol class="small">
+                        <li>Genera liquidaciones desde "Nueva liquidación" seleccionando trabajador y período — el monto se calcula automáticamente.</li>
+                        <li>Revisa y aprueba la liquidación antes de marcarla como pagada.</li>
+                        <li>Para facturar a un mandante, ve a "Facturas" → "Nueva factura", selecciona mandante y período.</li>
+                        <li>El % de IVA y días de vencimiento se toman automáticamente desde Configuración.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-3 manual-card">
+            <div class="card-header bg-white border-0 d-flex align-items-center gap-2 py-3" style="cursor:pointer" data-bs-toggle="collapse" data-bs-target="#manual-configuracion">
+                <i class="bi bi-gear-fill fs-5 text-secondary"></i>
+                <span class="fw-semibold">Configuración</span>
+                <i class="bi bi-chevron-down ms-auto small text-muted"></i>
+            </div>
+            <div id="manual-configuracion" class="collapse">
+                <div class="card-body pt-0">
+                    <p class="text-muted small">Parámetros globales del sistema para este tenant. Solo visible para administradores.</p>
+                    <ol class="small">
+                        <li>Ajusta el nombre de la clínica — aparecerá en el menú lateral de todos los usuarios.</li>
+                        <li>Configura el % de IVA y días de vencimiento usados en la facturación automática.</li>
+                        <li>Activa o desactiva módulos completos (Finanzas, Eventos Adversos) para simplificar la interfaz.</li>
+                        <li>Define cuántos días de anticipación usar para detectar turnos sin cobertura.</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-pane fade" id="faq-tab-pane" role="tabpanel" aria-labelledby="faq-tab" tabindex="0">
+        <input type="text" id="faq-search" class="form-control mb-4" placeholder="Buscar pregunta...">
+
+        <div class="accordion" id="faq-accordion">
+            <h6 class="text-muted small fw-bold text-uppercase mt-4 mb-2">Primeros pasos</h6>
+
+            <div class="accordion-item faq-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-1">¿Cómo inicio sesión si olvidé mi contraseña?</button>
+                </h2>
+                <div id="faq-1" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                    <div class="accordion-body">Haz clic en "¿Olvidaste tu contraseña?" en la pantalla de login. Recibirás un enlace por correo para restablecerla. Si no lo recibes, contacta a tu administrador del sistema.</div>
+                </div>
+            </div>
+
+            <div class="accordion-item faq-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-2">¿Qué diferencia hay entre los roles del sistema?</button>
+                </h2>
+                <div id="faq-2" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                    <div class="accordion-body">Admin: acceso total, configura el sistema y gestiona usuarios. Coordinador: gestiona pacientes, turnos y personal, ve finanzas. Enfermera/TENS: accede a la vista de campo con sus turnos del día. Visualizador: solo lectura.</div>
+                </div>
+            </div>
+
+            <div class="accordion-item faq-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-3">¿Puedo usar el sistema desde el celular?</button>
+                </h2>
+                <div id="faq-3" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                    <div class="accordion-body">Sí. El sistema es responsive. Además, TENS y Enfermeras tienen una "Vista de campo" optimizada para móvil accesible desde el menú lateral.</div>
+                </div>
+            </div>
+
+            <h6 class="text-muted small fw-bold text-uppercase mt-4 mb-2">Turnos y cobertura</h6>
+
+            <div class="accordion-item faq-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-4">¿Qué significa que un turno está "descubierto"?</button>
+                </h2>
+                <div id="faq-4" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                    <div class="accordion-body">Un turno descubierto no tiene trabajador asignado o el trabajador asignado no confirmó asistencia. El sistema genera una notificación automática al coordinador con la anticipación configurada.</div>
+                </div>
+            </div>
+
+            <div class="accordion-item faq-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-5">¿Cómo asigno un reemplazo a un turno?</button>
+                </h2>
+                <div id="faq-5" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                    <div class="accordion-body">Desde el detalle del turno, haz clic en "Editar", cambia el trabajador asignado y guarda. El sistema registra el cambio en la auditoría.</div>
+                </div>
+            </div>
+
+            <div class="accordion-item faq-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-6">¿Qué pasa si creo un turno de 24 horas en la exportación Buk?</button>
+                </h2>
+                <div id="faq-6" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                    <div class="accordion-body">El sistema lo divide automáticamente en 2 filas en el archivo CSV: una para la jornada diurna y otra para la nocturna, distribuyendo el monto por igual.</div>
+                </div>
+            </div>
+
+            <div class="accordion-item faq-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-7">¿Puedo ver todos los turnos de un trabajador específico?</button>
+                </h2>
+                <div id="faq-7" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                    <div class="accordion-body">Sí. Ve a Personal → haz clic en el ícono de ojo del trabajador → verás su historial completo de turnos por mes.</div>
+                </div>
+            </div>
+
+            <h6 class="text-muted small fw-bold text-uppercase mt-4 mb-2">Personal y liquidaciones</h6>
+
+            <div class="accordion-item faq-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-8">¿Cómo se calcula el monto de una liquidación?</button>
+                </h2>
+                <div id="faq-8" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                    <div class="accordion-body">El sistema suma todos los turnos con estado "Completado" del trabajador en el período, aplicando las tarifas configuradas según el tipo de turno (día, noche, 24h) y el mandante del paciente.</div>
+                </div>
+            </div>
+
+            <div class="accordion-item faq-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-9">¿Puedo corregir una liquidación ya generada?</button>
+                </h2>
+                <div id="faq-9" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                    <div class="accordion-body">Sí, mientras esté en estado "Borrador". Una vez aprobada no puede modificarse. Si necesitas corregirla, contacta al administrador para revertir el estado.</div>
+                </div>
+            </div>
+
+            <div class="accordion-item faq-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-10">¿Cómo exporto las liquidaciones a Buk?</button>
+                </h2>
+                <div id="faq-10" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                    <div class="accordion-body">Ve a Finanzas → Liquidaciones, filtra por período y haz clic en "Exportar Buk". El sistema genera un CSV con el formato requerido para importar en la plataforma Buk.</div>
+                </div>
+            </div>
+
+            <h6 class="text-muted small fw-bold text-uppercase mt-4 mb-2">Facturación</h6>
+
+            <div class="accordion-item faq-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-11">¿Cómo se calcula el IVA en las facturas?</button>
+                </h2>
+                <div id="faq-11" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                    <div class="accordion-body">El sistema usa el porcentaje configurado en Configuración → Facturación (por defecto 19%). Puedes ajustarlo sin necesidad de modificar código.</div>
+                </div>
+            </div>
+
+            <div class="accordion-item faq-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-12">¿Qué es un mandante en el sistema?</button>
+                </h2>
+                <div id="faq-12" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                    <div class="accordion-body">Es la entidad que paga por los servicios prestados al paciente. Puede ser una isapre, una empresa, o un particular. Cada mandante tiene su propio RUT y datos de facturación.</div>
+                </div>
+            </div>
+
+            <div class="accordion-item faq-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-13">¿Puedo exportar las facturas?</button>
+                </h2>
+                <div id="faq-13" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                    <div class="accordion-body">Sí. Desde Finanzas → Facturas hay un botón "Exportar" que descarga las facturas del período filtrado en formato CSV.</div>
+                </div>
+            </div>
+
+            <h6 class="text-muted small fw-bold text-uppercase mt-4 mb-2">Acceso y permisos</h6>
+
+            <div class="accordion-item faq-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-14">¿Por qué no veo el módulo de Finanzas?</button>
+                </h2>
+                <div id="faq-14" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                    <div class="accordion-body">Puede tener dos causas: (1) tu rol no tiene permiso para ver finanzas — consulta con tu administrador, o (2) el módulo fue desactivado desde Configuración.</div>
+                </div>
+            </div>
+
+            <div class="accordion-item faq-item">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-15">¿Cómo creo un nuevo usuario para la clínica?</button>
+                </h2>
+                <div id="faq-15" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
+                    <div class="accordion-body">Solo los administradores pueden crear usuarios. Ve a Administración → Usuarios → "Nuevo usuario", asigna el rol correspondiente y el sistema enviará las credenciales por correo.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script>
+// Búsqueda en Manual
+document.getElementById('manual-search').addEventListener('input', function () {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('.manual-card').forEach(card => {
+        card.style.display = card.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+});
+
+// Búsqueda en FAQ
+document.getElementById('faq-search').addEventListener('input', function () {
+    const q = this.value.toLowerCase();
+    document.querySelectorAll('.faq-item').forEach(item => {
+        item.style.display = item.textContent.toLowerCase().includes(q) ? '' : 'none';
+    });
+});
+</script>
+{% endblock %}
