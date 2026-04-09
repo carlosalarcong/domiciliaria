@@ -277,6 +277,33 @@ class FinanzasController extends AbstractController
         return $response;
     }
 
+    #[Route('/liquidaciones/exportar-buk', name: 'liquidaciones_exportar_buk', methods: ['GET'])]
+    #[IsGranted('FINANZAS_EDITAR')]
+    public function liquidacionesExportarBuk(Request $request): Response
+    {
+        $anio = $request->query->getInt('anio', (int) date('Y'));
+        $mes  = $request->query->getInt('mes', (int) date('n'));
+
+        $liquidaciones = $this->liquidacionRepository->findAprobadasPorPeriodo($anio, $mes);
+
+        if ($liquidaciones === []) {
+            $this->addFlash('warning', 'No hay liquidaciones aprobadas para ese período.');
+            return $this->redirectToRoute('app_finanzas_liquidaciones');
+        }
+
+        $csv = $this->exportService->exportarLiquidacionesBuk($liquidaciones, $anio, $mes);
+        $filename = sprintf('buk_%d_%02d.csv', $anio, $mes);
+
+        $response = new StreamedResponse(fn() => print($csv));
+        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
+        $response->headers->set('Content-Disposition', HeaderUtils::makeDisposition(
+            HeaderUtils::DISPOSITION_ATTACHMENT,
+            $filename,
+        ));
+
+        return $response;
+    }
+
     private function toAsciiFilename(string $value): string
     {
         $normalized = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value);
