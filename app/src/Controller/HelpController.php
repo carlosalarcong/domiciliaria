@@ -6,6 +6,7 @@ namespace App\Controller;
 
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
+use Symfony\Component\DependencyInjection\Attribute\Autowire;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,8 +19,13 @@ class HelpController extends AbstractController
 {
     private const MODULOS_VALIDOS = ['dashboard', 'pacientes', 'turnos', 'personal', 'finanzas'];
 
+    public function __construct(
+        #[Autowire(service: 'doctrine.orm.tenant_entity_manager')]
+        private readonly EntityManagerInterface $tenantEm,
+    ) {}
+
     #[Route('/tour/{modulo}/completar', name: 'tour_completar', methods: ['POST'])]
-    public function tourCompletar(string $modulo, Request $request, EntityManagerInterface $em): JsonResponse
+    public function tourCompletar(string $modulo, Request $request): JsonResponse
     {
         if (!in_array($modulo, self::MODULOS_VALIDOS, true)) {
             return $this->json(['ok' => false, 'error' => 'Módulo inválido'], Response::HTTP_BAD_REQUEST);
@@ -36,13 +42,13 @@ class HelpController extends AbstractController
         $user = $this->getUser();
         $user->marcarTourCompletado($modulo);
 
-        $em->flush();
+        $this->tenantEm->flush();
 
         return $this->json(['ok' => true]);
     }
 
     #[Route('/tours/reset', name: 'tours_reset', methods: ['POST'])]
-    public function toursReset(Request $request, EntityManagerInterface $em): Response
+    public function toursReset(Request $request): Response
     {
         $token = $request->query->get('_token', $request->request->get('_token'));
 
@@ -54,7 +60,7 @@ class HelpController extends AbstractController
         $user = $this->getUser();
         $user->resetearTours();
 
-        $em->flush();
+        $this->tenantEm->flush();
 
         $this->addFlash('success', 'Tours de ayuda reiniciados. Verás los tours nuevamente al visitar cada sección.');
 
