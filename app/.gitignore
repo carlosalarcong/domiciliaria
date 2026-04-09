@@ -12,3 +12,4 @@
 /phpunit.xml
 ###< phpunit/phpunit ###
 /config/reference.php
+/.phpunit.result.cache

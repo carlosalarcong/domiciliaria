@@ -17,7 +17,7 @@ class ExportBukTest extends TestCase
 {
     public function testRutConPuntosYGuionSeNormaliza(): void
     {
-        $logger = $this->createMock(LoggerInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
         $service = new ExportService($logger);
 
         $liq = $this->crearLiquidacionConItem('12.345.678-9', TipoConcepto::TURNO_DIA, '12.00', '5000.00', '60000.00');
@@ -29,7 +29,7 @@ class ExportBukTest extends TestCase
 
     public function testRutSinFormatoSeNormalizaConGuion(): void
     {
-        $logger = $this->createMock(LoggerInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
         $service = new ExportService($logger);
 
         $liq = $this->crearLiquidacionConItem('123456789', TipoConcepto::TURNO_DIA, '12.00', '5000.00', '60000.00');
@@ -41,7 +41,7 @@ class ExportBukTest extends TestCase
 
     public function testRutConKMinusculaSeNormalizaMayuscula(): void
     {
-        $logger = $this->createMock(LoggerInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
         $service = new ExportService($logger);
 
         $liq = $this->crearLiquidacionConItem('9876543-k', TipoConcepto::TURNO_DIA, '10.00', '4500.00', '45000.00');
@@ -72,7 +72,7 @@ class ExportBukTest extends TestCase
 
     public function testTurno24hGeneraDosFilasConMitadCantidadYMonto(): void
     {
-        $logger = $this->createMock(LoggerInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
         $service = new ExportService($logger);
 
         $liq = $this->crearLiquidacionConItem('12345678-9', TipoConcepto::TURNO_24H, '24.00', '5000.00', '120000.00');
@@ -96,7 +96,7 @@ class ExportBukTest extends TestCase
 
     public function testConceptoDescuentoNoApareceEnSalida(): void
     {
-        $logger = $this->createMock(LoggerInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
         $service = new ExportService($logger);
 
         $liq = $this->crearLiquidacionBase('12345678-9');
@@ -113,7 +113,7 @@ class ExportBukTest extends TestCase
 
     public function testCabeceraTieneOrdenCorrecto(): void
     {
-        $logger = $this->createMock(LoggerInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
         $service = new ExportService($logger);
 
         $liq = $this->crearLiquidacionConItem('12345678-9', TipoConcepto::VISITA, '1.00', '12000.00', '12000.00');
@@ -128,7 +128,7 @@ class ExportBukTest extends TestCase
 
     public function testCsvIncluyeBomUtf8(): void
     {
-        $logger = $this->createMock(LoggerInterface::class);
+        $logger = $this->createStub(LoggerInterface::class);
         $service = new ExportService($logger);
 
         $liq = $this->crearLiquidacionConItem('12345678-9', TipoConcepto::TURNO_DIA, '1.00', '1000.00', '1000.00');
