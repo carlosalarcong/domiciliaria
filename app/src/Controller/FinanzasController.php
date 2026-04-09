@@ -260,9 +260,10 @@ class FinanzasController extends AbstractController
     public function liquidacionExportar(LiquidacionMensual $liquidacion): Response
     {
         $csv      = $this->finanzasService->exportarLiquidacionCsv($liquidacion);
+        $apellido = $liquidacion->getTrabajador()?->getApellidos() ?? 'trabajador';
         $filename = sprintf(
             'liquidacion_%s_%s_%02d.csv',
-            strtolower(str_replace(' ', '_', $liquidacion->getTrabajador()?->getApellidos() ?? 'trabajador')),
+            $this->toAsciiFilename($apellido),
             $liquidacion->getAnio(),
             $liquidacion->getMes(),
         );
@@ -274,6 +275,20 @@ class FinanzasController extends AbstractController
         ));
 
         return $response;
+    }
+
+    private function toAsciiFilename(string $value): string
+    {
+        $normalized = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value);
+        if ($normalized === false) {
+            $normalized = $value;
+        }
+
+        $normalized = strtolower($normalized);
+        $normalized = preg_replace('/[^a-z0-9]+/', '_', $normalized) ?? '';
+        $normalized = trim($normalized, '_');
+
+        return $normalized !== '' ? $normalized : 'trabajador';
     }
 
     // ─── Facturas ─────────────────────────────────────────────────────────────

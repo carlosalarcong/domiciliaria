@@ -105,6 +105,14 @@
 
     tours.pacientes = [
         {
+            element: '#btn-exportar-pacientes',
+            popover: {
+                title: 'Exportar listado',
+                description: 'Descarga un CSV de pacientes respetando los filtros aplicados (estado, mandante y tipo de servicio).',
+                side: 'bottom', align: 'start',
+            },
+        },
+        {
             element: '#btn-nuevo-paciente',
             popover: {
                 title: 'Registrar paciente',
@@ -131,6 +139,14 @@
     ];
 
     tours.turnos = [
+        {
+            element: '#btn-exportar-turnos',
+            popover: {
+                title: 'Exportar turnos',
+                description: 'Descarga un CSV con los turnos del período para compartirlo o revisarlo fuera del sistema.',
+                side: 'bottom', align: 'start',
+            },
+        },
         {
             element: '#btn-nuevo-turno',
             popover: {
