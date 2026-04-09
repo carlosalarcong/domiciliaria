@@ -11,12 +11,13 @@ use Symfony\Component\Security\Core\Authorization\Voter\Voter;
 class FinanzasVoter extends Voter
 {
     public const VER = 'FINANZAS_VER';
+    public const EDITAR = 'FINANZAS_EDITAR';
     public const GESTIONAR = 'FINANZAS_GESTIONAR';
     public const EXPORTAR = 'FINANZAS_EXPORTAR';
 
     protected function supports(string $attribute, mixed $subject): bool
     {
-        return in_array($attribute, [self::VER, self::GESTIONAR, self::EXPORTAR]);
+        return in_array($attribute, [self::VER, self::EDITAR, self::GESTIONAR, self::EXPORTAR], true);
     }
 
     protected function voteOnAttribute(string $attribute, mixed $subject, TokenInterface $token): bool
