@@ -167,6 +167,7 @@
                         <li>Asocia al paciente a un mandante (isapre, empresa o particular).</li>
                         <li>Desde el detalle del paciente puedes ver su historial de turnos y evolución clínica.</li>
                         <li>Cambia el estado a "Alta" o "Baja" cuando corresponda.</li>
+                        <li>Usa "Exportar CSV" para descargar el listado respetando los filtros activos.</li>
                     </ol>
                 </div>
             </div>
@@ -204,6 +205,7 @@
                         <li>El calendario muestra el estado de cobertura: verde = cubierto, rojo = sin personal.</li>
                         <li>Marca el turno como "Completado" al finalizar la jornada.</li>
                         <li>Un turno sin personal genera automáticamente una notificación al coordinador.</li>
+                        <li>Usa "Exportar CSV" para descargar turnos del período.</li>
                     </ol>
                 </div>
             </div>
@@ -259,6 +261,7 @@
                         <li>Genera liquidaciones desde "Nueva liquidación" seleccionando trabajador y período — el monto se calcula automáticamente.</li>
                         <li>Revisa y aprueba la liquidación antes de marcarla como pagada.</li>
                         <li>Para facturar a un mandante, ve a "Facturas" → "Nueva factura", selecciona mandante y período.</li>
+                        <li>Desde "Facturas" puedes usar "Exportar CSV" para descargar el resultado filtrado.</li>
                         <li>El % de IVA y días de vencimiento se toman automáticamente desde Configuración.</li>
                     </ol>
                 </div>
@@ -340,10 +343,10 @@
 
             <div class="accordion-item faq-item">
                 <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-6">¿Qué pasa si creo un turno de 24 horas en la exportación Buk?</button>
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-6">¿Qué incluye la exportación CSV de turnos?</button>
                 </h2>
                 <div id="faq-6" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
-                    <div class="accordion-body">El sistema lo divide automáticamente en 2 filas en el archivo CSV: una para la jornada diurna y otra para la nocturna, distribuyendo el monto por igual.</div>
+                    <div class="accordion-body">Incluye los turnos del rango solicitado con su estado, paciente, trabajador y horarios. Es útil para seguimiento operativo y cuadraturas fuera del sistema.</div>
                 </div>
             </div>
 
@@ -378,10 +381,10 @@
 
             <div class="accordion-item faq-item">
                 <h2 class="accordion-header">
-                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-10">¿Cómo exporto las liquidaciones a Buk?</button>
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq-10">¿Cómo exporto una liquidación?</button>
                 </h2>
                 <div id="faq-10" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
-                    <div class="accordion-body">Ve a Finanzas → Liquidaciones, filtra por período y haz clic en "Exportar Buk". El sistema genera un CSV con el formato requerido para importar en la plataforma Buk.</div>
+                    <div class="accordion-body">Entra al detalle de la liquidación y usa el botón "Exportar" para descargar su CSV con conceptos, horas y subtotales del período.</div>
                 </div>
             </div>
 
