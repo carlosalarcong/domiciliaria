@@ -27,6 +27,7 @@ class FinanzasService
         private readonly TurnoRepository $turnoRepository,
         private readonly LiquidacionMensualRepository $liquidacionRepository,
         private readonly TarifaRepository $tarifaRepository,
+        private readonly ConfiguracionService $configuracionService,
     ) {}
 
     // ─── Liquidaciones ───────────────────────────────────────────────────────
@@ -162,10 +163,13 @@ class FinanzasService
         ?string $numeroFactura = null,
         float $descuentoPorTurnoDescubierto = 0.0,
     ): Factura {
+        $config = $this->configuracionService->get();
+
         $factura = new Factura($anio, $mes);
         $factura->setMandante($mandante)
                 ->setNumeroFactura($numeroFactura)
                 ->setMontoNeto(number_format($montoNeto, 2, '.', ''))
+                ->setPorcentajeIva($config->getPorcentajeIva())
                 ->setCreadoPor($creadoPor);
 
         // Calcular totales del período (turnos del mandante)
@@ -200,14 +204,21 @@ class FinanzasService
         }
 
         $factura->recalcularIva();
+        $factura->setFechaVencimiento(
+            (new \DateTime())->modify('+' . $config->getDiasVencimientoFactura() . ' days')
+        );
         $this->em->persist($factura);
         $this->em->flush();
 
         return $factura;
     }
 
-    public function emitirFactura(Factura $factura, \DateTimeInterface $fechaEmision, int $diasVencimiento = 30): Factura
+    public function emitirFactura(Factura $factura, \DateTimeInterface $fechaEmision, ?int $diasVencimiento = null): Factura
     {
+        if ($diasVencimiento === null) {
+            $diasVencimiento = $this->configuracionService->get()->getDiasVencimientoFactura();
+        }
+
         $vencimiento = (clone $fechaEmision)->modify("+{$diasVencimiento} days");
         $factura->setEstado(EstadoFactura::EMITIDA)
                 ->setFechaEmision($fechaEmision)

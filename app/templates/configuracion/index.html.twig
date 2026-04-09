@@ -1,0 +1,128 @@
+{% extends 'base.html.twig' %}
+{% block title %}Configuración{% endblock %}
+{% block help_modulo %}configuracion{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .form-check.form-switch { padding-left: 3em; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+  <div>
+    <h4 class="mb-0 fw-bold">Configuración de la clínica</h4>
+    <small class="text-muted">Parámetros globales del sistema</small>
+  </div>
+</div>
+
+{{ form_start(form) }}
+
+<div class="card border-0 shadow-sm mb-4" id="config-card-identidad">
+  <div class="card-header bg-white border-0 fw-semibold py-3">
+    <i class="bi bi-building me-2 text-primary"></i>Identidad de la clínica
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-6">{{ form_row(form.nombreClinica) }}</div>
+      <div class="col-md-6">{{ form_row(form.razonSocial) }}</div>
+      <div class="col-md-4">{{ form_row(form.rutEmpresa) }}</div>
+      <div class="col-md-4">{{ form_row(form.giro) }}</div>
+      <div class="col-md-4">{{ form_row(form.telefonoContacto) }}</div>
+      <div class="col-md-6">{{ form_row(form.direccionFiscal) }}</div>
+      <div class="col-md-6">{{ form_row(form.emailContacto) }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4" id="config-card-facturacion">
+  <div class="card-header bg-white border-0 fw-semibold py-3">
+    <i class="bi bi-receipt me-2 text-success"></i>Facturación
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-3">{{ form_row(form.porcentajeIva) }}</div>
+      <div class="col-md-4">{{ form_row(form.diasVencimientoFactura) }}</div>
+      <div class="col-md-3">{{ form_row(form.prefijoFactura) }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4" id="config-card-operaciones">
+  <div class="card-header bg-white border-0 fw-semibold py-3">
+    <i class="bi bi-gear me-2 text-warning"></i>Operaciones
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-3">{{ form_row(form.diasAnticipacionAlertas) }}</div>
+      <div class="col-md-3">{{ form_row(form.horaRevisionTurnos) }}</div>
+      <div class="col-md-3">{{ form_row(form.limiteDocumentosMB) }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4" id="config-card-notificaciones">
+  <div class="card-header bg-white border-0 fw-semibold py-3">
+    <i class="bi bi-bell me-2 text-info"></i>Notificaciones
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="form-check form-switch mt-1">
+          {{ form_widget(form.notifTurnoDescubierto, {'attr': {'class': 'form-check-input'}}) }}
+          {{ form_label(form.notifTurnoDescubierto, null, {'label_attr': {'class': 'form-check-label'}}) }}
+        </div>
+        {{ form_help(form.notifTurnoDescubierto) }}
+        {{ form_errors(form.notifTurnoDescubierto) }}
+      </div>
+      <div class="col-md-4">
+        <div class="form-check form-switch mt-1">
+          {{ form_widget(form.notifEventoGrave, {'attr': {'class': 'form-check-input'}}) }}
+          {{ form_label(form.notifEventoGrave, null, {'label_attr': {'class': 'form-check-label'}}) }}
+        </div>
+        {{ form_help(form.notifEventoGrave) }}
+        {{ form_errors(form.notifEventoGrave) }}
+      </div>
+      <div class="col-md-6 mt-2">{{ form_row(form.emailNotificaciones) }}</div>
+    </div>
+  </div>
+</div>
+
+<div class="card border-0 shadow-sm mb-4" id="config-card-modulos">
+  <div class="card-header bg-white border-0 fw-semibold py-3">
+    <i class="bi bi-puzzle me-2 text-secondary"></i>Módulos activos
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="form-check form-switch mt-1">
+          {{ form_widget(form.moduloFinanzasActivo, {'attr': {'class': 'form-check-input'}}) }}
+          {{ form_label(form.moduloFinanzasActivo, null, {'label_attr': {'class': 'form-check-label'}}) }}
+        </div>
+        {{ form_help(form.moduloFinanzasActivo) }}
+        {{ form_errors(form.moduloFinanzasActivo) }}
+      </div>
+      <div class="col-md-4">
+        <div class="form-check form-switch mt-1">
+          {{ form_widget(form.moduloEventosActivo, {'attr': {'class': 'form-check-input'}}) }}
+          {{ form_label(form.moduloEventosActivo, null, {'label_attr': {'class': 'form-check-label'}}) }}
+        </div>
+        {{ form_help(form.moduloEventosActivo) }}
+        {{ form_errors(form.moduloEventosActivo) }}
+      </div>
+    </div>
+    <small class="text-muted mt-2 d-block">
+      Desactivar un módulo lo oculta del menú lateral para todos los usuarios.
+    </small>
+  </div>
+</div>
+
+<div class="d-flex justify-content-end mb-5">
+  <button type="submit" class="btn btn-primary px-5" id="btn-guardar-config">
+    <i class="bi bi-check-lg me-2"></i>Guardar configuración
+  </button>
+</div>
+
+{{ form_end(form) }}
+{% endblock %}

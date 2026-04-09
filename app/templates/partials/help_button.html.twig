@@ -1,0 +1,100 @@
+<style>
+/* Botón flotante ? */
+#help-fab {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #3182ce;
+    color: #fff;
+    border: none;
+    font-size: 1.4rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 4px 14px rgba(49,130,206,.45);
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform .15s, background .15s;
+}
+#help-fab:hover { transform: scale(1.1); background: #2b6cb0; }
+
+/* Menú desplegable del botón */
+#help-menu {
+    position: fixed;
+    bottom: 5rem;
+    right: 1.5rem;
+    background: #fff;
+    border-radius: .75rem;
+    box-shadow: 0 8px 30px rgba(0,0,0,.15);
+    padding: .5rem;
+    z-index: 9998;
+    min-width: 210px;
+    display: none;
+}
+#help-menu.open { display: block; }
+#help-menu .help-item {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    padding: .55rem .85rem;
+    border-radius: .4rem;
+    cursor: pointer;
+    font-size: .88rem;
+    color: #2d3748;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    text-decoration: none;
+}
+#help-menu .help-item:hover { background: #f7f8fc; }
+#help-menu hr { margin: .35rem 0; border-color: #e2e8f0; }
+</style>
+
+<button id="help-fab" title="Ayuda" aria-label="Abrir ayuda">?</button>
+
+<div id="help-menu" role="dialog" aria-label="Menú de ayuda">
+  <button class="help-item" id="help-start-tour">
+    <i class="bi bi-play-circle-fill text-primary"></i>
+    <span>Tour de este módulo</span>
+  </button>
+  <hr>
+  <form method="post"
+        action="{{ path('app_help_tours_reset') }}"
+        onsubmit="return confirm('¿Reiniciar todos los tours de ayuda?')">
+    <input type="hidden" name="_token"
+           value="{{ csrf_token('help_reset') }}">
+    <button type="submit" class="help-item">
+      <i class="bi bi-arrow-counterclockwise text-warning"></i>
+      <span>Reiniciar todos los tours</span>
+    </button>
+  </form>
+</div>
+
+<script>
+(function () {
+    const fab  = document.getElementById('help-fab');
+    const menu = document.getElementById('help-menu');
+    if (!fab || !menu) return;
+
+    fab.addEventListener('click', (e) => {
+        e.stopPropagation();
+        menu.classList.toggle('open');
+    });
+    document.addEventListener('click', (e) => {
+        if (!menu.contains(e.target) && e.target !== fab) {
+            menu.classList.remove('open');
+        }
+    });
+
+    // Si no hay tour disponible en este módulo, ocultar el botón de tour
+    const startBtn = document.getElementById('help-start-tour');
+    if (startBtn && !window.helpConfig?.modulo) {
+        startBtn.style.display = 'none';
+    }
+})();
+</script>

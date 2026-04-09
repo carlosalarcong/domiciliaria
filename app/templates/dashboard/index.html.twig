@@ -1,6 +1,7 @@
 {% extends 'base.html.twig' %}
 
 {% block title %}Dashboard — Atención Domiciliaria{% endblock %}
+{% block help_modulo %}dashboard{% endblock %}
 
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -14,7 +15,7 @@
 {# ── KPIs ── #}
 <div class="row g-3 mb-4">
     <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm h-100" id="kpi-pacientes-activos">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="rounded-3 bg-primary bg-opacity-10 p-3">
                     <i class="bi bi-people-fill text-primary fs-4"></i>
@@ -27,7 +28,7 @@
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm h-100" id="kpi-turnos-hoy">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="rounded-3 p-3 {{ turnosDescubiertosHoy > 0 ? 'bg-danger bg-opacity-10' : 'bg-success bg-opacity-10' }}">
                     <i class="bi bi-calendar-check fs-4 {{ turnosDescubiertosHoy > 0 ? 'text-danger' : 'text-success' }}"></i>
@@ -47,7 +48,7 @@
         </div>
     </div>
     <div class="col-sm-6 col-xl-3">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm h-100" id="kpi-eventos">
             <div class="card-body d-flex align-items-center gap-3">
                 <div class="rounded-3 p-3 {{ eventosAbiertosCnt > 0 ? 'bg-warning bg-opacity-10' : 'bg-secondary bg-opacity-10' }}">
                     <i class="bi bi-exclamation-triangle-fill fs-4 {{ eventosAbiertosCnt > 0 ? 'text-warning' : 'text-secondary' }}"></i>

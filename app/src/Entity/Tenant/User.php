@@ -69,6 +69,9 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwo
     #[ORM\Column(type: 'boolean')]
     private bool $twoFactorEnabled = false;
 
+    #[ORM\Column(type: 'json', options: ['default' => '[]'])]
+    private array $toursCompletados = [];
+
     #[ORM\Column(type: 'datetime_immutable')]
     #[Gedmo\Timestampable(on: 'create')]
     private ?\DateTimeImmutable $creadoEn = null;
@@ -193,6 +196,28 @@ class User implements UserInterface, PasswordAuthenticatedUserInterface, TotpTwo
             'ROLE_VISUALIZADOR' => 'Visualizador',
             default => 'Usuario',
         };
+    }
+
+    public function getToursCompletados(): array
+    {
+        return $this->toursCompletados;
+    }
+
+    public function marcarTourCompletado(string $modulo): void
+    {
+        if (!in_array($modulo, $this->toursCompletados, true)) {
+            $this->toursCompletados[] = $modulo;
+        }
+    }
+
+    public function resetearTours(): void
+    {
+        $this->toursCompletados = [];
+    }
+
+    public function tieneTourCompletado(string $modulo): bool
+    {
+        return in_array($modulo, $this->toursCompletados, true);
     }
 
     // ─── TOTP 2FA ────────────────────────────────────────────────────────────

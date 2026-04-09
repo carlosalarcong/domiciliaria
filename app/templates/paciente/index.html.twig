@@ -1,5 +1,6 @@
 {% extends 'base.html.twig' %}
 {% block title %}Pacientes{% endblock %}
+{% block help_modulo %}pacientes{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -7,12 +8,12 @@
         <small class="text-muted">Registro y seguimiento operativo</small>
     </div>
     {% if is_granted('PACIENTE_CREAR') %}
-    <a href="{{ path('app_paciente_new') }}" class="btn btn-primary"><i class="bi bi-person-plus me-2"></i>Nuevo paciente</a>
+    <a href="{{ path('app_paciente_new') }}" class="btn btn-primary" id="btn-nuevo-paciente"><i class="bi bi-person-plus me-2"></i>Nuevo paciente</a>
     {% endif %}
 </div>
 
 {# Filtros #}
-<div class="card border-0 shadow-sm mb-4">
+<div class="card border-0 shadow-sm mb-4" id="filtros-pacientes">
     <div class="card-body">
         <form method="get" class="row g-2 align-items-end">
             <div class="col-md-3">
@@ -50,7 +51,7 @@
     </div>
 </div>
 
-<div class="card border-0 shadow-sm">
+<div class="card border-0 shadow-sm" id="tabla-pacientes">
     <div class="card-body p-0">
         <div class="table-responsive">
             <table class="table table-hover align-middle mb-0">

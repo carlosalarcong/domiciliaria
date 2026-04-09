@@ -1,5 +1,6 @@
 {% extends 'base.html.twig' %}
 {% block title %}Finanzas{% endblock %}
+{% block help_modulo %}finanzas{% endblock %}
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <div>
@@ -14,7 +15,7 @@
 <div class="row g-4 mb-4">
     {# Liquidaciones #}
     <div class="col-lg-6">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm h-100" id="card-liquidaciones">
             <div class="card-header bg-white border-0 fw-semibold py-3">
                 <i class="bi bi-receipt me-2 text-primary"></i>Liquidaciones de personal
             </div>
@@ -36,7 +37,7 @@
                         <i class="bi bi-list me-1"></i>Ver todas
                     </a>
                     {% if is_granted('FINANZAS_EDITAR') %}
-                    <a href="{{ path('app_finanzas_liquidacion_nueva') }}" class="btn btn-primary btn-sm">
+                    <a href="{{ path('app_finanzas_liquidacion_nueva') }}" class="btn btn-primary btn-sm" id="btn-nueva-liquidacion">
                         <i class="bi bi-plus-lg me-1"></i>Nueva liquidación
                     </a>
                     {% endif %}
@@ -47,7 +48,7 @@
 
     {# Facturas #}
     <div class="col-lg-6">
-        <div class="card border-0 shadow-sm h-100">
+        <div class="card border-0 shadow-sm h-100" id="card-facturas">
             <div class="card-header bg-white border-0 fw-semibold py-3">
                 <i class="bi bi-file-earmark-text me-2 text-success"></i>Facturación a mandantes
             </div>
