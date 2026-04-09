@@ -36,7 +36,13 @@ class TurnoController extends AbstractController
     #[Route('', name: 'index', methods: ['GET'])]
     public function index(): Response
     {
-        return $this->render('turno/index.html.twig');
+        $trabajadores = $this->em
+            ->getRepository(\App\Entity\Tenant\Trabajador::class)
+            ->findBy(['estado' => \App\Enum\EstadoTrabajador::ACTIVO], ['apellidos' => 'ASC']);
+
+        return $this->render('turno/index.html.twig', [
+            'trabajadores' => $trabajadores,
+        ]);
     }
 
     #[Route('/exportar', name: 'exportar', methods: ['GET'])]
@@ -172,10 +178,15 @@ class TurnoController extends AbstractController
     #[Route('/api/eventos', name: 'api_eventos', methods: ['GET'])]
     public function apiEventos(Request $request): JsonResponse
     {
-        $desde = new \DateTime($request->query->get('start', 'today'));
-        $hasta = new \DateTime($request->query->get('end', '+30 days'));
+        $desde        = new \DateTime($request->query->get('start', 'today'));
+        $hasta        = new \DateTime($request->query->get('end', '+30 days'));
+        $trabajadorId = $request->query->get('trabajadorId');
+        $estado       = $request->query->get('estado');
+        $tipo         = $request->query->get('tipo');
 
-        return $this->json($this->repository->findEventosCalendario($desde, $hasta));
+        return $this->json(
+            $this->repository->findEventosCalendario($desde, $hasta, $trabajadorId, $estado, $tipo)
+        );
     }
 
     // ─── API disponibilidad de trabajador ─────────────────────────────────────
@@ -227,5 +238,21 @@ class TurnoController extends AbstractController
         }
 
         return $this->json(['disponible' => true]);
+    }
+
+    #[Route('/api/kpis', name: 'api_kpis', methods: ['GET'])]
+    public function apiKpis(): JsonResponse
+    {
+        $hoy             = $this->repository->countHoyByEstado();
+        $descubiertos7d  = count($this->repository->findDescubiertosProximosDias(7));
+        $completadosMes  = $this->repository->countCompletadosMesActual();
+
+        return $this->json([
+            'hoy_total'        => array_sum($hoy),
+            'hoy_descubiertos' => $hoy['DESCUBIERTO'] ?? 0,
+            'hoy_completados'  => $hoy['COMPLETADO'] ?? 0,
+            'descubiertos_7d'  => $descubiertos7d,
+            'completados_mes'  => $completadosMes,
+        ]);
     }
 }

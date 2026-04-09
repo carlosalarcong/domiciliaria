@@ -162,33 +162,84 @@ class TurnoRepository extends ServiceEntityRepository
     /**
      * Para FullCalendar: todos los turnos en rango como array serializable.
      */
-    public function findEventosCalendario(\DateTimeInterface $desde, \DateTimeInterface $hasta): array
-    {
-        $turnos = $this->findByRangoFecha($desde, $hasta);
+    public function findEventosCalendario(
+        \DateTimeInterface $desde,
+        \DateTimeInterface $hasta,
+        ?string $trabajadorId = null,
+        ?string $estado = null,
+        ?string $tipo = null,
+    ): array {
+        $qb = $this->createQueryBuilder('t')
+            ->leftJoin('t.paciente', 'p')->addSelect('p')
+            ->leftJoin('t.trabajador', 'tr')->addSelect('tr')
+            ->where('t.fecha BETWEEN :desde AND :hasta')
+            ->setParameter('desde', $desde)
+            ->setParameter('hasta', $hasta);
+
+        if ($trabajadorId !== null) {
+            $qb->andWhere('tr.id = :trabajadorId')
+                ->setParameter('trabajadorId', $trabajadorId);
+        }
+        if ($estado !== null && EstadoTurno::tryFrom($estado) !== null) {
+            $qb->andWhere('t.estado = :estado')
+                ->setParameter('estado', EstadoTurno::from($estado));
+        }
+        if ($tipo !== null && TipoTurno::tryFrom($tipo) !== null) {
+            $qb->andWhere('t.tipoTurno = :tipo')
+                ->setParameter('tipo', TipoTurno::from($tipo));
+        }
+
+        $turnos  = $qb->orderBy('t.fecha', 'ASC')->getQuery()->getResult();
         $eventos = [];
 
         foreach ($turnos as $turno) {
             $fechaStr = $turno->getFecha()->format('Y-m-d');
             $inicio   = $turno->getHoraInicio()?->format('H:i') ?? '00:00';
             $termino  = $turno->getHoraTermino()?->format('H:i') ?? '23:59';
+            $trabajador       = $turno->getTrabajador();
+            $trabajadorNombre = $trabajador?->getNombreCompleto() ?? 'Sin asignar';
+            $iniciales        = $trabajador
+                ? mb_strtoupper(mb_substr($trabajador->getNombres() ?? '', 0, 1)
+                    . mb_substr($trabajador->getApellidos() ?? '', 0, 1))
+                : '??';
 
             $eventos[] = [
-                'id'              => (string) $turno->getId(),
-                'title'           => $turno->getTituloCalendario(),
-                'start'           => "{$fechaStr}T{$inicio}",
-                'end'             => "{$fechaStr}T{$termino}",
-                'color'           => $turno->getEstado()->colorCalendario(),
-                'extendedProps'   => [
-                    'estado'      => $turno->getEstado()->value,
-                    'tipoTurno'   => $turno->getTipoTurno()->etiqueta(),
-                    'paciente'    => $turno->getPaciente()?->getNombreCompleto(),
-                    'trabajador'  => $turno->getTrabajador()?->getNombreCompleto() ?? 'Sin asignar',
+                'id'            => (string) $turno->getId(),
+                'title'         => $turno->getTituloCalendario(),
+                'start'         => "{$fechaStr}T{$inicio}",
+                'end'           => "{$fechaStr}T{$termino}",
+                'color'         => $turno->getEstado()->colorCalendario(),
+                'extendedProps' => [
+                    'estado' => $turno->getEstado()->value,
+                    'tipoTurno' => $turno->getTipoTurno()->value,
+                    'tipoTurnoLabel' => $turno->getTipoTurno()->etiqueta(),
+                    'paciente' => $turno->getPaciente()?->getNombreCompleto(),
+                    'trabajador' => $trabajadorNombre,
+                    'trabajadorId' => $trabajador ? (string) $trabajador->getId() : null,
+                    'iniciales' => $iniciales,
                     'esReemplazo' => $turno->isEsReemplazo(),
+                    'horaInicio' => $inicio,
                 ],
             ];
         }
 
         return $eventos;
+    }
+
+    public function countCompletadosMesActual(): int
+    {
+        $desde = new \DateTime('first day of this month');
+        $hasta = new \DateTime('last day of this month');
+
+        return (int) $this->createQueryBuilder('t')
+            ->select('COUNT(t.id)')
+            ->where('t.estado = :estado')
+            ->andWhere('t.fecha BETWEEN :desde AND :hasta')
+            ->setParameter('estado', EstadoTurno::COMPLETADO)
+            ->setParameter('desde', $desde)
+            ->setParameter('hasta', $hasta)
+            ->getQuery()
+            ->getSingleScalarResult();
     }
 
     /**
