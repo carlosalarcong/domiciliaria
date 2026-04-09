@@ -210,4 +210,55 @@
             },
         },
     ];
+
+    tours.configuracion = [
+        {
+            element: '#config-card-identidad',
+            popover: {
+                title: 'Identidad de la clínica',
+                description: 'Configura el nombre visible en el sistema, razón social y datos de contacto. El nombre aparecerá en el menú lateral y en los encabezados del sistema.',
+                side: 'top', align: 'start',
+            },
+        },
+        {
+            element: '#config-card-facturacion',
+            popover: {
+                title: 'Facturación',
+                description: 'Define el % de IVA aplicado al generar facturas, los días de vencimiento y el prefijo del número de factura. Estos valores se usan automáticamente al emitir facturas a mandantes.',
+                side: 'top', align: 'start',
+            },
+        },
+        {
+            element: '#config-card-operaciones',
+            popover: {
+                title: 'Operaciones',
+                description: 'Controla cuántos días antes se detectan turnos sin cobertura, la hora de revisión diaria automática y el tamaño máximo permitido para archivos subidos al sistema.',
+                side: 'top', align: 'start',
+            },
+        },
+        {
+            element: '#config-card-notificaciones',
+            popover: {
+                title: 'Notificaciones',
+                description: 'Activa o desactiva alertas internas por turnos descubiertos y eventos adversos graves. Si configuras un email externo, recibirá copia de las alertas críticas.',
+                side: 'top', align: 'start',
+            },
+        },
+        {
+            element: '#config-card-modulos',
+            popover: {
+                title: 'Módulos activos',
+                description: 'Desactivar un módulo lo oculta del menú lateral para todos los usuarios de esta clínica. Útil si tu organización no usa Finanzas o Eventos Adversos.',
+                side: 'top', align: 'start',
+            },
+        },
+        {
+            element: '#btn-guardar-config',
+            popover: {
+                title: 'Guardar cambios',
+                description: 'Los cambios se aplican de inmediato a todos los usuarios del tenant. El nombre de la clínica y los módulos activos se reflejan en tiempo real en el menú lateral.',
+                side: 'top', align: 'end',
+            },
+        },
+    ];
 })();

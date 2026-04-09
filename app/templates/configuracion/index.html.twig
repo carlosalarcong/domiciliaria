@@ -1,5 +1,6 @@
 {% extends 'base.html.twig' %}
 {% block title %}Configuración{% endblock %}
+{% block help_modulo %}configuracion{% endblock %}
 
 {% block stylesheets %}
 {{ parent() }}
@@ -18,7 +19,7 @@
 
 {{ form_start(form) }}
 
-<div class="card border-0 shadow-sm mb-4">
+<div class="card border-0 shadow-sm mb-4" id="config-card-identidad">
   <div class="card-header bg-white border-0 fw-semibold py-3">
     <i class="bi bi-building me-2 text-primary"></i>Identidad de la clínica
   </div>
@@ -35,7 +36,7 @@
   </div>
 </div>
 
-<div class="card border-0 shadow-sm mb-4">
+<div class="card border-0 shadow-sm mb-4" id="config-card-facturacion">
   <div class="card-header bg-white border-0 fw-semibold py-3">
     <i class="bi bi-receipt me-2 text-success"></i>Facturación
   </div>
@@ -48,7 +49,7 @@
   </div>
 </div>
 
-<div class="card border-0 shadow-sm mb-4">
+<div class="card border-0 shadow-sm mb-4" id="config-card-operaciones">
   <div class="card-header bg-white border-0 fw-semibold py-3">
     <i class="bi bi-gear me-2 text-warning"></i>Operaciones
   </div>
@@ -61,7 +62,7 @@
   </div>
 </div>
 
-<div class="card border-0 shadow-sm mb-4">
+<div class="card border-0 shadow-sm mb-4" id="config-card-notificaciones">
   <div class="card-header bg-white border-0 fw-semibold py-3">
     <i class="bi bi-bell me-2 text-info"></i>Notificaciones
   </div>
@@ -88,7 +89,7 @@
   </div>
 </div>
 
-<div class="card border-0 shadow-sm mb-4">
+<div class="card border-0 shadow-sm mb-4" id="config-card-modulos">
   <div class="card-header bg-white border-0 fw-semibold py-3">
     <i class="bi bi-puzzle me-2 text-secondary"></i>Módulos activos
   </div>
@@ -118,7 +119,7 @@
 </div>
 
 <div class="d-flex justify-content-end mb-5">
-  <button type="submit" class="btn btn-primary px-5">
+  <button type="submit" class="btn btn-primary px-5" id="btn-guardar-config">
     <i class="bi bi-check-lg me-2"></i>Guardar configuración
   </button>
 </div>
