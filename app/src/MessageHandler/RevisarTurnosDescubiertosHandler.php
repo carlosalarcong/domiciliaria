@@ -7,6 +7,7 @@ namespace App\MessageHandler;
 use App\Message\RevisarTurnosDescubiertosMessage;
 use App\Message\TurnoDescubiertoMessage;
 use App\Repository\TurnoRepository;
+use App\Service\ConfiguracionService;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -16,13 +17,15 @@ final class RevisarTurnosDescubiertosHandler
 {
     public function __construct(
         private readonly TurnoRepository $turnoRepository,
+        private readonly ConfiguracionService $configuracionService,
         private readonly MessageBusInterface $bus,
         private readonly LoggerInterface $logger,
     ) {}
 
     public function __invoke(RevisarTurnosDescubiertosMessage $message): void
     {
-        $turnos = $this->turnoRepository->findDescubiertosProximosDias(1);
+        $dias = $this->configuracionService->get()->getDiasAnticipacionAlertas();
+        $turnos = $this->turnoRepository->findDescubiertosProximosDias($dias);
 
         $this->logger->info(sprintf('Revisión diaria: %d turno(s) descubierto(s) para mañana.', count($turnos)));
 
