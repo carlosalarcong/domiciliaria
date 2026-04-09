@@ -40,7 +40,7 @@
         <a href="{{ path('app_finanzas_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_finanzas' ? 'active' : '' }}">
             <i class="bi bi-cash-stack"></i> Finanzas
         </a>
-        <a href="{{ path('app_tarifa_index') }}" class="sidebar-link ps-4 {{ app.request.attributes.get('_route') starts with 'app_tarifa' ? 'active' : '' }}" style="font-size: 0.9em;">
+        <a href="{{ path('app_tarifa_index') }}" class="sidebar-link ps-4 {{ app.request.attributes.get('_route') starts with 'app_tarifa' ? 'active' : '' }}" style="font-size: 0.9em;" id="link-tarifas">
             <i class="bi bi-tag"></i> Tarifas
         </a>
         {% endif %}
