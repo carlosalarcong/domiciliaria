@@ -6,11 +6,22 @@
         <h4 class="mb-0 fw-bold">Facturación a mandantes</h4>
         <small class="text-muted">Resumen mensual por mandante</small>
     </div>
-    {% if is_granted('FINANZAS_EDITAR') %}
-    <a href="{{ path('app_finanzas_factura_nueva') }}" class="btn btn-success">
-        <i class="bi bi-plus-lg me-2"></i>Nueva factura
-    </a>
-    {% endif %}
+    <div class="d-flex gap-2">
+        {% if is_granted('FINANZAS_VER') %}
+        <a href="{{ path('app_finanzas_facturas_exportar', {
+                anio:   anio,
+                estado: filtroEstado ?? ''
+            }) }}"
+           class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-download me-1"></i>Exportar CSV
+        </a>
+        {% endif %}
+        {% if is_granted('FINANZAS_EDITAR') %}
+        <a href="{{ path('app_finanzas_factura_nueva') }}" class="btn btn-success">
+            <i class="bi bi-plus-lg me-2"></i>Nueva factura
+        </a>
+        {% endif %}
+    </div>
 </div>
 
 <div class="card border-0 shadow-sm mb-3">
