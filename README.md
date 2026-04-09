@@ -52,6 +52,8 @@ Cada clínica opera en una base de datos PostgreSQL completamente aislada. El te
 - **Symfony Messenger** para notificaciones asíncronas
 - **Symfony Scheduler** para tareas programadas (cron)
 - **KnpPaginator** para paginación
+- **NelmioSecurityBundle v3.9** para Content Security Policy (CSP)
+- **Driver.js v1.3.1** (CDN) para tours guiados contextuales
 - **Docker** para el entorno local
 
 ## Requisitos
@@ -345,6 +347,19 @@ Configuración recomendada de cron en producción:
 0 7 * * * php /ruta/app/bin/console app:revisar-documentos-vencimiento
 ```
 
+### Exportación de liquidaciones a Buk
+
+Permite exportar las liquidaciones aprobadas de un período al formato CSV compatible con la plataforma **Buk** (HRMS). Accesible desde Finanzas → Liquidaciones → "Exportar Buk" (requiere `FINANZAS_EDITAR`).
+
+**Características:**
+- Filtra solo liquidaciones en estado `APROBADA` del año y mes seleccionados
+- Genera un CSV con BOM UTF-8, separador `;`, compatible con Excel y con el importador de Buk
+- **Turnos de 24 horas** se dividen en 2 filas (jornada diurna + nocturna) distribuyendo cantidad y monto por igual
+- **Descuentos** son omitidos del CSV (Buk los gestiona por su propia lógica)
+- **RUT** normalizado automáticamente al formato chileno `12345678-9`
+- Nombre del archivo: `buk_YYYY_MM.csv`
+- Si no hay liquidaciones aprobadas para el período, muestra un mensaje de advertencia y redirige
+
 ### Importación masiva desde CSV
 
 Permite cargar pacientes y trabajadores en lote desde un archivo CSV (separador `;`, codificación UTF-8). Accesible desde `/import` exclusivamente para `ROLE_ADMIN`.
@@ -360,6 +375,78 @@ Permite cargar pacientes y trabajadores en lote desde un archivo CSV (separador 
 
 **Columnas para trabajadores:** `nombres`, `apellidos`, `rut`, `perfil`, `email`, `telefono`, `direccion`, `estado`, `fecha_ingreso`
 
+### Configuración por tenant
+
+Cada clínica puede personalizar los parámetros globales del sistema desde **Administración → Configuración** (solo `ROLE_ADMIN`). Los valores se guardan en la tabla `configuracion_clinica` de cada base de datos tenant.
+
+**Parámetros configurables:**
+
+| Grupo | Parámetros |
+|-------|-----------|
+| Identidad | Nombre de la clínica, razón social, RUT empresa, giro, dirección fiscal, teléfono, email |
+| Facturación | % IVA, días de vencimiento de factura, prefijo de número de factura |
+| Operaciones | Días de anticipación para alertas de cobertura, hora de revisión diaria, límite de archivos (MB) |
+| Notificaciones | Activar/desactivar alertas por turno descubierto y evento grave, email externo para alertas |
+| Módulos | Activar/desactivar módulo Finanzas y módulo Eventos Adversos |
+
+**Impacto en el sistema:**
+- El **nombre de la clínica** aparece en el menú lateral para todos los usuarios
+- El **% de IVA** y **días de vencimiento** se usan automáticamente al emitir facturas
+- Los **días de anticipación** controlan el cron de detección de turnos descubiertos
+- Los **módulos desactivados** se ocultan del menú lateral para todos los usuarios del tenant
+
+Arquitectura híbrida: columnas tipadas para parámetros consumidos por código (type-safety, validación) + campo `extras JSONB` para extensibilidad futura sin nuevas migraciones.
+
+### Sistema de ayuda contextual (tours Driver.js)
+
+Tours guiados interactivos que se activan automáticamente la primera vez que un usuario visita cada módulo. Implementado con **Driver.js v1.3.1**.
+
+**Módulos con tour:**
+
+| Módulo | Pasos | Elementos destacados |
+|--------|-------|---------------------|
+| Dashboard | 5 | KPIs, turnos del día, notificaciones |
+| Pacientes | 3 | Botón nuevo, filtros, tabla |
+| Turnos | 3 | Botón nuevo, calendario, leyenda |
+| Personal | 2 | Botón nuevo, tabla |
+| Finanzas | 4 | Cards de liquidaciones/facturas, tarifas |
+| Configuración | 6 | Las 5 secciones de configuración + botón guardar |
+
+**Comportamiento:**
+- El tour se inicia automáticamente (delay 600ms) si el usuario no lo ha completado antes
+- El estado de tours completados se guarda por usuario en la columna `tours_completados JSON` de la tabla `users`
+- El botón `?` (esquina inferior derecha) permite reiniciar el tour del módulo actual manualmente
+- Desde el mismo menú `?` se pueden reiniciar todos los tours a la vez
+
+### Centro de ayuda (`/ayuda`)
+
+Página dedicada accesible desde "Centro de ayuda" al pie del menú lateral (visible para todos los roles).
+
+**Tres pestañas:**
+
+- **Inicio rápido**: 6 cards de acceso directo a las acciones más frecuentes + botones para iniciar los tours de cada módulo
+- **Manual del sistema**: 8 módulos colapsables con descripción y pasos numerados; incluye buscador en tiempo real
+- **Preguntas frecuentes**: 15 preguntas agrupadas en 5 categorías (Primeros pasos, Turnos, Personal y liquidaciones, Facturación, Acceso y permisos); incluye buscador en tiempo real
+
+### Seguridad HTTP (headers y CSP)
+
+Headers de seguridad gestionados en dos capas complementarias:
+
+| Header | Capa | Valor |
+|--------|------|-------|
+| `Content-Security-Policy` | NelmioSecurityBundle | CDNs permitidos: `cdn.jsdelivr.net`, `cdnjs.cloudflare.com`; `unsafe-inline` para Turbo/Stimulus |
+| `X-Frame-Options` | Nginx | `DENY` |
+| `X-Content-Type-Options` | Nginx | `nosniff` |
+| `Referrer-Policy` | Nginx | `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | Nginx | Deshabilita cámara, micrófono, geolocalización y pagos |
+| `Strict-Transport-Security` | Nginx | Solo en HTTPS (producción) |
+
+**Comando de verificación de headers:**
+```bash
+docker exec domiciliaria-php-1 bash -c "cd /var/www/html/app && php bin/console app:security:headers http://demo.localhost:8090"
+```
+Muestra ✅/❌ para cada header esperado.
+
 ---
 
 ## Estructura del proyecto
@@ -367,44 +454,54 @@ Permite cargar pacientes y trabajadores en lote desde un archivo CSV (separador 
 ```
 domiciliaria/
 ├── docker/
-│   ├── nginx/default.conf          # Configuración Nginx
+│   ├── nginx/default.conf          # Nginx + headers de seguridad HTTP
 │   └── php/Dockerfile              # PHP 8.3 + extensiones + Composer
 ├── app/
 │   ├── config/
-│   │   └── packages/               # messenger.yaml, scheduler.yaml, etc.
-│   ├── migrations/                 # Migraciones de base de datos
+│   │   └── packages/               # messenger.yaml, scheduler.yaml,
+│   │                               # nelmio_security.yaml, monolog.yaml
+│   ├── migrations/                 # Migraciones BD central
+│   ├── migrations/Tenant/          # Migraciones BD por tenant
+│   ├── public/js/help/             # tours.js (Driver.js)
 │   ├── src/
+│   │   ├── Command/                # SecurityHeadersCommand
 │   │   ├── Controller/             # SecurityController, DashboardController,
 │   │   │                           # UserController, MandanteController,
 │   │   │                           # PacienteController, TurnoController,
 │   │   │                           # TrabajadorController, EventoAdversoController,
-│   │   │                           # FinanzasController, ImportController
+│   │   │                           # FinanzasController, ImportController,
+│   │   │                           # HelpController, ConfiguracionController
 │   │   ├── Controller/Api/         # ApiController (7 endpoints REST v1)
-│   │   ├── Entity/                 # User, Paciente, Mandante, Trabajador,
-│   │   │                           # Turno, DisponibilidadTrabajador, ...
+│   │   ├── Entity/Tenant/          # User, Paciente, Mandante, Trabajador,
+│   │   │                           # Turno, ConfiguracionClinica, ...
 │   │   ├── Enum/                   # TipoTurno, EstadoTurno, TipoServicio, ...
-│   │   ├── Form/                   # TurnoType, TrabajadorType, ReemplazoType, ...
+│   │   ├── Form/                   # TurnoType, TrabajadorType, ConfiguracionType, ...
 │   │   ├── Message/                # TurnoDescubiertoMessage, ...
 │   │   ├── MessageHandler/         # TurnoDescubiertoHandler, ...
-│   │   ├── Repository/             # TurnoRepository (+ findEventosCalendario), ...
+│   │   ├── Repository/             # TurnoRepository, ConfiguracionClinicaRepository, ...
 │   │   ├── Scheduler/              # TurnosDescubiertosSchedule
 │   │   ├── Security/Voter/         # TurnoVoter, PacienteVoter, FinanzasVoter
-│   │   └── Service/                # TurnoService, PacienteService, UserService, ...
-│   ├── templates/                  # Vistas Twig por módulo
+│   │   ├── Service/                # TurnoService, PacienteService, ExportService,
+│   │   │                           # FinanzasService, ConfiguracionService, ...
+│   │   └── Twig/                   # ConfiguracionExtension (GlobalsInterface)
+│   ├── templates/
+│   │   ├── configuracion/          # index.html.twig
+│   │   ├── help/                   # ayuda.html.twig
+│   │   └── partials/               # sidebar, header, help_button, flash_messages
 │   └── tests/                      # Tests PHPUnit (Service/)
 └── docker-compose.yml
 ```
 
 ## Roles y permisos
 
-| Rol | Turnos | Personal | Pacientes | Finanzas | Usuarios | Exportar | Importar |
-|-----|--------|----------|-----------|----------|----------|----------|----------|
-| ROLE_ADMIN | ✅ CRUD | ✅ CRUD | ✅ | ✅ | ✅ | ✅ | ✅ |
-| ROLE_COORDINADOR | ✅ Crear/Editar | 👁 Ver | ✅ | ✅ | ❌ | ✅ | ❌ |
-| ROLE_ENFERMERA | 👁 Ver | 👁 Ver | ✅ | ❌ | ❌ | ❌ | ❌ |
-| ROLE_TENS | 👁 Ver | 👁 Ver | ❌ | ❌ | ❌ | ❌ | ❌ |
-| ROLE_VISUALIZADOR | 👁 Ver | 👁 Ver | ❌ | ❌ | ❌ | ❌ | ❌ |
-| ROLE_API | — | — | — | — | — | — | — |
+| Rol | Turnos | Personal | Pacientes | Finanzas | Usuarios | Exportar | Importar | Configuración |
+|-----|--------|----------|-----------|----------|----------|----------|----------|---------------|
+| ROLE_ADMIN | ✅ CRUD | ✅ CRUD | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| ROLE_COORDINADOR | ✅ Crear/Editar | 👁 Ver | ✅ | ✅ | ❌ | ✅ | ❌ | ❌ |
+| ROLE_ENFERMERA | 👁 Ver | 👁 Ver | ✅ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| ROLE_TENS | 👁 Ver | 👁 Ver | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| ROLE_VISUALIZADOR | 👁 Ver | 👁 Ver | ❌ | ❌ | ❌ | ❌ | ❌ | ❌ |
+| ROLE_API | — | — | — | — | — | — | — | — |
 
 > Los tokens de API tienen roles propios: `ROLE_API_PACIENTES`, `ROLE_API_TURNOS`, `ROLE_API_TRABAJADORES`, `ROLE_API_LIQUIDACIONES`, `ROLE_API_FACTURAS`. Se asignan al generar el token.
 
@@ -469,12 +566,17 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && php bin/console
 - [x] **Fase 17** — Flujo formal de eventos adversos: registrado → revisión → cerrado con trazabilidad completa
 - [x] **Fase 18** — Alertas in-app inmediatas para eventos graves y críticos
 - [x] **Fase 19** — Notificaciones por email con Mailpit en dev, vencimiento de documentos de trabajadores con semáforo visual y comando de revisión diaria
+- [x] **Fase 20** — Seguridad HTTP: NelmioSecurityBundle (CSP) + headers Nginx + comando de verificación
+- [x] **Fase 21** — Exportación de liquidaciones al formato CSV Buk (división de turnos 24h, normalización RUT)
+- [x] **Fase 22** — Sistema de ayuda contextual: tours Driver.js por módulo con estado por usuario
+- [x] **Fase 23** — Centro de ayuda (`/ayuda`): manual del sistema, FAQ con buscador y acceso rápido
+- [x] **Fase 24** — Configuración por tenant: parámetros globales configurables por clínica (identidad, facturación, operaciones, notificaciones, módulos)
 
 ## Notas técnicas
 
 ### Content Security Policy (CSP)
 
-El CSP está configurado en `docker/nginx/default.conf`. Permite cargar scripts, estilos y fuentes desde `cdn.jsdelivr.net` (Bootstrap, Bootstrap Icons, FullCalendar). El `connect-src` también incluye `cdn.jsdelivr.net` para permitir la carga de source maps en DevTools sin warnings.
+El CSP está gestionado por **NelmioSecurityBundle** (`config/packages/nelmio_security.yaml`), no por Nginx. Permite cargar scripts, estilos y fuentes desde `cdn.jsdelivr.net` y `cdnjs.cloudflare.com` (Bootstrap, Bootstrap Icons, FullCalendar, Driver.js). Los headers de transporte y framing (`X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`) los gestiona Nginx para que apliquen a todas las respuestas incluyendo redirects.
 
 ### SSL corporativo
 Si el entorno tiene inspección SSL (certificado autofirmado en la cadena), instalar dependencias con `--no-plugins` para evitar que Symfony Flex intente descargar recetas vía HTTPS:
