@@ -17,7 +17,7 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 #[IsGranted('IS_AUTHENTICATED_FULLY')]
 class HelpController extends AbstractController
 {
-    private const MODULOS_VALIDOS = ['dashboard', 'pacientes', 'turnos', 'personal', 'finanzas'];
+    private const MODULOS_VALIDOS = ['dashboard', 'pacientes', 'turnos', 'personal', 'finanzas', 'configuracion'];
 
     public function __construct(
         #[Autowire(service: 'doctrine.orm.tenant_entity_manager')]
@@ -65,5 +65,11 @@ class HelpController extends AbstractController
         $this->addFlash('success', 'Tours de ayuda reiniciados. Verás los tours nuevamente al visitar cada sección.');
 
         return $this->redirectToRoute('app_dashboard');
+    }
+
+    #[Route('/ayuda', name: 'ayuda', methods: ['GET'])]
+    public function ayuda(): Response
+    {
+        return $this->render('help/ayuda.html.twig');
     }
 }
