@@ -1,6 +1,6 @@
 <nav class="sidebar">
     <div class="sidebar-brand">
-        <h5><i class="bi bi-house-heart-fill text-info me-2"></i>Domiciliaria</h5>
+        <h5><i class="bi bi-house-heart-fill text-info me-2"></i>{{ clinicaConfig ? clinicaConfig.nombreClinica : 'Domiciliaria' }}</h5>
         <small>Sistema de Atención Domiciliaria</small>
     </div>
     <div class="sidebar-nav">
@@ -30,11 +30,13 @@
         {% endif %}
 
         <div class="sidebar-section mt-2">Gestión</div>
+        {% if clinicaConfig is null or clinicaConfig.isModuloEventosActivo() %}
         <a href="{{ path('app_evento_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_evento' ? 'active' : '' }}">
             <i class="bi bi-exclamation-triangle-fill"></i> Eventos Adversos
         </a>
+        {% endif %}
 
-        {% if is_granted('FINANZAS_VER') %}
+        {% if (clinicaConfig is null or clinicaConfig.isModuloFinanzasActivo()) and is_granted('FINANZAS_VER') %}
         <a href="{{ path('app_finanzas_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_finanzas' ? 'active' : '' }}">
             <i class="bi bi-cash-stack"></i> Finanzas
         </a>
@@ -53,6 +55,10 @@
         </a>
         <a href="{{ path('app_integracion_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_integracion' ? 'active' : '' }}">
             <i class="bi bi-plug"></i> Integraciones
+        </a>
+        <a href="{{ path('app_configuracion_index') }}"
+           class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_configuracion' ? 'active' : '' }}">
+            <i class="bi bi-gear-fill"></i> Configuración
         </a>
         {% endif %}
     </div>
