@@ -52,6 +52,25 @@ class LiquidacionMensualRepository extends ServiceEntityRepository
         return $this->findOneBy(['trabajador' => $trabajador, 'anio' => $anio, 'mes' => $mes]);
     }
 
+    /**
+     * @return LiquidacionMensual[]
+     */
+    public function findAprobadasPorPeriodo(int $anio, int $mes): array
+    {
+        return $this->createQueryBuilder('l')
+            ->leftJoin('l.trabajador', 't')->addSelect('t')
+            ->where('l.anio = :anio')
+            ->andWhere('l.mes = :mes')
+            ->andWhere('l.estado = :estado')
+            ->setParameter('anio', $anio)
+            ->setParameter('mes', $mes)
+            ->setParameter('estado', EstadoLiquidacion::APROBADA)
+            ->orderBy('t.apellidos', 'ASC')
+            ->addOrderBy('t.nombres', 'ASC')
+            ->getQuery()
+            ->getResult();
+    }
+
     /** @return array<int, array{id: string, nombres: string, apellidos: string, total_liquidaciones: int, suma_total: float, estado: EstadoLiquidacion}> */
     public function reportePorTrabajador(int $anio): array
     {
