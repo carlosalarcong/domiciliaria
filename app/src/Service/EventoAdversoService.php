@@ -8,6 +8,7 @@ use App\Entity\Tenant\EventoAdverso;
 use App\Entity\Tenant\SeguimientoEvento;
 use App\Entity\Tenant\User;
 use App\Enum\EstadoEvento;
+use App\Enum\EstadoPaciente;
 use App\Message\EventoAdversoGraveMessage;
 use App\Message\EventoResponsableAsignadoMessage;
 use Doctrine\ORM\EntityManagerInterface;
@@ -22,6 +23,15 @@ class EventoAdversoService
 
     public function registrar(EventoAdverso $evento, User $creadoPor): EventoAdverso
     {
+        $paciente = $evento->getPaciente();
+        if ($paciente !== null && $paciente->getEstado() !== EstadoPaciente::ACTIVO) {
+            throw new \DomainException(sprintf(
+                'No se puede registrar un evento adverso: el paciente %s no está activo (estado: %s).',
+                $paciente->getNombreCompleto(),
+                $paciente->getEstado()->etiqueta(),
+            ));
+        }
+
         $evento->setCreadoPor($creadoPor);
         $evento->setEstado(EstadoEvento::ABIERTO);
 
