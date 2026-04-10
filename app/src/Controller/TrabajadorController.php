@@ -7,6 +7,7 @@ namespace App\Controller;
 use App\Entity\Tenant\DisponibilidadTrabajador;
 use App\Entity\Tenant\DocumentoTrabajador;
 use App\Entity\Tenant\Trabajador;
+use App\Enum\EstadoTrabajador;
 use App\Form\DisponibilidadTrabajadorType;
 use App\Form\DocumentoTrabajadorType;
 use App\Form\TrabajadorType;
@@ -140,12 +141,26 @@ class TrabajadorController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $nuevoEstado = $trabajador->getEstado() === \App\Enum\EstadoTrabajador::ACTIVO
-            ? \App\Enum\EstadoTrabajador::INACTIVO
-            : \App\Enum\EstadoTrabajador::ACTIVO;
+        $nuevoEstado = $trabajador->getEstado() === EstadoTrabajador::ACTIVO
+            ? EstadoTrabajador::INACTIVO
+            : EstadoTrabajador::ACTIVO;
 
         $trabajador->setEstado($nuevoEstado);
         $this->em->flush();
+
+        if (in_array($trabajador->getEstado(), [EstadoTrabajador::INACTIVO, EstadoTrabajador::SUSPENDIDO], true)) {
+            $descubiertos = $this->trabajadorService->descubrirTurnosFuturos($trabajador);
+            if ($descubiertos > 0) {
+                $this->addFlash(
+                    'warning',
+                    sprintf(
+                        'Se marcaron %d turno(s) futuro(s) como descubiertos porque el trabajador ya no está activo.',
+                        $descubiertos,
+                    )
+                );
+            }
+        }
+
         $this->addFlash('success', 'Estado del trabajador actualizado.');
 
         return $this->redirectToRoute('app_trabajador_show', ['id' => $trabajador->getId()]);

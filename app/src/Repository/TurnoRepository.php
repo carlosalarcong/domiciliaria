@@ -73,6 +73,20 @@ class TurnoRepository extends ServiceEntityRepository
     }
 
     /** @return Turno[] */
+    public function findParcialesVencidos(int $horas = 26): array
+    {
+        $limite = new \DateTime("-{$horas} hours");
+
+        return $this->createQueryBuilder('t')
+            ->where('t.estado = :estado')
+            ->andWhere('t.registroInicio <= :limite')
+            ->setParameter('estado', EstadoTurno::PARCIAL)
+            ->setParameter('limite', $limite)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /** @return Turno[] */
     public function findByTrabajadorYFecha(Trabajador $trabajador, \DateTimeInterface $fecha): array
     {
         return $this->createQueryBuilder('t')
@@ -80,6 +94,38 @@ class TurnoRepository extends ServiceEntityRepository
             ->andWhere('t.fecha = :fecha')
             ->setParameter('trabajador', $trabajador)
             ->setParameter('fecha', $fecha->format('Y-m-d'))
+            ->getQuery()
+            ->getResult();
+    }
+
+    /**
+     * Retorna turnos futuros CUBIERTOS o PARCIALES asignados a un trabajador.
+     *
+     * @return Turno[]
+     */
+    public function findFuturosCubiertosDesTrabajador(Trabajador $trabajador): array
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.trabajador = :trabajador')
+            ->andWhere('t.fecha >= :hoy')
+            ->andWhere('t.estado IN (:estados)')
+            ->setParameter('trabajador', $trabajador)
+            ->setParameter('hoy', new \DateTime('today'))
+            ->setParameter('estados', [EstadoTurno::CUBIERTO, EstadoTurno::PARCIAL])
+            ->getQuery()
+            ->getResult();
+    }
+
+    /** @return Turno[] */
+    public function findFuturosAsignadosDePaciente(Paciente $paciente): array
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.paciente = :paciente')
+            ->andWhere('t.fecha >= :hoy')
+            ->andWhere('t.estado IN (:estados)')
+            ->setParameter('paciente', $paciente)
+            ->setParameter('hoy', new \DateTime('today'))
+            ->setParameter('estados', [EstadoTurno::CUBIERTO, EstadoTurno::PARCIAL])
             ->getQuery()
             ->getResult();
     }

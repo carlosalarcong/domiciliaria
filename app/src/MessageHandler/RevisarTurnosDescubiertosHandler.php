@@ -6,6 +6,7 @@ namespace App\MessageHandler;
 
 use App\Message\RevisarTurnosDescubiertosMessage;
 use App\Message\TurnoDescubiertoMessage;
+use App\Message\TurnoParcialVencidoMessage;
 use App\Repository\TurnoRepository;
 use App\Service\ConfiguracionService;
 use Psr\Log\LoggerInterface;
@@ -29,12 +30,35 @@ final class RevisarTurnosDescubiertosHandler
 
         $this->logger->info(sprintf('Revisión diaria: %d turno(s) descubierto(s) para mañana.', count($turnos)));
 
+        $ahora = new \DateTimeImmutable();
+
         foreach ($turnos as $turno) {
+            $ultimaAlerta = $turno->getUltimaAlertaDescubiertoEn();
+            if ($ultimaAlerta !== null) {
+                $diferencia = $ahora->diff($ultimaAlerta);
+                $horasDesdeUltimaAlerta = ($diferencia->days * 24) + $diferencia->h;
+                if ($horasDesdeUltimaAlerta < 20) {
+                    continue;
+                }
+            }
+
             $this->bus->dispatch(new TurnoDescubiertoMessage(
                 turnoId:        (string) $turno->getId(),
                 pacienteNombre: $turno->getPaciente()?->getNombreCompleto() ?? 'Desconocido',
                 fecha:          $turno->getFecha()->format('d/m/Y'),
                 tipoTurno:      $turno->getTipoTurno()->etiqueta(),
+            ));
+        }
+
+        $parcialesVencidos = $this->turnoRepository->findParcialesVencidos(26);
+
+        foreach ($parcialesVencidos as $turno) {
+            $this->bus->dispatch(new TurnoParcialVencidoMessage(
+                turnoId:         (string) $turno->getId(),
+                pacienteNombre:  $turno->getPaciente()?->getNombreCompleto() ?? 'Desconocido',
+                trabajadorNombre: $turno->getTrabajador()?->getNombreCompleto() ?? 'Sin asignar',
+                fecha:           $turno->getFecha()?->format('d/m/Y') ?? '—',
+                tipoTurno:       $turno->getTipoTurno()->etiqueta(),
             ));
         }
     }

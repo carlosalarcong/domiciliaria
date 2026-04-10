@@ -64,8 +64,22 @@
 
         <div class="sidebar-section mt-3" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.75rem;">Soporte</div>
         <a href="{{ path('app_help_ayuda') }}"
-           class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_help' ? 'active' : '' }}">
+           class="sidebar-link {{ app.request.attributes.get('_route') == 'app_help_ayuda' ? 'active' : '' }}">
             <i class="bi bi-question-circle-fill"></i> Centro de ayuda
         </a>
+        <a href="{{ path('app_help_manual_usuario') }}"
+           class="sidebar-link {{ app.request.attributes.get('_route') == 'app_help_manual_usuario' ? 'active' : '' }}">
+            <i class="bi bi-book-fill"></i> Manual de usuario
+        </a>
+        <a href="{{ path('app_help_manual_flujo') }}"
+           class="sidebar-link {{ app.request.attributes.get('_route') == 'app_help_manual_flujo' ? 'active' : '' }}">
+            <i class="bi bi-diagram-3-fill"></i> Manual de flujo
+        </a>
+        {% if is_granted('ROLE_ADMIN') %}
+        <a href="{{ path('app_help_manual_tecnico') }}"
+           class="sidebar-link {{ app.request.attributes.get('_route') == 'app_help_manual_tecnico' ? 'active' : '' }}">
+            <i class="bi bi-gear-wide-connected"></i> Manual técnico
+        </a>
+        {% endif %}
     </div>
 </nav>

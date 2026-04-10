@@ -9,6 +9,7 @@ use App\Entity\Tenant\ItemLiquidacion;
 use App\Entity\Tenant\LiquidacionMensual;
 use App\Entity\Tenant\Mandante;
 use App\Entity\Tenant\Trabajador;
+use App\Entity\Tenant\Turno;
 use App\Entity\Tenant\User;
 use App\Enum\EstadoFactura;
 use App\Enum\EstadoLiquidacion;
@@ -73,9 +74,13 @@ class FinanzasService
             }
 
             $concepto  = $this->tipoTurnoAConcepto($turno->getTipoTurno(), $turno->isEsReemplazo());
-            $horas     = (float) $turno->getTipoTurno()->duracionHoras();
+            $horas     = $this->calcularHorasEfectivas($turno);
             $mandante  = $turno->getPaciente()?->getMandante();
             $fecha     = $turno->getFecha() ?? new \DateTimeImmutable();
+            $esHorasReales = $turno->getRegistroInicio() !== null && $turno->getRegistroTermino() !== null;
+            $descripcion = $turno->getFecha()?->format('d/m/Y')
+                . ' — ' . $turno->getPaciente()?->getNombreCompleto()
+                . ($esHorasReales ? '' : ' (horas planificadas)');
 
             $tarifa = $this->tarifaRepository->findTarifaVigente($concepto, $fecha, $mandante);
 
@@ -93,7 +98,7 @@ class FinanzasService
             $item = new ItemLiquidacion();
             $item->setLiquidacion($liquidacion)
                  ->setConcepto($concepto)
-                 ->setDescripcion($turno->getFecha()?->format('d/m/Y') . ' — ' . $turno->getPaciente()?->getNombreCompleto())
+                 ->setDescripcion($descripcion)
                  ->setCantidad(number_format($horas, 2, '.', ''))
                  ->setValorUnitario(number_format($valorUnitario, 2, '.', ''))
                  ->setSubtotal(number_format($subtotal, 2, '.', ''))
@@ -117,6 +122,13 @@ class FinanzasService
 
     public function aprobarLiquidacion(LiquidacionMensual $liquidacion): LiquidacionMensual
     {
+        if ($liquidacion->getEstado() !== EstadoLiquidacion::BORRADOR) {
+            throw new \LogicException(sprintf(
+                'Solo se puede aprobar una liquidación en estado Borrador (estado actual: %s).',
+                $liquidacion->getEstado()->etiqueta(),
+            ));
+        }
+
         $liquidacion->setEstado(EstadoLiquidacion::APROBADA);
         $this->em->flush();
 
@@ -125,6 +137,13 @@ class FinanzasService
 
     public function marcarPagadaLiquidacion(LiquidacionMensual $liquidacion, \DateTimeInterface $fechaPago): LiquidacionMensual
     {
+        if ($liquidacion->getEstado() !== EstadoLiquidacion::APROBADA) {
+            throw new \LogicException(sprintf(
+                'Solo se puede marcar como pagada una liquidación aprobada (estado actual: %s).',
+                $liquidacion->getEstado()->etiqueta(),
+            ));
+        }
+
         $liquidacion->setEstado(EstadoLiquidacion::PAGADA)->setFechaPago($fechaPago);
         $this->em->flush();
 
@@ -215,6 +234,13 @@ class FinanzasService
 
     public function emitirFactura(Factura $factura, \DateTimeInterface $fechaEmision, ?int $diasVencimiento = null): Factura
     {
+        if ($factura->getEstado() !== EstadoFactura::BORRADOR) {
+            throw new \LogicException(sprintf(
+                'Solo se puede emitir una factura en estado Borrador (estado actual: %s).',
+                $factura->getEstado()->etiqueta(),
+            ));
+        }
+
         if ($diasVencimiento === null) {
             $diasVencimiento = $this->configuracionService->get()->getDiasVencimientoFactura();
         }
@@ -230,6 +256,13 @@ class FinanzasService
 
     public function marcarPagadaFactura(Factura $factura, \DateTimeInterface $fechaPago): Factura
     {
+        if ($factura->getEstado() !== EstadoFactura::EMITIDA) {
+            throw new \LogicException(sprintf(
+                'Solo se puede marcar como pagada una factura emitida (estado actual: %s).',
+                $factura->getEstado()->etiqueta(),
+            ));
+        }
+
         $factura->setEstado(EstadoFactura::PAGADA)->setFechaPago($fechaPago);
         $this->em->flush();
 
@@ -250,5 +283,22 @@ class FinanzasService
             TipoTurno::T24H       => TipoConcepto::TURNO_24H,
             TipoTurno::VISITA     => TipoConcepto::VISITA,
         };
+    }
+
+    private function calcularHorasEfectivas(Turno $turno): float
+    {
+        $inicio  = $turno->getRegistroInicio();
+        $termino = $turno->getRegistroTermino();
+
+        if ($inicio !== null && $termino !== null) {
+            $minutos = ($termino->getTimestamp() - $inicio->getTimestamp()) / 60;
+            if ($minutos < 0) {
+                $minutos += 1440;
+            }
+
+            return round($minutos / 60, 2);
+        }
+
+        return (float) $turno->getTipoTurno()->duracionHoras();
     }
 }
