@@ -53,6 +53,22 @@ class FinanzasService
             $liquidacion->setTrabajador($trabajador)->setCreadoPor($creadoPor);
             $this->em->persist($liquidacion);
         } else {
+            if (!in_array($liquidacion->getEstado(), [EstadoLiquidacion::BORRADOR], true)) {
+                throw new \LogicException(sprintf(
+                    'Solo se puede regenerar una liquidación en estado Borrador (estado actual: %s). ' .
+                    'Anula la liquidación actual antes de crear una nueva.',
+                    $liquidacion->getEstado()->etiqueta(),
+                ));
+            }
+
+            $nota = sprintf(
+                '[Regenerada por sistema el %s - items anteriores eliminados]',
+                (new \DateTime())->format('d/m/Y H:i'),
+            );
+            $liquidacion->setObservaciones(
+                trim(($liquidacion->getObservaciones() ?? '') . ' ' . $nota)
+            );
+
             // Limpiar items anteriores
             foreach ($liquidacion->getItems() as $item) {
                 $this->em->remove($item);
@@ -144,7 +160,34 @@ class FinanzasService
             ));
         }
 
+        $manana = new \DateTime('+1 day');
+        if ($fechaPago > $manana) {
+            throw new \LogicException('La fecha de pago no puede ser una fecha futura.');
+        }
+
         $liquidacion->setEstado(EstadoLiquidacion::PAGADA)->setFechaPago($fechaPago);
+        $this->em->flush();
+
+        return $liquidacion;
+    }
+
+    public function anularLiquidacion(LiquidacionMensual $liquidacion, string $motivo, User $anuladoPor): LiquidacionMensual
+    {
+        if ($liquidacion->getEstado() === EstadoLiquidacion::ANULADA) {
+            throw new \LogicException('La liquidación ya está anulada.');
+        }
+
+        $liquidacion->setEstado(EstadoLiquidacion::ANULADA)
+            ->setMotivoAnulacion($motivo)
+            ->setObservaciones(
+                trim(($liquidacion->getObservaciones() ?? '') .
+                    sprintf(' [Anulada por %s el %s]',
+                        $anuladoPor->getNombreCompleto(),
+                        (new \DateTime())->format('d/m/Y H:i'),
+                    )
+                )
+            );
+
         $this->em->flush();
 
         return $liquidacion;
@@ -261,6 +304,11 @@ class FinanzasService
                 'Solo se puede marcar como pagada una factura emitida (estado actual: %s).',
                 $factura->getEstado()->etiqueta(),
             ));
+        }
+
+        $manana = new \DateTime('+1 day');
+        if ($fechaPago > $manana) {
+            throw new \LogicException('La fecha de pago no puede ser una fecha futura.');
         }
 
         $factura->setEstado(EstadoFactura::PAGADA)->setFechaPago($fechaPago);

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity\Tenant;
 
+use App\Entity\Tenant\Log\LogEntry;
 use App\Enum\EstadoLiquidacion;
 use App\Repository\LiquidacionMensualRepository;
 use Doctrine\Common\Collections\ArrayCollection;
@@ -15,6 +16,7 @@ use Symfony\Component\Uid\Uuid;
 #[ORM\Entity(repositoryClass: LiquidacionMensualRepository::class)]
 #[ORM\Table(name: 'liquidaciones_mensuales')]
 #[ORM\UniqueConstraint(columns: ['trabajador_id', 'anio', 'mes'])]
+#[Gedmo\Loggable(logEntryClass: LogEntry::class)]
 class LiquidacionMensual
 {
     #[ORM\Id]
@@ -43,10 +45,14 @@ class LiquidacionMensual
     private string $montoTotal = '0.00';
 
     #[ORM\Column(type: 'string', enumType: EstadoLiquidacion::class)]
+    #[Gedmo\Versioned]
     private EstadoLiquidacion $estado = EstadoLiquidacion::BORRADOR;
 
     #[ORM\Column(type: 'text', nullable: true)]
     private ?string $observaciones = null;
+
+    #[ORM\Column(type: 'text', nullable: true)]
+    private ?string $motivoAnulacion = null;
 
     #[ORM\Column(type: 'date', nullable: true)]
     private ?\DateTimeInterface $fechaPago = null;
@@ -98,6 +104,9 @@ class LiquidacionMensual
 
     public function getObservaciones(): ?string { return $this->observaciones; }
     public function setObservaciones(?string $o): static { $this->observaciones = $o; return $this; }
+
+    public function getMotivoAnulacion(): ?string { return $this->motivoAnulacion; }
+    public function setMotivoAnulacion(?string $motivo): static { $this->motivoAnulacion = $motivo; return $this; }
 
     public function getFechaPago(): ?\DateTimeInterface { return $this->fechaPago; }
     public function setFechaPago(?\DateTimeInterface $f): static { $this->fechaPago = $f; return $this; }

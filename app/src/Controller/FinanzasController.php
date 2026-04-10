@@ -264,6 +264,30 @@ class FinanzasController extends AbstractController
         return $this->redirectToRoute('app_finanzas_liquidacion_show', ['id' => $liquidacion->getId()]);
     }
 
+    #[Route('/liquidaciones/{id}/anular', name: 'liquidacion_anular', methods: ['POST'])]
+    #[IsGranted('FINANZAS_EDITAR')]
+    public function liquidacionAnular(Request $request, LiquidacionMensual $liquidacion): Response
+    {
+        if (!$this->isCsrfTokenValid('liq_' . $liquidacion->getId(), $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $motivo = trim($request->request->get('motivo', ''));
+        if ($motivo === '') {
+            $this->addFlash('danger', 'Debe ingresar un motivo para anular la liquidación.');
+            return $this->redirectToRoute('app_finanzas_liquidacion_show', ['id' => $liquidacion->getId()]);
+        }
+
+        try {
+            $this->finanzasService->anularLiquidacion($liquidacion, $motivo, $this->getUser());
+            $this->addFlash('warning', 'Liquidación anulada correctamente.');
+        } catch (\LogicException $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
+
+        return $this->redirectToRoute('app_finanzas_liquidacion_show', ['id' => $liquidacion->getId()]);
+    }
+
     #[Route('/liquidaciones/{id}/exportar', name: 'liquidacion_exportar', methods: ['GET'])]
     public function liquidacionExportar(LiquidacionMensual $liquidacion): Response
     {
