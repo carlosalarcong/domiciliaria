@@ -145,23 +145,26 @@ class TrabajadorController extends AbstractController
             ? EstadoTrabajador::INACTIVO
             : EstadoTrabajador::ACTIVO;
 
-        $trabajador->setEstado($nuevoEstado);
-        $this->em->flush();
-
-        if (in_array($trabajador->getEstado(), [EstadoTrabajador::INACTIVO, EstadoTrabajador::SUSPENDIDO], true)) {
-            $descubiertos = $this->trabajadorService->descubrirTurnosFuturos($trabajador);
-            if ($descubiertos > 0) {
-                $this->addFlash(
-                    'warning',
-                    sprintf(
-                        'Se marcaron %d turno(s) futuro(s) como descubiertos porque el trabajador ya no está activo.',
-                        $descubiertos,
-                    )
-                );
+        try {
+            if (in_array($nuevoEstado, [EstadoTrabajador::INACTIVO, EstadoTrabajador::SUSPENDIDO], true)) {
+                $descubiertos = $this->trabajadorService->descubrirTurnosFuturos($trabajador);
+                if ($descubiertos > 0) {
+                    $this->addFlash(
+                        'warning',
+                        sprintf(
+                            'Se marcaron %d turno(s) futuro(s) como descubiertos porque el trabajador ya no está activo.',
+                            $descubiertos,
+                        )
+                    );
+                }
             }
-        }
 
-        $this->addFlash('success', 'Estado del trabajador actualizado.');
+            $trabajador->setEstado($nuevoEstado);
+            $this->em->flush();
+            $this->addFlash('success', 'Estado del trabajador actualizado.');
+        } catch (\RuntimeException $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
 
         return $this->redirectToRoute('app_trabajador_show', ['id' => $trabajador->getId()]);
     }
