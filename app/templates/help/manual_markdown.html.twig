@@ -1,0 +1,94 @@
+{% extends 'base.html.twig' %}
+{% block title %}{{ titulo }}{% endblock %}
+
+{% block stylesheets %}
+{{ parent() }}
+<style>
+    .manual-body {
+        max-width: 860px;
+    }
+    .manual-body h1 { font-size: 1.6rem; font-weight: 700; margin-top: 2rem; margin-bottom: 1rem; border-bottom: 2px solid #e2e8f0; padding-bottom: .4rem; }
+    .manual-body h2 { font-size: 1.25rem; font-weight: 600; margin-top: 1.75rem; margin-bottom: .75rem; }
+    .manual-body h3 { font-size: 1.05rem; font-weight: 600; margin-top: 1.5rem; margin-bottom: .5rem; }
+    .manual-body table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .875rem; }
+    .manual-body th { background: #f1f5f9; font-weight: 600; }
+    .manual-body th, .manual-body td { border: 1px solid #dee2e6; padding: .5rem .75rem; vertical-align: top; }
+    .manual-body code { background: #f1f5f9; padding: .1em .35em; border-radius: 3px; font-size: .875em; }
+    .manual-body pre { background: #1e293b; color: #e2e8f0; padding: 1rem 1.25rem; border-radius: .5rem; overflow-x: auto; font-size: .85rem; margin: 1rem 0; }
+    .manual-body pre code { background: none; padding: 0; color: inherit; }
+    .manual-body blockquote { border-left: 4px solid #3182ce; background: #eff6ff; padding: .75rem 1rem; margin: 1rem 0; border-radius: 0 .4rem .4rem 0; color: #1e40af; }
+    .manual-body hr { border: none; border-top: 2px solid #e2e8f0; margin: 2rem 0; }
+    .manual-body ul, .manual-body ol { padding-left: 1.5rem; margin-bottom: 1rem; }
+    .manual-body li { margin-bottom: .25rem; }
+    #toc { position: sticky; top: 80px; max-height: calc(100vh - 100px); overflow-y: auto; font-size: .85rem; }
+    #toc a { display: block; color: #64748b; text-decoration: none; padding: .2rem 0; }
+    #toc a:hover { color: #3182ce; }
+    #toc a.toc-h2 { padding-left: .75rem; }
+    #toc a.toc-h3 { padding-left: 1.5rem; font-size: .8rem; color: #94a3b8; }
+    #toc-container { border-left: 2px solid #e2e8f0; padding-left: 1rem; }
+    @media (max-width: 991px) { .toc-col { display: none; } }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-1">
+                <li class="breadcrumb-item"><a href="{{ path('app_help_ayuda') }}">Centro de ayuda</a></li>
+                <li class="breadcrumb-item active">{{ titulo }}</li>
+            </ol>
+        </nav>
+        <h4 class="mb-0 fw-bold">{{ titulo }}</h4>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-lg-9">
+        <div class="card border-0 shadow-sm">
+            <div class="card-body p-4">
+                <div id="manual-render" class="manual-body">
+                    {# El markdown se renderiza aquí por marked.js #}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-3 toc-col">
+        <div id="toc">
+            <div id="toc-container">
+                <p class="fw-semibold small text-muted text-uppercase mb-2" style="letter-spacing:.05em">Contenido</p>
+                <div id="toc-links"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{# Almacenar el markdown en un script tag para que JS lo lea de forma segura #}
+<script id="md-source" type="text/plain">{{ markdown }}</script>
+{% endblock %}
+
+{% block javascripts %}
+{{ parent() }}
+<script src="https://cdn.jsdelivr.net/npm/marked@12/marked.min.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const raw  = document.getElementById('md-source').textContent;
+    const html = marked.parse(raw);
+
+    const container = document.getElementById('manual-render');
+    container.innerHTML = html;
+
+    // Construir tabla de contenidos a partir de los encabezados renderizados
+    const tocLinks = document.getElementById('toc-links');
+    container.querySelectorAll('h1, h2, h3').forEach(function (heading, i) {
+        const id = 'heading-' + i;
+        heading.id = id;
+        const a = document.createElement('a');
+        a.href = '#' + id;
+        a.textContent = heading.textContent;
+        a.className = 'toc-' + heading.tagName.toLowerCase();
+        tocLinks.appendChild(a);
+    });
+});
+</script>
+{% endblock %}
