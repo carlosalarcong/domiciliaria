@@ -155,6 +155,13 @@ class TurnoService
 
     public function asignarReemplazo(Turno $turno, Trabajador $reemplazo, MotivoReemplazo $motivo): Turno
     {
+        if (!in_array($turno->getEstado(), [EstadoTurno::DESCUBIERTO, EstadoTurno::CUBIERTO], true)) {
+            throw new \DomainException(sprintf(
+                'No se puede asignar reemplazo a un turno en estado "%s". Solo se permite en turnos Descubiertos o Cubiertos.',
+                $turno->getEstado()->etiqueta(),
+            ));
+        }
+
         if ($reemplazo->getEstado() !== EstadoTrabajador::ACTIVO) {
             throw new \DomainException(sprintf(
                 'No se puede asignar el turno: el trabajador %s no está activo (estado: %s).',
