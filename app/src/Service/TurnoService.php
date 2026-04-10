@@ -54,6 +54,41 @@ class TurnoService
     }
 
     /**
+     * Recalcula y aplica el estado correcto del turno según si tiene o no trabajador.
+     *
+     * @throws \DomainException si el trabajador no está activo o tiene conflicto
+     */
+    public function actualizarEstadoSegunTrabajador(Turno $turno): void
+    {
+        if ($turno->getTrabajador() !== null) {
+            $trabajador = $turno->getTrabajador();
+
+            if ($trabajador->getEstado() !== EstadoTrabajador::ACTIVO) {
+                throw new \DomainException(sprintf(
+                    'No se puede asignar el turno: el trabajador %s no está activo (estado: %s).',
+                    $trabajador->getNombreCompleto(),
+                    $trabajador->getEstado()->etiqueta(),
+                ));
+            }
+
+            $this->verificarDisponibilidad(
+                $trabajador,
+                $turno->getFecha(),
+                $turno->getHoraInicio(),
+                $turno->getHoraTermino(),
+            );
+
+            if ($turno->getEstado() === EstadoTurno::DESCUBIERTO) {
+                $turno->setEstado(EstadoTurno::CUBIERTO);
+            }
+        } else {
+            if (in_array($turno->getEstado(), [EstadoTurno::CUBIERTO, EstadoTurno::PARCIAL], true)) {
+                $turno->setEstado(EstadoTurno::DESCUBIERTO);
+            }
+        }
+    }
+
+    /**
      * Verifica que el trabajador no tenga conflicto de horario.
      *
      * @throws \DomainException si hay conflicto

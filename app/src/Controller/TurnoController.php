@@ -105,14 +105,7 @@ class TurnoController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             try {
-                if ($turno->getTrabajador() !== null) {
-                    $this->turnoService->verificarDisponibilidad(
-                        $turno->getTrabajador(),
-                        $turno->getFecha(),
-                        $turno->getHoraInicio(),
-                        $turno->getHoraTermino(),
-                    );
-                }
+                $this->turnoService->actualizarEstadoSegunTrabajador($turno);
                 $this->em->flush();
                 $this->addFlash('success', 'Turno actualizado correctamente.');
 
