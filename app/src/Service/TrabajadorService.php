@@ -85,6 +85,22 @@ class TrabajadorService
         $this->em->flush();
     }
 
+    public function descubrirTurnosFuturos(Trabajador $trabajador): int
+    {
+        $turnos = $this->turnoRepository->findFuturosCubiertosDesTrabajador($trabajador);
+
+        foreach ($turnos as $turno) {
+            $turno->setTrabajador(null);
+            $turno->setEstado(EstadoTurno::DESCUBIERTO);
+        }
+
+        if (count($turnos) > 0) {
+            $this->em->flush();
+        }
+
+        return count($turnos);
+    }
+
     // ─── Horas trabajadas ────────────────────────────────────────────────────
 
     /**
