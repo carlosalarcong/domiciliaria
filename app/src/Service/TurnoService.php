@@ -205,6 +205,24 @@ class TurnoService
         return $turno;
     }
 
+    public function forzarCierreParcial(Turno $turno, User $autor): Turno
+    {
+        if ($turno->getEstado() !== EstadoTurno::PARCIAL) {
+            throw new \LogicException('Solo se puede forzar el cierre de un turno en estado Parcial.');
+        }
+
+        $termino = $turno->getHoraTermino();
+        $turno->setRegistroTermino($termino)
+            ->setEstado(EstadoTurno::COMPLETADO)
+            ->setObservaciones(
+                trim(($turno->getObservaciones() ?? '') . ' [Cierre forzado por ' . $autor->getNombreCompleto() . ' el ' . (new \DateTime())->format('d/m/Y H:i') . ']')
+            );
+
+        $this->em->flush();
+
+        return $turno;
+    }
+
     public function calcularEstadoCobertura(Paciente $paciente, \DateTimeInterface $inicioSemana): array
     {
         $turnos = $this->turnoRepository->findByPacienteYSemana($paciente, $inicioSemana);

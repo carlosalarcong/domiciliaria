@@ -166,6 +166,23 @@ class TurnoController extends AbstractController
         return $this->redirectToRoute('app_turno_show', ['id' => $turno->getId()]);
     }
 
+    #[Route('/{id}/forzar-cierre', name: 'forzar_cierre', methods: ['POST'])]
+    public function forzarCierre(Request $request, Turno $turno): Response
+    {
+        if (!$this->isCsrfTokenValid('forzar_cierre_' . $turno->getId(), $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        try {
+            $this->turnoService->forzarCierreParcial($turno, $this->getUser());
+            $this->addFlash('warning', 'Turno cerrado forzosamente usando hora planificada de término.');
+        } catch (\LogicException $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
+
+        return $this->redirectToRoute('app_turno_show', ['id' => $turno->getId()]);
+    }
+
     // ─── API para FullCalendar ────────────────────────────────────────────────
 
     #[Route('/api/eventos', name: 'api_eventos', methods: ['GET'])]
