@@ -190,9 +190,21 @@ class TurnoService
     public function registrarAsistencia(Turno $turno, string $tipo): Turno
     {
         if ($tipo === 'inicio') {
+            if ($turno->getEstado() !== EstadoTurno::CUBIERTO) {
+                throw new \LogicException(sprintf(
+                    'Solo se puede registrar el inicio en un turno Cubierto (estado actual: %s).',
+                    $turno->getEstado()->etiqueta(),
+                ));
+            }
             $turno->setRegistroInicio(new \DateTime());
             $turno->setEstado(EstadoTurno::PARCIAL);
         } elseif ($tipo === 'termino') {
+            if ($turno->getEstado() !== EstadoTurno::PARCIAL) {
+                throw new \LogicException(sprintf(
+                    'Solo se puede registrar el término en un turno Parcial (estado actual: %s).',
+                    $turno->getEstado()->etiqueta(),
+                ));
+            }
             if ($turno->getRegistroInicio() === null) {
                 throw new \LogicException('No se puede registrar el término sin haber registrado el inicio.');
             }
