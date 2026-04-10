@@ -70,6 +70,10 @@ class EventoAdversoService
 
     public function agregarSeguimiento(EventoAdverso $evento, string $nota, User $autor): SeguimientoEvento
     {
+        if ($evento->getEstado() === EstadoEvento::CERRADO) {
+            throw new \LogicException('No se puede agregar seguimiento a un evento cerrado.');
+        }
+
         $seguimiento = new SeguimientoEvento();
         $seguimiento->setEvento($evento)
                     ->setNota($nota)
