@@ -29,7 +29,18 @@ final class RevisarTurnosDescubiertosHandler
 
         $this->logger->info(sprintf('Revisión diaria: %d turno(s) descubierto(s) para mañana.', count($turnos)));
 
+        $ahora = new \DateTimeImmutable();
+
         foreach ($turnos as $turno) {
+            $ultimaAlerta = $turno->getUltimaAlertaDescubiertoEn();
+            if ($ultimaAlerta !== null) {
+                $diferencia = $ahora->diff($ultimaAlerta);
+                $horasDesdeUltimaAlerta = ($diferencia->days * 24) + $diferencia->h;
+                if ($horasDesdeUltimaAlerta < 20) {
+                    continue;
+                }
+            }
+
             $this->bus->dispatch(new TurnoDescubiertoMessage(
                 turnoId:        (string) $turno->getId(),
                 pacienteNombre: $turno->getPaciente()?->getNombreCompleto() ?? 'Desconocido',

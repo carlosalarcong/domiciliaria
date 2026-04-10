@@ -73,6 +73,9 @@ class Turno
     #[ORM\Column(type: 'datetime', nullable: true)]
     private ?\DateTimeInterface $registroTermino = null;
 
+    #[ORM\Column(type: 'datetime_immutable', nullable: true)]
+    private ?\DateTimeImmutable $ultimaAlertaDescubiertoEn = null;
+
     #[ORM\Column(type: 'text', nullable: true)]
     #[Gedmo\Versioned]
     private ?string $observaciones = null;
@@ -126,6 +129,9 @@ class Turno
 
     public function getRegistroTermino(): ?\DateTimeInterface { return $this->registroTermino; }
     public function setRegistroTermino(?\DateTimeInterface $r): static { $this->registroTermino = $r; return $this; }
+
+    public function getUltimaAlertaDescubiertoEn(): ?\DateTimeImmutable { return $this->ultimaAlertaDescubiertoEn; }
+    public function setUltimaAlertaDescubiertoEn(?\DateTimeImmutable $dt): static { $this->ultimaAlertaDescubiertoEn = $dt; return $this; }
 
     public function getObservaciones(): ?string { return $this->observaciones; }
     public function setObservaciones(?string $o): static { $this->observaciones = $o; return $this; }
