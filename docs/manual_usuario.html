@@ -1,0 +1,571 @@
+<!-- Fragmento de contenido: se inyecta dentro del layout del sistema vía |raw. Sin <html>/<head>/<body>. -->
+<style>
+  .mu-hero {
+    background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+    color: #fff; border-radius: 1rem;
+    padding: 2rem 2rem 1.75rem; margin-bottom: 2rem;
+  }
+  .mu-hero h1 { font-size: 1.6rem; font-weight: 700; margin: 0 0 .35rem; }
+  .mu-hero p  { margin: 0; opacity: .82; font-size: .95rem; }
+
+  .mu-section h2 {
+    font-size: 1.2rem; font-weight: 700;
+    border-bottom: 2px solid #e9ecef;
+    padding-bottom: .4rem; margin-top: 2rem; margin-bottom: 1rem;
+    scroll-margin-top: 1.5rem;
+  }
+  .mu-section h3 { font-size: 1rem; font-weight: 600; margin-top: 1.5rem; color: #0d6efd; }
+  .mu-section h4 { font-size: .9rem; font-weight: 600; margin-top: 1.25rem; color: #495057; }
+
+  .mu-tip {
+    background: #cff4fc; border-left: 4px solid #0dcaf0;
+    border-radius: .25rem; padding: .65rem 1rem;
+    margin: .75rem 0; font-size: .88rem;
+  }
+  .mu-warning {
+    background: #fff3cd; border-left: 4px solid #ffc107;
+    border-radius: .25rem; padding: .65rem 1rem;
+    margin: .75rem 0; font-size: .88rem;
+  }
+
+  .mu-steps { counter-reset: mu-step; list-style: none; padding: 0; margin: .75rem 0 1rem; }
+  .mu-steps li {
+    counter-increment: mu-step;
+    display: flex; gap: .85rem; margin-bottom: .75rem; align-items: flex-start;
+  }
+  .mu-steps li::before {
+    content: counter(mu-step);
+    background: #0d6efd; color: #fff;
+    min-width: 1.6rem; height: 1.6rem; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: .75rem; font-weight: 700; flex-shrink: 0; margin-top: .1rem;
+  }
+
+  .mu-badge {
+    display: inline-block; padding: .15em .55em;
+    border-radius: .35rem; font-size: .78rem; font-weight: 600;
+  }
+  .mu-cubierto    { background:#d1e7dd; color:#0a3622; }
+  .mu-descubierto { background:#f8d7da; color:#58151c; }
+  .mu-parcial     { background:#fff3cd; color:#664d03; }
+  .mu-completado  { background:#d3d3d3; color:#333; }
+  .mu-borrador    { background:#e9ecef; color:#495057; }
+  .mu-aprobada    { background:#cfe2ff; color:#084298; }
+  .mu-pagada      { background:#d1e7dd; color:#0a3622; }
+  .mu-anulada     { background:#f8d7da; color:#58151c; }
+  .mu-emitida     { background:#cfe2ff; color:#084298; }
+  .mu-vencida     { background:#f8d7da; color:#58151c; }
+  .mu-abierto     { background:#f8d7da; color:#58151c; }
+  .mu-enproceso   { background:#fff3cd; color:#664d03; }
+  .mu-cerrado     { background:#d3d3d3; color:#333; }
+
+  .mu-section table th { background: #f8f9fa; font-size: .84rem; }
+  .mu-section table td { font-size: .87rem; vertical-align: middle; }
+
+  .mu-faq-item {
+    border: 1px solid #e9ecef; border-radius: .5rem;
+    padding: .85rem 1rem; margin-bottom: .6rem; background: #fff;
+  }
+  .mu-faq-item strong { display: block; margin-bottom: .3rem; font-size: .9rem; }
+  .mu-faq-item p { margin: 0; font-size: .87rem; color: #495057; }
+
+  .mu-screenshot {
+    background: #f8f9fa; border: 2px dashed #dee2e6;
+    border-radius: .5rem; padding: 1.25rem 1rem;
+    text-align: center; color: #6c757d;
+    margin: .75rem 0 1.25rem; font-size: .83rem;
+  }
+  .mu-screenshot i { font-size: 1.6rem; display: block; margin-bottom: .35rem; opacity: .35; }
+
+  .mu-toc {
+    background: #f8f9fa; border-radius: .5rem;
+    padding: 1rem 1.25rem; margin-bottom: 2rem;
+    columns: 2; column-gap: 2rem;
+  }
+  .mu-toc a {
+    display: block; color: #0d6efd; text-decoration: none;
+    font-size: .875rem; padding: .15rem 0;
+  }
+  .mu-toc a:hover { text-decoration: underline; }
+</style>
+
+<div class="mu-section">
+
+  <!-- Hero -->
+  <div class="mu-hero">
+    <h1><i class="bi bi-book-half me-2"></i>Manual de Usuario</h1>
+    <p>Sistema de gestión de atención domiciliaria de salud · Versión abril 2026</p>
+  </div>
+
+  <!-- Tabla de contenidos -->
+  <div class="mu-toc">
+    <a href="#mu-acceso"><i class="bi bi-box-arrow-in-right me-1"></i>Acceso al sistema</a>
+    <a href="#mu-navegacion"><i class="bi bi-compass me-1"></i>Navegación</a>
+    <a href="#mu-roles"><i class="bi bi-shield-check me-1"></i>Roles y permisos</a>
+    <a href="#mu-dashboard"><i class="bi bi-grid-1x2 me-1"></i>Dashboard</a>
+    <a href="#mu-pacientes"><i class="bi bi-person-heart me-1"></i>Pacientes</a>
+    <a href="#mu-trabajadores"><i class="bi bi-person-badge me-1"></i>Trabajadores</a>
+    <a href="#mu-turnos"><i class="bi bi-calendar-week me-1"></i>Turnos y Calendario</a>
+    <a href="#mu-eventos"><i class="bi bi-exclamation-triangle me-1"></i>Eventos Adversos</a>
+    <a href="#mu-finanzas"><i class="bi bi-cash-stack me-1"></i>Finanzas</a>
+    <a href="#mu-configuracion"><i class="bi bi-gear me-1"></i>Configuración</a>
+    <a href="#mu-usuarios"><i class="bi bi-people me-1"></i>Usuarios</a>
+    <a href="#mu-notificaciones"><i class="bi bi-bell me-1"></i>Notificaciones</a>
+    <a href="#mu-exportar"><i class="bi bi-download me-1"></i>Exportar datos</a>
+    <a href="#mu-2fa"><i class="bi bi-shield-lock me-1"></i>Autenticación 2FA</a>
+    <a href="#mu-faq"><i class="bi bi-question-circle me-1"></i>Preguntas frecuentes</a>
+    <a href="#mu-capturas"><i class="bi bi-camera me-1"></i>Capturas pendientes</a>
+  </div>
+
+  <!-- 1. Acceso -->
+  <h2 id="mu-acceso"><i class="bi bi-box-arrow-in-right me-2 text-primary"></i>Acceso al sistema</h2>
+
+  <h3>Iniciar sesión</h3>
+  <ol class="mu-steps">
+    <li>Ingresa la URL de tu clínica en el navegador.</li>
+    <li>Introduce tu <strong>correo electrónico</strong> y <strong>contraseña</strong>.</li>
+    <li>Si tu cuenta tiene <strong>2FA</strong> activado, ingresa el código de 6 dígitos de tu app autenticadora.</li>
+    <li>Serás redirigido al <strong>Dashboard</strong> principal.</li>
+  </ol>
+
+  <h3>Recuperar contraseña</h3>
+  <ol class="mu-steps">
+    <li>En la pantalla de login, haz clic en <strong>"¿Olvidaste tu contraseña?"</strong>.</li>
+    <li>Ingresa tu correo electrónico registrado.</li>
+    <li>Recibirás un email con un enlace para restablecer tu contraseña (válido por 1 hora).</li>
+    <li>Haz clic en el enlace, ingresa tu nueva contraseña dos veces y confirma.</li>
+  </ol>
+  <div class="mu-tip"><i class="bi bi-lightbulb-fill me-1"></i>
+    Si no recibes el email en 5 minutos, revisa la carpeta de spam o contacta a tu administrador.
+  </div>
+
+  <h3>Cerrar sesión</h3>
+  <p>Haz clic en tu nombre (esquina superior derecha) y selecciona <strong>"Cerrar sesión"</strong>. El sistema cierra la sesión automáticamente tras 2 horas de inactividad.</p>
+
+  <!-- 2. Navegación -->
+  <h2 id="mu-navegacion"><i class="bi bi-compass me-2 text-primary"></i>Navegación</h2>
+
+  <p>La interfaz tiene tres zonas:</p>
+  <table class="table table-bordered">
+    <thead><tr><th>Zona</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Barra lateral (sidebar)</strong></td><td>Menú principal: accede a todos los módulos, ayuda y notificaciones.</td></tr>
+      <tr><td><strong>Encabezado (header)</strong></td><td>Nombre del módulo activo, acceso al perfil y notificaciones.</td></tr>
+      <tr><td><strong>Área de contenido</strong></td><td>Listas, formularios, calendarios y reportes del módulo activo.</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Tours interactivos</h3>
+  <p>Cada módulo principal tiene un <strong>tour guiado</strong>. Para iniciarlo, busca el botón <kbd><i class="bi bi-question-circle"></i> Tour</kbd> en la vista, o accede desde <strong>Centro de ayuda → Inicio rápido</strong>.</p>
+
+  <!-- 3. Roles -->
+  <h2 id="mu-roles"><i class="bi bi-shield-check me-2 text-primary"></i>Roles y permisos</h2>
+
+  <table class="table table-bordered">
+    <thead><tr><th>Rol</th><th>Puede hacer</th></tr></thead>
+    <tbody>
+      <tr>
+        <td><span class="badge bg-secondary">Usuario</span></td>
+        <td>Ver dashboard, agregar bitácoras a pacientes, registrar comunicaciones, ver notificaciones propias.</td>
+      </tr>
+      <tr>
+        <td><span class="badge bg-primary">Coordinador</span></td>
+        <td>Todo lo anterior + gestión completa de pacientes, trabajadores, turnos, eventos adversos y exportaciones.</td>
+      </tr>
+      <tr>
+        <td><span class="badge bg-danger">Administrador</span></td>
+        <td>Todo lo anterior + gestión de usuarios, tarifas, configuración, alta/baja de trabajadores.</td>
+      </tr>
+    </tbody>
+  </table>
+  <div class="mu-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>
+    Si intentas acceder a una sección sin el permiso adecuado, el sistema mostrará un mensaje de acceso denegado. Contacta a tu administrador para solicitar más permisos.
+  </div>
+
+  <!-- 4. Dashboard -->
+  <h2 id="mu-dashboard"><i class="bi bi-grid-1x2 me-2 text-primary"></i>Dashboard</h2>
+
+  <p>Pantalla de inicio con resumen en tiempo real del estado operativo de tu clínica.</p>
+
+  <h3>Indicadores (KPIs)</h3>
+  <table class="table table-bordered">
+    <thead><tr><th>Indicador</th><th>Qué significa</th></tr></thead>
+    <tbody>
+      <tr><td>Turnos hoy</td><td>Total de turnos programados para hoy.</td></tr>
+      <tr><td>Turnos descubiertos</td><td>Turnos sin trabajador asignado (requieren acción).</td></tr>
+      <tr><td>Turnos completados hoy</td><td>Trabajadores que ya registraron término de turno.</td></tr>
+      <tr><td>Descubiertos próximos 7 días</td><td>Alerta temprana de turnos sin cobertura esta semana.</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 5. Pacientes -->
+  <h2 id="mu-pacientes"><i class="bi bi-person-heart me-2 text-primary"></i>Módulo de Pacientes</h2>
+
+  <p>Centraliza toda la información clínica y operativa de cada beneficiario del servicio.</p>
+
+  <h3>Estados del paciente</h3>
+  <div class="d-flex gap-2 flex-wrap mb-3">
+    <span class="mu-badge mu-cubierto">Activo</span>
+    <span class="mu-badge mu-parcial">Suspendido</span>
+    <span class="mu-badge mu-completado">Dado de baja</span>
+  </div>
+
+  <h3>Crear un nuevo paciente</h3>
+  <ol class="mu-steps">
+    <li>En el menú lateral, haz clic en <strong>Pacientes</strong>.</li>
+    <li>Haz clic en <kbd>Nuevo paciente</kbd>.</li>
+    <li>Completa los datos personales (nombres, apellidos, RUT, fecha de nacimiento).</li>
+    <li>Selecciona el <strong>Tipo de servicio</strong>: Turno 12h, Turno 24h o Visita.</li>
+    <li>Asigna el <strong>Mandante</strong> (institución que financia el servicio).</li>
+    <li>Completa los datos del tutor/contacto de emergencia si aplica.</li>
+    <li>Haz clic en <strong>Guardar</strong>.</li>
+  </ol>
+
+  <h3>Ficha del paciente</h3>
+  <p>Al hacer clic en el ícono de ojo en la lista, accedes a la ficha con pestañas:</p>
+  <ul>
+    <li><strong>Datos generales</strong>: información personal y de contacto.</li>
+    <li><strong>Condición del domicilio</strong>: tipo de cama, accesibilidad, equipamiento médico disponible.</li>
+    <li><strong>Bitácora operativa</strong>: notas cronológicas del equipo.</li>
+    <li><strong>Comunicaciones</strong>: registro de llamadas, emails y visitas con familia o médico.</li>
+  </ul>
+
+  <h3>Dar de baja a un paciente</h3>
+  <ol class="mu-steps">
+    <li>Abre la ficha del paciente.</li>
+    <li>Haz clic en <strong>Dar de baja</strong> (requiere rol Coordinador o Admin).</li>
+    <li>Confirma la acción. El sistema registrará la fecha de término y liberará los turnos futuros.</li>
+  </ol>
+  <div class="mu-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>
+    Dar de baja a un paciente no elimina sus datos. Su historial queda disponible para consulta.
+  </div>
+
+  <!-- 6. Trabajadores -->
+  <h2 id="mu-trabajadores"><i class="bi bi-person-badge me-2 text-primary"></i>Módulo de Trabajadores</h2>
+
+  <p>Gestiona el personal sanitario: TENS, cuidadores, enfermeras y otros perfiles.</p>
+
+  <h3>Perfiles disponibles</h3>
+  <div class="d-flex gap-2 flex-wrap mb-3">
+    <span class="badge bg-info-subtle text-info border border-info-subtle">TENS</span>
+    <span class="badge bg-info-subtle text-info border border-info-subtle">Cuidador/a</span>
+    <span class="badge bg-info-subtle text-info border border-info-subtle">Enfermera/o</span>
+    <span class="badge bg-secondary-subtle text-secondary border">Otro</span>
+  </div>
+
+  <h3>Registrar disponibilidad</h3>
+  <ol class="mu-steps">
+    <li>Abre la ficha del trabajador y ve a la pestaña <strong>Disponibilidad</strong>.</li>
+    <li>Haz clic en <strong>+ Nueva disponibilidad</strong>.</li>
+    <li>Selecciona el día de la semana, hora de inicio y hora de término.</li>
+    <li>Guarda. El sistema usará esta información al verificar conflictos de turno.</li>
+  </ol>
+
+  <h3>Documentos del trabajador</h3>
+  <p>En la pestaña <strong>Documentos</strong> puedes subir y descargar: Contrato, Currículum, Certificados, Título profesional, Licencia médica y otros archivos. El sistema alerta cuando un documento está próximo a vencer.</p>
+
+  <h3>Ver horas trabajadas</h3>
+  <p>La pestaña <strong>Horas</strong> muestra un resumen de horas por mes para el año seleccionado. Usa el botón <kbd><i class="bi bi-download"></i> Exportar</kbd> para descargar el reporte en CSV.</p>
+
+  <!-- 7. Turnos -->
+  <h2 id="mu-turnos"><i class="bi bi-calendar-week me-2 text-primary"></i>Turnos y Calendario</h2>
+
+  <p>Módulo central de la operación. Permite crear, asignar y hacer seguimiento de todos los turnos de atención.</p>
+
+  <h3>Estados de los turnos</h3>
+  <div class="d-flex gap-2 flex-wrap mb-3">
+    <span class="mu-badge mu-cubierto">Cubierto</span>
+    <span class="mu-badge mu-descubierto">Descubierto</span>
+    <span class="mu-badge mu-parcial">Parcial (en curso)</span>
+    <span class="mu-badge mu-completado">Completado</span>
+  </div>
+
+  <h3>Tipos de turno</h3>
+  <table class="table table-bordered">
+    <thead><tr><th>Tipo</th><th>Duración</th><th>Descripción</th></tr></thead>
+    <tbody>
+      <tr><td>Turno 12h Día</td><td>12 h</td><td>Jornada diurna</td></tr>
+      <tr><td>Turno 12h Noche</td><td>12 h</td><td>Jornada nocturna</td></tr>
+      <tr><td>Turno 24h</td><td>24 h</td><td>Turno continuo de un día</td></tr>
+      <tr><td>Visita</td><td>~2 h</td><td>Atención puntual</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Crear un turno</h3>
+  <ol class="mu-steps">
+    <li>Haz clic en <kbd>Nuevo turno</kbd>.</li>
+    <li>Selecciona el <strong>Paciente</strong> que recibirá la atención.</li>
+    <li>Selecciona el <strong>Trabajador</strong> asignado (puedes dejarlo vacío y asignar después).</li>
+    <li>Elige la <strong>fecha</strong>, <strong>hora de inicio</strong> y <strong>hora de término</strong>.</li>
+    <li>El sistema verificará automáticamente si el trabajador tiene conflictos de horario.</li>
+    <li>Guarda el turno.</li>
+  </ol>
+  <div class="mu-tip"><i class="bi bi-lightbulb-fill me-1"></i>
+    Si el trabajador ya tiene un turno en el mismo horario, el sistema te mostrará un aviso en tiempo real mientras completas el formulario.
+  </div>
+
+  <h3>Asignar un reemplazo</h3>
+  <ol class="mu-steps">
+    <li>Abre el detalle del turno descubierto.</li>
+    <li>Haz clic en <kbd><i class="bi bi-arrow-repeat"></i> Asignar reemplazo</kbd>.</li>
+    <li>Selecciona el trabajador reemplazante y el motivo del reemplazo.</li>
+    <li>Confirma. El turno pasará a estado <span class="mu-badge mu-cubierto">Cubierto</span>.</li>
+  </ol>
+
+  <h3>Registrar asistencia</h3>
+  <ol class="mu-steps">
+    <li>Abre el detalle del turno.</li>
+    <li>Haz clic en <kbd>Registrar inicio</kbd> cuando el trabajador llegue al domicilio.</li>
+    <li>Al finalizar, haz clic en <kbd>Registrar término</kbd>. El turno pasará a <span class="mu-badge mu-completado">Completado</span>.</li>
+  </ol>
+
+  <h3>Filtrar el calendario</h3>
+  <p>Usa los selectores sobre el calendario para filtrar por: <strong>Trabajador</strong>, <strong>Tipo de turno</strong> y <strong>Estado</strong>. El calendario usa código de colores: verde = cubierto, rojo = descubierto, amarillo = parcial, azul = completado.</p>
+
+  <!-- 8. Eventos adversos -->
+  <h2 id="mu-eventos"><i class="bi bi-exclamation-triangle me-2 text-primary"></i>Eventos Adversos</h2>
+
+  <p>Registro de incidentes o situaciones inesperadas durante la atención domiciliaria.</p>
+
+  <h3>Estados del evento adverso</h3>
+  <div class="d-flex gap-2 flex-wrap mb-3">
+    <span class="mu-badge mu-abierto">Registrado</span>
+    <span class="mu-badge mu-enproceso">En revisión</span>
+    <span class="mu-badge mu-cerrado">Cerrado</span>
+  </div>
+
+  <h3>Registrar un evento adverso</h3>
+  <ol class="mu-steps">
+    <li>Ve a <strong>Eventos adversos → Nuevo evento</strong>.</li>
+    <li>Selecciona el <strong>Paciente</strong> involucrado.</li>
+    <li>Ingresa la <strong>fecha y hora</strong> del evento.</li>
+    <li>Selecciona el <strong>Tipo de evento</strong> (caída, error de medicación, emergencia médica, etc.).</li>
+    <li>Indica la <strong>Gravedad</strong>: Leve, Moderado, Grave o Crítico.</li>
+    <li>Describe detalladamente lo ocurrido.</li>
+    <li>Guarda. El sistema notificará automáticamente a los coordinadores.</li>
+  </ol>
+  <div class="mu-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>
+    Los eventos de gravedad <strong>Grave/Crítico</strong> generan notificación inmediata a todos los coordinadores y administradores.
+  </div>
+
+  <h3>Seguimiento y cierre</h3>
+  <p>Desde el detalle del evento puedes agregar <strong>notas de seguimiento</strong>, mover el evento a <strong>"En revisión"</strong> y cerrarlo con una <strong>observación de cierre</strong> obligatoria.</p>
+
+  <!-- 9. Finanzas -->
+  <h2 id="mu-finanzas"><i class="bi bi-cash-stack me-2 text-primary"></i>Módulo de Finanzas</h2>
+
+  <p>Gestiona liquidaciones de remuneraciones y facturación a mandantes.</p>
+
+  <h3>Liquidaciones de personal</h3>
+  <p>Una liquidación consolida todos los turnos de un trabajador en un mes para calcular su remuneración.</p>
+
+  <h4>Estados de liquidación</h4>
+  <div class="d-flex gap-2 flex-wrap mb-3">
+    <span class="mu-badge mu-borrador">Borrador</span>
+    <span class="mu-badge mu-aprobada">Aprobada</span>
+    <span class="mu-badge mu-pagada">Pagada</span>
+    <span class="mu-badge mu-anulada">Anulada</span>
+  </div>
+
+  <h4>Crear una liquidación</h4>
+  <ol class="mu-steps">
+    <li>Ve a <strong>Finanzas → Liquidaciones → Nueva liquidación</strong>.</li>
+    <li>Selecciona el <strong>Trabajador</strong> y el <strong>período</strong> (mes/año).</li>
+    <li>El sistema cargará automáticamente los turnos completados del período.</li>
+    <li>Revisa los ítems generados.</li>
+    <li>Guarda como <span class="mu-badge mu-borrador">Borrador</span>.</li>
+    <li>Cuando esté lista, haz clic en <kbd>Aprobar</kbd>.</li>
+    <li>Al realizar el pago, haz clic en <kbd>Marcar como pagada</kbd>.</li>
+  </ol>
+
+  <h4>Exportar a Buk</h4>
+  <ol class="mu-steps">
+    <li>Ve a <strong>Finanzas → Liquidaciones</strong>.</li>
+    <li>Haz clic en <kbd><i class="bi bi-download"></i> Exportar Buk</kbd>.</li>
+    <li>Selecciona el mes. Se descargará un CSV compatible con la importación de Buk.</li>
+  </ol>
+
+  <h3>Facturas</h3>
+  <p>Las facturas se emiten a los <strong>Mandantes</strong> por los servicios del período.</p>
+
+  <h4>Estados de factura</h4>
+  <div class="d-flex gap-2 flex-wrap mb-3">
+    <span class="mu-badge mu-borrador">Borrador</span>
+    <span class="mu-badge mu-emitida">Emitida</span>
+    <span class="mu-badge mu-pagada">Pagada</span>
+    <span class="mu-badge mu-vencida">Vencida</span>
+    <span class="mu-badge mu-anulada">Anulada</span>
+  </div>
+
+  <h4>Crear y emitir una factura</h4>
+  <ol class="mu-steps">
+    <li>Ve a <strong>Finanzas → Facturas → Nueva factura</strong>.</li>
+    <li>Selecciona el <strong>Mandante</strong> y el <strong>período</strong>.</li>
+    <li>Revisa el monto neto, IVA y total.</li>
+    <li>Guarda como Borrador y, cuando esté lista, haz clic en <kbd>Emitir factura</kbd>.</li>
+    <li>Al recibir el pago, haz clic en <kbd>Marcar como pagada</kbd>.</li>
+  </ol>
+
+  <!-- 10. Configuración -->
+  <h2 id="mu-configuracion"><i class="bi bi-gear me-2 text-primary"></i>Configuración de la clínica</h2>
+
+  <p>Solo disponible para usuarios con rol <span class="badge bg-danger">Administrador</span>.</p>
+
+  <table class="table table-bordered">
+    <thead><tr><th>Sección</th><th>Qué configuras</th></tr></thead>
+    <tbody>
+      <tr><td><strong>Identidad de la clínica</strong></td><td>Nombre, RUT, logo. Aparecen en facturas y reportes.</td></tr>
+      <tr><td><strong>Facturación</strong></td><td>Porcentaje de IVA por defecto, datos del emisor.</td></tr>
+      <tr><td><strong>Operaciones</strong></td><td>Horas mínimas por turno, días de anticipación para alertas de turnos descubiertos.</td></tr>
+      <tr><td><strong>Notificaciones</strong></td><td>Habilitar/deshabilitar notificaciones por email, destinatarios de alertas.</td></tr>
+      <tr><td><strong>Módulos</strong></td><td>Activar o desactivar módulos opcionales (Eventos Adversos, Finanzas, etc.).</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 11. Usuarios -->
+  <h2 id="mu-usuarios"><i class="bi bi-people me-2 text-primary"></i>Gestión de Usuarios</h2>
+
+  <p>Solo disponible para usuarios con rol <span class="badge bg-danger">Administrador</span>.</p>
+
+  <h3>Crear un usuario</h3>
+  <ol class="mu-steps">
+    <li>Ve a <strong>Usuarios → Nuevo usuario</strong>.</li>
+    <li>Ingresa nombre, apellido y correo electrónico.</li>
+    <li>Asigna el rol apropiado.</li>
+    <li>Establece una contraseña inicial.</li>
+  </ol>
+
+  <p>Desde la ficha de un usuario también puedes <strong>cambiar su contraseña</strong> y <strong>activar/desactivar</strong> su acceso sin eliminarlo.</p>
+
+  <!-- 12. Notificaciones -->
+  <h2 id="mu-notificaciones"><i class="bi bi-bell me-2 text-primary"></i>Notificaciones</h2>
+
+  <p>El sistema envía notificaciones automáticas ante eventos importantes. Las encontrarás en el ícono <kbd><i class="bi bi-bell"></i></kbd> del encabezado.</p>
+
+  <table class="table table-bordered">
+    <thead><tr><th>Evento</th><th>¿Quién recibe la notificación?</th></tr></thead>
+    <tbody>
+      <tr><td>Turno descubierto</td><td>Coordinadores y administradores</td></tr>
+      <tr><td>Turno próximo (24h antes)</td><td>El trabajador asignado</td></tr>
+      <tr><td>Evento adverso nuevo</td><td>Coordinadores y administradores</td></tr>
+      <tr><td>Liquidación aprobada</td><td>El trabajador afectado</td></tr>
+      <tr><td>Factura emitida</td><td>El contacto del mandante (email)</td></tr>
+    </tbody>
+  </table>
+
+  <!-- 13. Exportar datos -->
+  <h2 id="mu-exportar"><i class="bi bi-download me-2 text-primary"></i>Exportar datos</h2>
+
+  <p>El sistema permite exportar en formato CSV desde varios módulos (compatible con Excel y Google Sheets).</p>
+
+  <table class="table table-bordered">
+    <thead><tr><th>Módulo</th><th>Contenido del CSV</th></tr></thead>
+    <tbody>
+      <tr><td>Turnos</td><td>Turnos del rango de fechas seleccionado</td></tr>
+      <tr><td>Pacientes</td><td>Pacientes según los filtros activos</td></tr>
+      <tr><td>Trabajador — Horas</td><td>Horas trabajadas por mes</td></tr>
+      <tr><td>Liquidación</td><td>Detalle de ítems de esa liquidación</td></tr>
+      <tr><td>Liquidaciones — Buk</td><td>CSV formato Buk para importar en sistema de remuneraciones</td></tr>
+      <tr><td>Facturas</td><td>Facturas del año/estado seleccionado</td></tr>
+    </tbody>
+  </table>
+  <div class="mu-tip"><i class="bi bi-lightbulb-fill me-1"></i>
+    Si al abrir el CSV en Excel los caracteres especiales (tildes, ñ) no se ven bien, abre el archivo desde Excel usando <strong>Datos → Desde texto/CSV</strong> y selecciona codificación <strong>UTF-8</strong>.
+  </div>
+
+  <!-- 14. 2FA -->
+  <h2 id="mu-2fa"><i class="bi bi-shield-lock me-2 text-primary"></i>Autenticación de dos factores (2FA)</h2>
+
+  <p>El 2FA agrega una capa adicional de seguridad. <strong>Es obligatorio para Administradores y Coordinadores.</strong></p>
+
+  <h3>Activar 2FA</h3>
+  <ol class="mu-steps">
+    <li>Ve a tu perfil (clic en tu nombre, arriba a la derecha).</li>
+    <li>Selecciona <strong>Seguridad → Activar autenticación de dos factores</strong>.</li>
+    <li>Escanea el código QR con tu app autenticadora (Google Authenticator, Authy, etc.).</li>
+    <li>Ingresa el código de 6 dígitos que muestra la app para confirmar la activación.</li>
+    <li>Guarda los <strong>10 códigos de respaldo</strong> en un lugar seguro.</li>
+  </ol>
+  <div class="mu-warning"><i class="bi bi-exclamation-triangle-fill me-1"></i>
+    Guarda tus códigos de respaldo ahora. Si pierdes el acceso a tu app autenticadora y no tienes los códigos, deberás contactar al administrador para desactivar el 2FA.
+  </div>
+
+  <!-- 15. FAQ -->
+  <h2 id="mu-faq"><i class="bi bi-question-circle me-2 text-primary"></i>Preguntas frecuentes</h2>
+
+  <div class="mu-faq-item">
+    <strong>¿Puedo crear un turno sin asignar trabajador?</strong>
+    <p>Sí. El turno quedará en estado <span class="mu-badge mu-descubierto">Descubierto</span>. El sistema notificará a los coordinadores automáticamente. Puedes asignar un reemplazo más tarde desde el detalle del turno.</p>
+  </div>
+
+  <div class="mu-faq-item">
+    <strong>El sistema me dice que el trabajador "ya tiene turno". ¿Qué hago?</strong>
+    <p>Se detectó un conflicto de horario: el trabajador ya tiene otro turno que se solapa con el que intentas crear. Elige otro trabajador disponible o ajusta el horario.</p>
+  </div>
+
+  <div class="mu-faq-item">
+    <strong>¿Cómo sé cuántos turnos descubiertos hay esta semana?</strong>
+    <p>El <strong>Dashboard</strong> muestra en tiempo real el indicador "Descubiertos próximos 7 días". También puedes ir al Calendario de Turnos y filtrar por estado "Descubierto".</p>
+  </div>
+
+  <div class="mu-faq-item">
+    <strong>¿Puedo editar una liquidación ya aprobada?</strong>
+    <p>No. Una vez aprobada queda bloqueada. Si hay un error, anúlala y crea una nueva. Contacta a tu administrador si no tienes permiso para anular.</p>
+  </div>
+
+  <div class="mu-faq-item">
+    <strong>¿Qué es el "Mandante"?</strong>
+    <p>La institución o persona jurídica que financia el servicio (isapre, municipio, empresa aseguradora). Cada paciente está asociado a un mandante y las facturas se emiten a ellos.</p>
+  </div>
+
+  <div class="mu-faq-item">
+    <strong>¿El sistema funciona en el celular?</strong>
+    <p>Sí. La interfaz es responsive. TENS y Enfermeras tienen además una <strong>Vista de campo</strong> optimizada para móvil, accesible desde el menú lateral.</p>
+  </div>
+
+  <div class="mu-faq-item">
+    <strong>¿Cómo agrego una nota en la bitácora de un paciente?</strong>
+    <p>Abre la ficha del paciente, ve a la pestaña <strong>Bitácora operativa</strong> y completa el formulario. Cualquier usuario con acceso puede agregar entradas.</p>
+  </div>
+
+  <div class="mu-faq-item">
+    <strong>No veo el botón "Nueva liquidación". ¿Por qué?</strong>
+    <p>El botón solo es visible para usuarios con el permiso <strong>FINANZAS_EDITAR</strong>. Contacta a tu administrador para que te otorgue el permiso correspondiente.</p>
+  </div>
+
+  <div class="mu-faq-item">
+    <strong>¿Por qué no veo el módulo de Finanzas o Eventos Adversos?</strong>
+    <p>Puede tener dos causas: (1) tu rol no tiene permiso para verlo, o (2) el módulo fue desactivado desde Configuración. Consulta con tu administrador.</p>
+  </div>
+
+  <!-- 16. Capturas pendientes -->
+  <h2 id="mu-capturas"><i class="bi bi-camera me-2 text-primary"></i>Capturas de pantalla pendientes</h2>
+
+  <p>Para completar este manual, se deben tomar las siguientes capturas del sistema en producción o staging:</p>
+
+  <table class="table table-bordered table-sm">
+    <thead><tr><th>#</th><th>Pantalla</th><th>URL</th><th>Qué mostrar</th></tr></thead>
+    <tbody>
+      <tr><td>01</td><td>Login</td><td><code>/login</code></td><td>Formulario de acceso (sin datos reales)</td></tr>
+      <tr><td>02</td><td>Dashboard</td><td><code>/</code></td><td>KPIs + tabla de turnos del día + alertas</td></tr>
+      <tr><td>03</td><td>Lista de pacientes</td><td><code>/pacientes</code></td><td>Filtros + tabla con badges de estado</td></tr>
+      <tr><td>04</td><td>Nuevo paciente</td><td><code>/pacientes/nuevo</code></td><td>Formulario vacío, primer tab</td></tr>
+      <tr><td>05</td><td>Ficha del paciente</td><td><code>/pacientes/{id}</code></td><td>Las 4 pestañas + datos generales</td></tr>
+      <tr><td>06</td><td>Lista de trabajadores</td><td><code>/trabajadores</code></td><td>Tabla con perfiles y estados</td></tr>
+      <tr><td>07</td><td>Ficha del trabajador</td><td><code>/trabajadores/{id}</code></td><td>Pestañas: Datos, Disponibilidad, Documentos, Horas</td></tr>
+      <tr><td>08</td><td>Calendario de turnos</td><td><code>/turnos</code></td><td>KPIs + filtros + calendario con eventos</td></tr>
+      <tr><td>09</td><td>Detalle del turno</td><td><code>/turnos/{id}</code></td><td>Info del turno + botones de asistencia</td></tr>
+      <tr><td>10</td><td>Lista eventos adversos</td><td><code>/eventos-adversos</code></td><td>Tabla con filtros + badges de gravedad</td></tr>
+      <tr><td>11</td><td>Dashboard Finanzas</td><td><code>/finanzas</code></td><td>KPIs financieros + acceso rápido</td></tr>
+      <tr><td>12</td><td>Detalle liquidación</td><td><code>/finanzas/liquidaciones/{id}</code></td><td>Tabla de ítems + total + botones</td></tr>
+      <tr><td>13</td><td>Configuración</td><td><code>/configuracion</code></td><td>Las tarjetas de configuración</td></tr>
+    </tbody>
+  </table>
+  <div class="mu-tip"><i class="bi bi-lightbulb-fill me-1"></i>
+    Usa datos de demostración (no datos reales de pacientes) al tomar capturas.
+  </div>
+
+  <hr class="my-4">
+  <p class="text-muted small text-center">Domiciliaria SaaS · Manual de usuario v1.0 · Abril 2026</p>
+
+</div>
