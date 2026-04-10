@@ -8,9 +8,11 @@ use App\Entity\Tenant\DisponibilidadTrabajador;
 use App\Entity\Tenant\DocumentoTrabajador;
 use App\Entity\Tenant\Trabajador;
 use App\Entity\Tenant\User;
+use App\Enum\EstadoLiquidacion;
 use App\Enum\EstadoTurno;
 use App\Enum\TipoDocumento;
 use App\Message\TurnoDescubiertoMessage;
+use App\Repository\LiquidacionMensualRepository;
 use App\Repository\TurnoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
@@ -21,6 +23,7 @@ class TrabajadorService
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly TurnoRepository $turnoRepository,
+        private readonly LiquidacionMensualRepository $liquidacionRepository,
         private readonly MessageBusInterface $bus,
         private readonly string $uploadDir,
     ) {}
@@ -75,6 +78,31 @@ class TrabajadorService
         Trabajador $trabajador,
         DisponibilidadTrabajador $disponibilidad,
     ): DisponibilidadTrabajador {
+        if (!$disponibilidad->isDisponible() && $disponibilidad->getFecha() !== null) {
+            $turnosEnFecha = $this->turnoRepository->findByTrabajadorYFecha(
+                $trabajador,
+                $disponibilidad->getFecha(),
+            );
+
+            $turnosActivos = array_filter(
+                $turnosEnFecha,
+                fn(\App\Entity\Tenant\Turno $t) => in_array(
+                    $t->getEstado(),
+                    [EstadoTurno::CUBIERTO, EstadoTurno::PARCIAL],
+                    true,
+                ),
+            );
+
+            if (count($turnosActivos) > 0) {
+                throw new \DomainException(sprintf(
+                    'No se puede registrar no-disponibilidad el %s: el trabajador tiene %d turno(s) activo(s) asignado(s) ese día. ' .
+                    'Primero reasigna o descubre esos turnos.',
+                    $disponibilidad->getFecha()->format('d/m/Y'),
+                    count($turnosActivos),
+                ));
+            }
+        }
+
         $disponibilidad->setTrabajador($trabajador);
         $this->em->persist($disponibilidad);
         $this->em->flush();
@@ -90,6 +118,23 @@ class TrabajadorService
 
     public function descubrirTurnosFuturos(Trabajador $trabajador): int
     {
+        $liquidacionesPendientes = array_filter(
+            $this->liquidacionRepository->findByTrabajador($trabajador),
+            fn(\App\Entity\Tenant\LiquidacionMensual $l) => in_array(
+                $l->getEstado(),
+                [EstadoLiquidacion::BORRADOR, EstadoLiquidacion::APROBADA],
+                true,
+            ),
+        );
+
+        if (count($liquidacionesPendientes) > 0) {
+            throw new \RuntimeException(sprintf(
+                'El trabajador tiene %d liquidación(es) en estado Borrador o Aprobada. ' .
+                'Ciérralas o anulalas antes de inactivar al trabajador para evitar liquidaciones huérfanas.',
+                count($liquidacionesPendientes),
+            ));
+        }
+
         $turnos = $this->turnoRepository->findFuturosCubiertosDesTrabajador($trabajador);
 
         foreach ($turnos as $turno) {

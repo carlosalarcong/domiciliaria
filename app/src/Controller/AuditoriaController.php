@@ -22,6 +22,7 @@ class AuditoriaController extends AbstractController
         'App\\Entity\\Tenant\\Paciente'       => 'Paciente',
         'App\\Entity\\Tenant\\Trabajador'     => 'Trabajador',
         'App\\Entity\\Tenant\\Turno'          => 'Turno',
+        'App\\Entity\\Tenant\\LiquidacionMensual' => 'Liquidación',
         'App\\Entity\\Tenant\\Mandante'       => 'Mandante',
         'App\\Entity\\Tenant\\EventoAdverso'  => 'Evento Adverso',
         'App\\Entity\\Tenant\\User'           => 'Usuario',

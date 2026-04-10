@@ -32,10 +32,13 @@ class TurnoService
         $turno->setCreadoPor($creadoPor);
         $paciente = $turno->getPaciente();
         if ($paciente !== null && $paciente->getEstado() !== EstadoPaciente::ACTIVO) {
+            $razon = $paciente->getEstado() === EstadoPaciente::SUSPENDIDO
+                ? 'El paciente está suspendido temporalmente y no puede recibir nuevos turnos.'
+                : 'El paciente está dado de baja.';
             throw new \DomainException(sprintf(
-                'No se puede crear el turno: el paciente %s no está activo (estado: %s).',
+                'No se puede crear el turno: %s (Paciente: %s)',
+                $razon,
                 $paciente->getNombreCompleto(),
-                $paciente->getEstado()->etiqueta(),
             ));
         }
 
@@ -69,12 +72,21 @@ class TurnoService
      */
     public function actualizarEstadoSegunTrabajador(Turno $turno): void
     {
+        if ($turno->getEstado() === EstadoTurno::COMPLETADO) {
+            throw new \DomainException(
+                'No se puede modificar un turno completado. Si necesitas corregirlo, contacta al administrador.'
+            );
+        }
+
         $paciente = $turno->getPaciente();
         if ($paciente !== null && $paciente->getEstado() !== EstadoPaciente::ACTIVO) {
+            $razon = $paciente->getEstado() === EstadoPaciente::SUSPENDIDO
+                ? 'El paciente está suspendido temporalmente y no puede recibir nuevos turnos.'
+                : 'El paciente está dado de baja.';
             throw new \DomainException(sprintf(
-                'No se puede modificar el turno: el paciente %s no está activo (estado: %s).',
+                'No se puede modificar el turno: %s (Paciente: %s)',
+                $razon,
                 $paciente->getNombreCompleto(),
-                $paciente->getEstado()->etiqueta(),
             ));
         }
 

@@ -148,7 +148,16 @@ services:
         tags:
             - { name: console.command }
 
+    App\Command\CerrarTurnosParcialVencidosCommand:
+        arguments:
+            $defaultEm: '@doctrine.orm.default_entity_manager'
+            $tenantEm: '@doctrine.orm.tenant_entity_manager'
+
+    App\MessageHandler\CerrarTurnosParcialesVencidosHandler:
+        arguments:
+            $defaultEm: '@doctrine.orm.default_entity_manager'
+            $tenantEm: '@doctrine.orm.tenant_entity_manager'
+
     App\Security\ApiTokenAuthenticator:
         arguments:
             $tokenRepository: '@App\Repository\ApiTokenRepository'
-
