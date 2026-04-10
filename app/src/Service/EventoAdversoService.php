@@ -90,6 +90,11 @@ class EventoAdversoService
         if (!$evento->getEstado()->puedeCerrar()) {
             throw new \LogicException('Solo se puede cerrar un evento que está en revisión.');
         }
+        if ($evento->getGravedad()->requiereNotificacion() && $evento->getResponsable() === null) {
+            throw new \LogicException(
+                'Los eventos de gravedad Grave o Crítico deben tener un responsable asignado antes de cerrarse.'
+            );
+        }
 
         $evento->setEstado(EstadoEvento::CERRADO)
                ->setFechaCierre(new \DateTime())
