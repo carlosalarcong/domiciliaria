@@ -84,6 +84,24 @@ class TurnoRepository extends ServiceEntityRepository
             ->getResult();
     }
 
+    /**
+     * Retorna turnos futuros CUBIERTOS o PARCIALES asignados a un trabajador.
+     *
+     * @return Turno[]
+     */
+    public function findFuturosCubiertosDesTrabajador(Trabajador $trabajador): array
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.trabajador = :trabajador')
+            ->andWhere('t.fecha >= :hoy')
+            ->andWhere('t.estado IN (:estados)')
+            ->setParameter('trabajador', $trabajador)
+            ->setParameter('hoy', new \DateTime('today'))
+            ->setParameter('estados', [EstadoTurno::CUBIERTO, EstadoTurno::PARCIAL])
+            ->getQuery()
+            ->getResult();
+    }
+
     /** @return Turno[] */
     public function findByTrabajadorYRango(Trabajador $trabajador, \DateTimeInterface $desde, \DateTimeInterface $hasta): array
     {

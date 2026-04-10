@@ -8,9 +8,11 @@ use App\Entity\Tenant\Paciente;
 use App\Entity\Tenant\Trabajador;
 use App\Entity\Tenant\Turno;
 use App\Entity\Tenant\User;
+use App\Enum\EstadoTrabajador;
 use App\Enum\EstadoTurno;
 use App\Enum\MotivoReemplazo;
 use App\Message\TurnoDescubiertoMessage;
+use App\Repository\DisponibilidadTrabajadorRepository;
 use App\Repository\TurnoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
@@ -20,6 +22,7 @@ class TurnoService
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly TurnoRepository $turnoRepository,
+        private readonly DisponibilidadTrabajadorRepository $disponibilidadRepository,
         private readonly MessageBusInterface $bus,
     ) {}
 
@@ -29,6 +32,14 @@ class TurnoService
 
         // Si tiene trabajador asignado, queda CUBIERTO; si no, DESCUBIERTO
         if ($turno->getTrabajador() !== null) {
+            $trabajador = $turno->getTrabajador();
+            if ($trabajador->getEstado() !== EstadoTrabajador::ACTIVO) {
+                throw new \DomainException(sprintf(
+                    'No se puede asignar el turno: el trabajador %s no está activo (estado: %s).',
+                    $trabajador->getNombreCompleto(),
+                    $trabajador->getEstado()->etiqueta(),
+                ));
+            }
             $this->verificarDisponibilidad($turno->getTrabajador(), $turno->getFecha(), $turno->getHoraInicio(), $turno->getHoraTermino());
             $turno->setEstado(EstadoTurno::CUBIERTO);
         } else {
@@ -53,6 +64,37 @@ class TurnoService
         \DateTimeInterface $horaInicio,
         \DateTimeInterface $horaTermino,
     ): void {
+        $disponibilidad = $this->disponibilidadRepository->findByTrabajadorYFecha($trabajador, $fecha);
+
+        if ($disponibilidad !== null && !$disponibilidad->isDisponible()) {
+            throw new \DomainException(sprintf(
+                'El trabajador %s tiene registrada no disponibilidad el %s. Motivo: %s',
+                $trabajador->getNombreCompleto(),
+                $fecha->format('d/m/Y'),
+                $disponibilidad->getObservacion() ?? 'sin especificar',
+            ));
+        }
+
+        if ($disponibilidad !== null
+            && $disponibilidad->isDisponible()
+            && $disponibilidad->getHoraDesde() !== null
+            && $disponibilidad->getHoraHasta() !== null
+        ) {
+            if ($horaInicio < $disponibilidad->getHoraDesde()
+                || $horaTermino > $disponibilidad->getHoraHasta()
+            ) {
+                throw new \DomainException(sprintf(
+                    'El turno (%s–%s) está fuera del horario de disponibilidad del trabajador %s el %s (%s–%s).',
+                    $horaInicio->format('H:i'),
+                    $horaTermino->format('H:i'),
+                    $trabajador->getNombreCompleto(),
+                    $fecha->format('d/m/Y'),
+                    $disponibilidad->getHoraDesde()->format('H:i'),
+                    $disponibilidad->getHoraHasta()->format('H:i'),
+                ));
+            }
+        }
+
         $turnosExistentes = $this->turnoRepository->findByTrabajadorYFecha($trabajador, $fecha);
 
         foreach ($turnosExistentes as $existente) {
@@ -78,6 +120,14 @@ class TurnoService
 
     public function asignarReemplazo(Turno $turno, Trabajador $reemplazo, MotivoReemplazo $motivo): Turno
     {
+        if ($reemplazo->getEstado() !== EstadoTrabajador::ACTIVO) {
+            throw new \DomainException(sprintf(
+                'No se puede asignar el turno: el trabajador %s no está activo (estado: %s).',
+                $reemplazo->getNombreCompleto(),
+                $reemplazo->getEstado()->etiqueta(),
+            ));
+        }
+
         $this->verificarDisponibilidad(
             $reemplazo,
             $turno->getFecha(),
