@@ -8,6 +8,7 @@ use App\Entity\Tenant\Paciente;
 use App\Entity\Tenant\Trabajador;
 use App\Entity\Tenant\Turno;
 use App\Entity\Tenant\User;
+use App\Enum\EstadoTrabajador;
 use App\Enum\EstadoTurno;
 use App\Enum\MotivoReemplazo;
 use App\Message\TurnoDescubiertoMessage;
@@ -29,6 +30,14 @@ class TurnoService
 
         // Si tiene trabajador asignado, queda CUBIERTO; si no, DESCUBIERTO
         if ($turno->getTrabajador() !== null) {
+            $trabajador = $turno->getTrabajador();
+            if ($trabajador->getEstado() !== EstadoTrabajador::ACTIVO) {
+                throw new \DomainException(sprintf(
+                    'No se puede asignar el turno: el trabajador %s no está activo (estado: %s).',
+                    $trabajador->getNombreCompleto(),
+                    $trabajador->getEstado()->etiqueta(),
+                ));
+            }
             $this->verificarDisponibilidad($turno->getTrabajador(), $turno->getFecha(), $turno->getHoraInicio(), $turno->getHoraTermino());
             $turno->setEstado(EstadoTurno::CUBIERTO);
         } else {
@@ -78,6 +87,14 @@ class TurnoService
 
     public function asignarReemplazo(Turno $turno, Trabajador $reemplazo, MotivoReemplazo $motivo): Turno
     {
+        if ($reemplazo->getEstado() !== EstadoTrabajador::ACTIVO) {
+            throw new \DomainException(sprintf(
+                'No se puede asignar el turno: el trabajador %s no está activo (estado: %s).',
+                $reemplazo->getNombreCompleto(),
+                $reemplazo->getEstado()->etiqueta(),
+            ));
+        }
+
         $this->verificarDisponibilidad(
             $reemplazo,
             $turno->getFecha(),
