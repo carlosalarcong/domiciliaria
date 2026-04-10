@@ -236,8 +236,12 @@ class FinanzasController extends AbstractController
         if (!$this->isCsrfTokenValid('liq_' . $liquidacion->getId(), $request->request->get('_token'))) {
             throw $this->createAccessDeniedException();
         }
-        $this->finanzasService->aprobarLiquidacion($liquidacion);
-        $this->addFlash('success', 'Liquidación aprobada.');
+        try {
+            $this->finanzasService->aprobarLiquidacion($liquidacion);
+            $this->addFlash('success', 'Liquidación aprobada.');
+        } catch (\LogicException $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
 
         return $this->redirectToRoute('app_finanzas_liquidacion_show', ['id' => $liquidacion->getId()]);
     }
@@ -249,9 +253,13 @@ class FinanzasController extends AbstractController
         if (!$this->isCsrfTokenValid('liq_' . $liquidacion->getId(), $request->request->get('_token'))) {
             throw $this->createAccessDeniedException();
         }
-        $fecha = new \DateTime($request->request->get('fecha_pago', 'today'));
-        $this->finanzasService->marcarPagadaLiquidacion($liquidacion, $fecha);
-        $this->addFlash('success', 'Liquidación marcada como pagada.');
+        try {
+            $fecha = new \DateTime($request->request->get('fecha_pago', 'today'));
+            $this->finanzasService->marcarPagadaLiquidacion($liquidacion, $fecha);
+            $this->addFlash('success', 'Liquidación marcada como pagada.');
+        } catch (\LogicException $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
 
         return $this->redirectToRoute('app_finanzas_liquidacion_show', ['id' => $liquidacion->getId()]);
     }
@@ -408,8 +416,12 @@ class FinanzasController extends AbstractController
         if (!$this->isCsrfTokenValid('fac_' . $factura->getId(), $request->request->get('_token'))) {
             throw $this->createAccessDeniedException();
         }
-        $this->finanzasService->emitirFactura($factura, new \DateTime());
-        $this->addFlash('success', 'Factura emitida.');
+        try {
+            $this->finanzasService->emitirFactura($factura, new \DateTime());
+            $this->addFlash('success', 'Factura emitida.');
+        } catch (\LogicException $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
 
         return $this->redirectToRoute('app_finanzas_factura_show', ['id' => $factura->getId()]);
     }
@@ -421,9 +433,13 @@ class FinanzasController extends AbstractController
         if (!$this->isCsrfTokenValid('fac_' . $factura->getId(), $request->request->get('_token'))) {
             throw $this->createAccessDeniedException();
         }
-        $fecha = new \DateTime($request->request->get('fecha_pago', 'today'));
-        $this->finanzasService->marcarPagadaFactura($factura, $fecha);
-        $this->addFlash('success', 'Factura marcada como pagada.');
+        try {
+            $fecha = new \DateTime($request->request->get('fecha_pago', 'today'));
+            $this->finanzasService->marcarPagadaFactura($factura, $fecha);
+            $this->addFlash('success', 'Factura marcada como pagada.');
+        } catch (\LogicException $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
 
         return $this->redirectToRoute('app_finanzas_factura_show', ['id' => $factura->getId()]);
     }

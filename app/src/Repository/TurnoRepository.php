@@ -73,6 +73,20 @@ class TurnoRepository extends ServiceEntityRepository
     }
 
     /** @return Turno[] */
+    public function findParcialesVencidos(int $horas = 26): array
+    {
+        $limite = new \DateTime("-{$horas} hours");
+
+        return $this->createQueryBuilder('t')
+            ->where('t.estado = :estado')
+            ->andWhere('t.registroInicio <= :limite')
+            ->setParameter('estado', EstadoTurno::PARCIAL)
+            ->setParameter('limite', $limite)
+            ->getQuery()
+            ->getResult();
+    }
+
+    /** @return Turno[] */
     public function findByTrabajadorYFecha(Trabajador $trabajador, \DateTimeInterface $fecha): array
     {
         return $this->createQueryBuilder('t')

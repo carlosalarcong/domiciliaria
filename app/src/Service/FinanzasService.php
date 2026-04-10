@@ -122,6 +122,13 @@ class FinanzasService
 
     public function aprobarLiquidacion(LiquidacionMensual $liquidacion): LiquidacionMensual
     {
+        if ($liquidacion->getEstado() !== EstadoLiquidacion::BORRADOR) {
+            throw new \LogicException(sprintf(
+                'Solo se puede aprobar una liquidación en estado Borrador (estado actual: %s).',
+                $liquidacion->getEstado()->etiqueta(),
+            ));
+        }
+
         $liquidacion->setEstado(EstadoLiquidacion::APROBADA);
         $this->em->flush();
 
@@ -130,6 +137,13 @@ class FinanzasService
 
     public function marcarPagadaLiquidacion(LiquidacionMensual $liquidacion, \DateTimeInterface $fechaPago): LiquidacionMensual
     {
+        if ($liquidacion->getEstado() !== EstadoLiquidacion::APROBADA) {
+            throw new \LogicException(sprintf(
+                'Solo se puede marcar como pagada una liquidación aprobada (estado actual: %s).',
+                $liquidacion->getEstado()->etiqueta(),
+            ));
+        }
+
         $liquidacion->setEstado(EstadoLiquidacion::PAGADA)->setFechaPago($fechaPago);
         $this->em->flush();
 
@@ -220,6 +234,13 @@ class FinanzasService
 
     public function emitirFactura(Factura $factura, \DateTimeInterface $fechaEmision, ?int $diasVencimiento = null): Factura
     {
+        if ($factura->getEstado() !== EstadoFactura::BORRADOR) {
+            throw new \LogicException(sprintf(
+                'Solo se puede emitir una factura en estado Borrador (estado actual: %s).',
+                $factura->getEstado()->etiqueta(),
+            ));
+        }
+
         if ($diasVencimiento === null) {
             $diasVencimiento = $this->configuracionService->get()->getDiasVencimientoFactura();
         }
@@ -235,6 +256,13 @@ class FinanzasService
 
     public function marcarPagadaFactura(Factura $factura, \DateTimeInterface $fechaPago): Factura
     {
+        if ($factura->getEstado() !== EstadoFactura::EMITIDA) {
+            throw new \LogicException(sprintf(
+                'Solo se puede marcar como pagada una factura emitida (estado actual: %s).',
+                $factura->getEstado()->etiqueta(),
+            ));
+        }
+
         $factura->setEstado(EstadoFactura::PAGADA)->setFechaPago($fechaPago);
         $this->em->flush();
 

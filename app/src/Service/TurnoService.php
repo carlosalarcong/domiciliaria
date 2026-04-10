@@ -54,6 +54,41 @@ class TurnoService
     }
 
     /**
+     * Recalcula y aplica el estado correcto del turno según si tiene o no trabajador.
+     *
+     * @throws \DomainException si el trabajador no está activo o tiene conflicto
+     */
+    public function actualizarEstadoSegunTrabajador(Turno $turno): void
+    {
+        if ($turno->getTrabajador() !== null) {
+            $trabajador = $turno->getTrabajador();
+
+            if ($trabajador->getEstado() !== EstadoTrabajador::ACTIVO) {
+                throw new \DomainException(sprintf(
+                    'No se puede asignar el turno: el trabajador %s no está activo (estado: %s).',
+                    $trabajador->getNombreCompleto(),
+                    $trabajador->getEstado()->etiqueta(),
+                ));
+            }
+
+            $this->verificarDisponibilidad(
+                $trabajador,
+                $turno->getFecha(),
+                $turno->getHoraInicio(),
+                $turno->getHoraTermino(),
+            );
+
+            if ($turno->getEstado() === EstadoTurno::DESCUBIERTO) {
+                $turno->setEstado(EstadoTurno::CUBIERTO);
+            }
+        } else {
+            if (in_array($turno->getEstado(), [EstadoTurno::CUBIERTO, EstadoTurno::PARCIAL], true)) {
+                $turno->setEstado(EstadoTurno::DESCUBIERTO);
+            }
+        }
+    }
+
+    /**
      * Verifica que el trabajador no tenga conflicto de horario.
      *
      * @throws \DomainException si hay conflicto
@@ -120,6 +155,13 @@ class TurnoService
 
     public function asignarReemplazo(Turno $turno, Trabajador $reemplazo, MotivoReemplazo $motivo): Turno
     {
+        if (!in_array($turno->getEstado(), [EstadoTurno::DESCUBIERTO, EstadoTurno::CUBIERTO], true)) {
+            throw new \DomainException(sprintf(
+                'No se puede asignar reemplazo a un turno en estado "%s". Solo se permite en turnos Descubiertos o Cubiertos.',
+                $turno->getEstado()->etiqueta(),
+            ));
+        }
+
         if ($reemplazo->getEstado() !== EstadoTrabajador::ACTIVO) {
             throw new \DomainException(sprintf(
                 'No se puede asignar el turno: el trabajador %s no está activo (estado: %s).',
@@ -157,6 +199,28 @@ class TurnoService
             $turno->setRegistroTermino(new \DateTime());
             $turno->setEstado(EstadoTurno::COMPLETADO);
         }
+
+        $this->em->flush();
+
+        return $turno;
+    }
+
+    public function forzarCierreParcial(Turno $turno, User $autor): Turno
+    {
+        if ($turno->getEstado() !== EstadoTurno::PARCIAL) {
+            throw new \LogicException('Solo se puede forzar el cierre de un turno en estado Parcial.');
+        }
+
+        // Combinar la fecha del turno con la hora planificada de término para obtener un datetime completo
+        $terminoDatetime = \DateTime::createFromFormat(
+            'Y-m-d H:i:s',
+            $turno->getFecha()->format('Y-m-d') . ' ' . $turno->getHoraTermino()->format('H:i:s'),
+        );
+        $turno->setRegistroTermino($terminoDatetime)
+            ->setEstado(EstadoTurno::COMPLETADO)
+            ->setObservaciones(
+                trim(($turno->getObservaciones() ?? '') . ' [Cierre forzado por ' . $autor->getNombreCompleto() . ' el ' . (new \DateTime())->format('d/m/Y H:i') . ']')
+            );
 
         $this->em->flush();
 

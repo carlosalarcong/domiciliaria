@@ -105,14 +105,7 @@ class TurnoController extends AbstractController
 
         if ($form->isSubmitted() && $form->isValid()) {
             try {
-                if ($turno->getTrabajador() !== null) {
-                    $this->turnoService->verificarDisponibilidad(
-                        $turno->getTrabajador(),
-                        $turno->getFecha(),
-                        $turno->getHoraInicio(),
-                        $turno->getHoraTermino(),
-                    );
-                }
+                $this->turnoService->actualizarEstadoSegunTrabajador($turno);
                 $this->em->flush();
                 $this->addFlash('success', 'Turno actualizado correctamente.');
 
@@ -166,6 +159,23 @@ class TurnoController extends AbstractController
         try {
             $this->turnoService->registrarAsistencia($turno, $tipo);
             $this->addFlash('success', $tipo === 'inicio' ? 'Turno iniciado.' : 'Turno finalizado.');
+        } catch (\LogicException $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
+
+        return $this->redirectToRoute('app_turno_show', ['id' => $turno->getId()]);
+    }
+
+    #[Route('/{id}/forzar-cierre', name: 'forzar_cierre', methods: ['POST'])]
+    public function forzarCierre(Request $request, Turno $turno): Response
+    {
+        if (!$this->isCsrfTokenValid('forzar_cierre_' . $turno->getId(), $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        try {
+            $this->turnoService->forzarCierreParcial($turno, $this->getUser());
+            $this->addFlash('warning', 'Turno cerrado forzosamente usando hora planificada de término.');
         } catch (\LogicException $e) {
             $this->addFlash('danger', $e->getMessage());
         }

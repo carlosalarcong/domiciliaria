@@ -5,8 +5,10 @@ declare(strict_types=1);
 namespace App\MessageHandler;
 
 use App\Message\TurnoDescubiertoMessage;
+use App\Repository\TurnoRepository;
 use App\Repository\UserRepository;
 use App\Service\NotificacionService;
+use Doctrine\ORM\EntityManagerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;
@@ -18,6 +20,8 @@ final class TurnoDescubiertoHandler
 {
     public function __construct(
         private readonly UserRepository $userRepository,
+        private readonly TurnoRepository $turnoRepository,
+        private readonly EntityManagerInterface $em,
         private readonly MailerInterface $mailer,
         private readonly LoggerInterface $logger,
         private readonly NotificacionService $notificacionService,
@@ -74,6 +78,12 @@ final class TurnoDescubiertoHandler
                     'error'   => $e->getMessage(),
                 ]);
             }
+        }
+
+        $turno = $this->turnoRepository->find($message->turnoId);
+        if ($turno !== null) {
+            $turno->setUltimaAlertaDescubiertoEn(new \DateTimeImmutable());
+            $this->em->flush();
         }
     }
 }
