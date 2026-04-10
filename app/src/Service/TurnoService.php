@@ -8,6 +8,7 @@ use App\Entity\Tenant\Paciente;
 use App\Entity\Tenant\Trabajador;
 use App\Entity\Tenant\Turno;
 use App\Entity\Tenant\User;
+use App\Enum\EstadoPaciente;
 use App\Enum\EstadoTrabajador;
 use App\Enum\EstadoTurno;
 use App\Enum\MotivoReemplazo;
@@ -29,6 +30,14 @@ class TurnoService
     public function crear(Turno $turno, User $creadoPor): Turno
     {
         $turno->setCreadoPor($creadoPor);
+        $paciente = $turno->getPaciente();
+        if ($paciente !== null && $paciente->getEstado() !== EstadoPaciente::ACTIVO) {
+            throw new \DomainException(sprintf(
+                'No se puede crear el turno: el paciente %s no está activo (estado: %s).',
+                $paciente->getNombreCompleto(),
+                $paciente->getEstado()->etiqueta(),
+            ));
+        }
 
         // Si tiene trabajador asignado, queda CUBIERTO; si no, DESCUBIERTO
         if ($turno->getTrabajador() !== null) {
@@ -60,6 +69,15 @@ class TurnoService
      */
     public function actualizarEstadoSegunTrabajador(Turno $turno): void
     {
+        $paciente = $turno->getPaciente();
+        if ($paciente !== null && $paciente->getEstado() !== EstadoPaciente::ACTIVO) {
+            throw new \DomainException(sprintf(
+                'No se puede modificar el turno: el paciente %s no está activo (estado: %s).',
+                $paciente->getNombreCompleto(),
+                $paciente->getEstado()->etiqueta(),
+            ));
+        }
+
         if ($turno->getTrabajador() !== null) {
             $trabajador = $turno->getTrabajador();
 
@@ -190,9 +208,21 @@ class TurnoService
     public function registrarAsistencia(Turno $turno, string $tipo): Turno
     {
         if ($tipo === 'inicio') {
+            if ($turno->getEstado() !== EstadoTurno::CUBIERTO) {
+                throw new \LogicException(sprintf(
+                    'Solo se puede registrar el inicio en un turno Cubierto (estado actual: %s).',
+                    $turno->getEstado()->etiqueta(),
+                ));
+            }
             $turno->setRegistroInicio(new \DateTime());
             $turno->setEstado(EstadoTurno::PARCIAL);
         } elseif ($tipo === 'termino') {
+            if ($turno->getEstado() !== EstadoTurno::PARCIAL) {
+                throw new \LogicException(sprintf(
+                    'Solo se puede registrar el término en un turno Parcial (estado actual: %s).',
+                    $turno->getEstado()->etiqueta(),
+                ));
+            }
             if ($turno->getRegistroInicio() === null) {
                 throw new \LogicException('No se puede registrar el término sin haber registrado el inicio.');
             }

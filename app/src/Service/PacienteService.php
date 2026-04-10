@@ -10,10 +10,12 @@ use App\Entity\Tenant\HistorialComunicacion;
 use App\Entity\Tenant\Paciente;
 use App\Entity\Tenant\User;
 use App\Enum\EstadoPaciente;
+use App\Enum\EstadoTurno;
 use App\Enum\TipoBitacora;
 use App\Enum\TipoComunicacion;
 use App\Message\PacienteEstadoCambioMessage;
 use App\Repository\PacienteRepository;
+use App\Repository\TurnoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 
@@ -22,6 +24,7 @@ class PacienteService
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly PacienteRepository $pacienteRepository,
+        private readonly TurnoRepository $turnoRepository,
         private readonly MessageBusInterface $bus,
     ) {}
 
@@ -66,6 +69,10 @@ class PacienteService
         $paciente->setEstado($nuevoEstado);
         $this->em->flush();
 
+        if ($nuevoEstado !== EstadoPaciente::ACTIVO) {
+            $this->cancelarTurnosFuturos($paciente);
+        }
+
         $this->bus->dispatch(new PacienteEstadoCambioMessage(
             pacienteId:     (string) $paciente->getId(),
             pacienteNombre: $paciente->getNombreCompleto(),
@@ -76,7 +83,7 @@ class PacienteService
         return $paciente;
     }
 
-    public function darDeBaja(Paciente $paciente, User $usuario, string $motivo): Paciente
+    public function darDeBaja(Paciente $paciente, User $usuario, string $motivo): int
     {
         if ($paciente->getEstado() === EstadoPaciente::DADO_DE_BAJA) {
             throw new \LogicException('El paciente ya está dado de baja.');
@@ -96,6 +103,7 @@ class PacienteService
 
         $this->em->persist($entrada);
         $this->em->flush();
+        $turnosCancelados = $this->cancelarTurnosFuturos($paciente);
 
         $this->bus->dispatch(new PacienteEstadoCambioMessage(
             pacienteId:     (string) $paciente->getId(),
@@ -104,7 +112,22 @@ class PacienteService
             estadoNuevo:    EstadoPaciente::DADO_DE_BAJA->value,
         ));
 
-        return $paciente;
+        return $turnosCancelados;
+    }
+
+    public function cancelarTurnosFuturos(Paciente $paciente): int
+    {
+        $turnos = $this->turnoRepository->findFuturosAsignadosDePaciente($paciente);
+
+        foreach ($turnos as $turno) {
+            $turno->setEstado(EstadoTurno::DESCUBIERTO);
+        }
+
+        if (count($turnos) > 0) {
+            $this->em->flush();
+        }
+
+        return count($turnos);
     }
 
     public function agregarBitacora(Paciente $paciente, TipoBitacora $tipo, string $descripcion, User $usuario): BitacoraOperativa

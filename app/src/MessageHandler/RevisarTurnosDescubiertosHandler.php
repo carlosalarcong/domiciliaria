@@ -6,6 +6,7 @@ namespace App\MessageHandler;
 
 use App\Message\RevisarTurnosDescubiertosMessage;
 use App\Message\TurnoDescubiertoMessage;
+use App\Message\TurnoParcialVencidoMessage;
 use App\Repository\TurnoRepository;
 use App\Service\ConfiguracionService;
 use Psr\Log\LoggerInterface;
@@ -46,6 +47,18 @@ final class RevisarTurnosDescubiertosHandler
                 pacienteNombre: $turno->getPaciente()?->getNombreCompleto() ?? 'Desconocido',
                 fecha:          $turno->getFecha()->format('d/m/Y'),
                 tipoTurno:      $turno->getTipoTurno()->etiqueta(),
+            ));
+        }
+
+        $parcialesVencidos = $this->turnoRepository->findParcialesVencidos(26);
+
+        foreach ($parcialesVencidos as $turno) {
+            $this->bus->dispatch(new TurnoParcialVencidoMessage(
+                turnoId:         (string) $turno->getId(),
+                pacienteNombre:  $turno->getPaciente()?->getNombreCompleto() ?? 'Desconocido',
+                trabajadorNombre: $turno->getTrabajador()?->getNombreCompleto() ?? 'Sin asignar',
+                fecha:           $turno->getFecha()?->format('d/m/Y') ?? '—',
+                tipoTurno:       $turno->getTipoTurno()->etiqueta(),
             ));
         }
     }
