@@ -10,15 +10,18 @@ use App\Entity\Tenant\Trabajador;
 use App\Entity\Tenant\User;
 use App\Enum\EstadoTurno;
 use App\Enum\TipoDocumento;
+use App\Message\TurnoDescubiertoMessage;
 use App\Repository\TurnoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\File\UploadedFile;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 class TrabajadorService
 {
     public function __construct(
         private readonly EntityManagerInterface $em,
         private readonly TurnoRepository $turnoRepository,
+        private readonly MessageBusInterface $bus,
         private readonly string $uploadDir,
     ) {}
 
@@ -96,6 +99,15 @@ class TrabajadorService
 
         if (count($turnos) > 0) {
             $this->em->flush();
+
+            foreach ($turnos as $turno) {
+                $this->bus->dispatch(new TurnoDescubiertoMessage(
+                    turnoId:        (string) $turno->getId(),
+                    pacienteNombre: $turno->getPaciente()?->getNombreCompleto() ?? 'Desconocido',
+                    fecha:          $turno->getFecha()?->format('d/m/Y') ?? '—',
+                    tipoTurno:      $turno->getTipoTurno()->etiqueta(),
+                ));
+            }
         }
 
         return count($turnos);
