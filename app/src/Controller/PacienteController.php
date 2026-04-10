@@ -217,8 +217,17 @@ class PacienteController extends AbstractController
         $motivo = $request->getPayload()->getString('motivo', 'Sin especificar');
 
         try {
-            $this->pacienteService->darDeBaja($paciente, $this->getUser(), $motivo);
+            $turnosCancelados = $this->pacienteService->darDeBaja($paciente, $this->getUser(), $motivo);
             $this->addFlash('success', 'Paciente dado de baja correctamente.');
+            if ($turnosCancelados > 0) {
+                $this->addFlash(
+                    'warning',
+                    sprintf(
+                        'Se marcaron %d turno(s) futuro(s) como descubiertos porque el paciente ya no está activo.',
+                        $turnosCancelados,
+                    )
+                );
+            }
         } catch (\LogicException $e) {
             $this->addFlash('warning', $e->getMessage());
         }

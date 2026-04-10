@@ -117,6 +117,20 @@ class TurnoRepository extends ServiceEntityRepository
     }
 
     /** @return Turno[] */
+    public function findFuturosAsignadosDePaciente(Paciente $paciente): array
+    {
+        return $this->createQueryBuilder('t')
+            ->where('t.paciente = :paciente')
+            ->andWhere('t.fecha >= :hoy')
+            ->andWhere('t.estado IN (:estados)')
+            ->setParameter('paciente', $paciente)
+            ->setParameter('hoy', new \DateTime('today'))
+            ->setParameter('estados', [EstadoTurno::CUBIERTO, EstadoTurno::PARCIAL])
+            ->getQuery()
+            ->getResult();
+    }
+
+    /** @return Turno[] */
     public function findByTrabajadorYRango(Trabajador $trabajador, \DateTimeInterface $desde, \DateTimeInterface $hasta): array
     {
         return $this->createQueryBuilder('t')
