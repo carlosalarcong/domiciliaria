@@ -65,6 +65,27 @@ services:
       TENANT_DB_HOST: "postgres"
       MAILER_DSN: "smtp://mailpit:1025"
 
+  php-scheduler:
+    build:
+      context: .
+      dockerfile: docker/php/Dockerfile
+    command: php /var/www/html/app/bin/console messenger:consume scheduler_turnos scheduler_facturas_vencidas scheduler_backup scheduler_turnos_parciales_vencidos --time-limit=3600 --memory-limit=128M -vv
+    restart: unless-stopped
+    volumes:
+      - .:/var/www/html:cached
+    depends_on:
+      - postgres
+      - redis
+      - mailpit
+    environment:
+      APP_ENV: dev
+      DATABASE_URL: "postgresql://app:secret@postgres:5432/domiciliaria?serverVersion=16&charset=utf8"
+      REDIS_URL: "redis://redis:6379"
+      TENANT_DB_USER: "app"
+      TENANT_DB_PASSWORD: "secret"
+      TENANT_DB_HOST: "postgres"
+      MAILER_DSN: "smtp://mailpit:1025"
+
   mailpit:
     image: axllent/mailpit:latest
     ports:
