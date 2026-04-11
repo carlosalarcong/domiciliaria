@@ -108,10 +108,11 @@ class TurnoRepository extends ServiceEntityRepository
         return $this->createQueryBuilder('t')
             ->where('t.trabajador = :trabajador')
             ->andWhere('t.fecha >= :hoy')
-            ->andWhere('t.estado IN (:estados)')
+            ->andWhere('(t.estado = :cubierto) OR (t.estado = :parcial AND t.registroInicio IS NULL)')
             ->setParameter('trabajador', $trabajador)
             ->setParameter('hoy', new \DateTime('today'))
-            ->setParameter('estados', [EstadoTurno::CUBIERTO, EstadoTurno::PARCIAL])
+            ->setParameter('cubierto', EstadoTurno::CUBIERTO)
+            ->setParameter('parcial', EstadoTurno::PARCIAL)
             ->getQuery()
             ->getResult();
     }
