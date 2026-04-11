@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Controller;
+namespace App\Controller\Default;
 
 use App\Entity\Tenant\DisponibilidadTrabajador;
 use App\Entity\Tenant\DocumentoTrabajador;

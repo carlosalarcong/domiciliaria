@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Controller;
+namespace App\Controller\Default;
 
 use App\Repository\Tenant\EventoAdversoRepository;
 use App\Repository\Tenant\FacturaRepository;
