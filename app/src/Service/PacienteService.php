@@ -54,7 +54,7 @@ class PacienteService
         $this->em->flush();
     }
 
-    public function actualizarEstado(Paciente $paciente, EstadoPaciente $nuevoEstado): Paciente
+    public function actualizarEstado(Paciente $paciente, EstadoPaciente $nuevoEstado, ?User $usuario = null): Paciente
     {
         $estadoAnterior = $paciente->getEstado();
 
@@ -68,6 +68,33 @@ class PacienteService
         }
 
         $paciente->setEstado($nuevoEstado);
+
+        if ($usuario === null) {
+            throw new \LogicException('Se requiere un usuario para registrar bitácora al cambiar estado del paciente.');
+        }
+
+        $descripcion = match ($nuevoEstado) {
+            EstadoPaciente::DADO_DE_BAJA => sprintf(
+                'Paciente dado de baja. Estado anterior: %s.',
+                $estadoAnterior->etiqueta(),
+            ),
+            EstadoPaciente::SUSPENDIDO => sprintf(
+                'Paciente suspendido. Estado anterior: %s.',
+                $estadoAnterior->etiqueta(),
+            ),
+            EstadoPaciente::ACTIVO => sprintf(
+                'Paciente reactivado. Estado anterior: %s.',
+                $estadoAnterior->etiqueta(),
+            ),
+        };
+
+        $entrada = new BitacoraOperativa();
+        $entrada->setPaciente($paciente)
+            ->setTipo(TipoBitacora::NOVEDAD)
+            ->setDescripcion($descripcion)
+            ->setCreadoPor($usuario);
+        $this->em->persist($entrada);
+
         $this->em->flush();
 
         if ($nuevoEstado !== EstadoPaciente::ACTIVO) {
