@@ -106,9 +106,10 @@ services:
     App\EventSubscriber\DynamicControllerSubscriber:
         arguments:
             $tenantContext:       '@App\Service\TenantContext'
+            $controllerResolver:  '@App\Service\DynamicControllerResolver'
             $logger:              '@logger'
             $excludedControllers: []
-            $excludedNamespaces:  []
+            $excludedNamespaces:  ['App\Controller\Api\\']
         tags:
             - { name: kernel.event_subscriber }
 
