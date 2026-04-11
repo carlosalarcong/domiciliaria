@@ -16,12 +16,30 @@
         </a>
         <form method="post" action="{{ path('app_trabajador_toggle_estado', {id: trabajador.id}) }}">
             <input type="hidden" name="_token" value="{{ csrf_token('toggle_estado_' ~ trabajador.id) }}">
-            <button type="submit" class="btn btn-outline-{{ trabajador.estado.value == 'ACTIVO' ? 'warning' : 'success' }} btn-sm"
-                    onclick="return confirm('¿Confirmas el cambio de estado?')">
-                <i class="bi bi-{{ trabajador.estado.value == 'ACTIVO' ? 'pause' : 'play' }}-circle me-1"></i>
-                {{ trabajador.estado.value == 'ACTIVO' ? 'Desactivar' : 'Activar' }}
+            {% if trabajador.estado.value == 'ACTIVO' %}
+                <input type="hidden" name="nuevo_estado" value="INACTIVO">
+                <button type="submit" class="btn btn-outline-danger btn-sm"
+                        onclick="return confirm('¿Confirmas el cambio de estado?')">
+                    <i class="bi bi-person-x me-1"></i>Inactivar
+                </button>
+            {% else %}
+                <input type="hidden" name="nuevo_estado" value="ACTIVO">
+                <button type="submit" class="btn btn-outline-success btn-sm"
+                        onclick="return confirm('¿Confirmas el cambio de estado?')">
+                    <i class="bi bi-person-check me-1"></i>Reactivar
+                </button>
+            {% endif %}
+        </form>
+        {% if trabajador.estado.value == 'ACTIVO' %}
+        <form method="post" action="{{ path('app_trabajador_toggle_estado', {id: trabajador.id}) }}">
+            <input type="hidden" name="_token" value="{{ csrf_token('toggle_estado_' ~ trabajador.id) }}">
+            <input type="hidden" name="nuevo_estado" value="SUSPENDIDO">
+            <button type="submit" class="btn btn-outline-warning btn-sm"
+                    onclick="return confirm('¿Confirmas suspender temporalmente al trabajador?')">
+                <i class="bi bi-pause-circle me-1"></i>Suspender
             </button>
         </form>
+        {% endif %}
     </div>
     {% endif %}
 </div>

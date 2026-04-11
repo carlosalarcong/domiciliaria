@@ -141,9 +141,11 @@ class TrabajadorController extends AbstractController
             throw $this->createAccessDeniedException();
         }
 
-        $nuevoEstado = $trabajador->getEstado() === EstadoTrabajador::ACTIVO
-            ? EstadoTrabajador::INACTIVO
-            : EstadoTrabajador::ACTIVO;
+        $estadoParam = $request->request->get('nuevo_estado');
+        $nuevoEstado = EstadoTrabajador::tryFrom($estadoParam ?? '')
+            ?? ($trabajador->getEstado() === EstadoTrabajador::ACTIVO
+                ? EstadoTrabajador::INACTIVO
+                : EstadoTrabajador::ACTIVO);
 
         try {
             if (in_array($nuevoEstado, [EstadoTrabajador::INACTIVO, EstadoTrabajador::SUSPENDIDO], true)) {
