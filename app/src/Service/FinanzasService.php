@@ -61,6 +61,12 @@ class FinanzasService
             }
 
             if ($liquidacion->getEstado() === EstadoLiquidacion::ANULADA) {
+                if ($liquidacion->isFuePagada()) {
+                    throw new \LogicException(
+                        'No se puede regenerar esta liquidación: fue pagada previamente. ' .
+                        'Crea una nueva liquidación de ajuste si es necesario.'
+                    );
+                }
                 $liquidacion->setEstado(EstadoLiquidacion::BORRADOR)
                     ->setMotivoAnulacion(null);
             }
@@ -170,7 +176,9 @@ class FinanzasService
             throw new \LogicException('La fecha de pago no puede ser una fecha futura.');
         }
 
-        $liquidacion->setEstado(EstadoLiquidacion::PAGADA)->setFechaPago($fechaPago);
+        $liquidacion->setEstado(EstadoLiquidacion::PAGADA)
+            ->setFechaPago($fechaPago)
+            ->setFuePagada(true);
         $this->em->flush();
 
         return $liquidacion;

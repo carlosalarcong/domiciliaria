@@ -57,6 +57,9 @@ class LiquidacionMensual
     #[ORM\Column(type: 'date', nullable: true)]
     private ?\DateTimeInterface $fechaPago = null;
 
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $fuePagada = false;
+
     #[ORM\Column(type: 'datetime_immutable')]
     #[Gedmo\Timestampable(on: 'create')]
     private ?\DateTimeImmutable $creadoEn = null;
@@ -110,6 +113,8 @@ class LiquidacionMensual
 
     public function getFechaPago(): ?\DateTimeInterface { return $this->fechaPago; }
     public function setFechaPago(?\DateTimeInterface $f): static { $this->fechaPago = $f; return $this; }
+    public function isFuePagada(): bool { return $this->fuePagada; }
+    public function setFuePagada(bool $v): static { $this->fuePagada = $v; return $this; }
 
     public function getCreadoEn(): ?\DateTimeImmutable { return $this->creadoEn; }
     public function getCreadoPor(): ?User { return $this->creadoPor; }
