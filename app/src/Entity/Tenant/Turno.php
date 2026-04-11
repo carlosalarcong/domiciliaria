@@ -17,6 +17,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: TurnoRepository::class)]
 #[ORM\Table(name: 'turnos')]
 #[Gedmo\Loggable(logEntryClass: LogEntry::class)]
+#[Assert\Expression(
+    expression: 'this.getHoraTermino() === null or this.getHoraInicio() === null or this.getHoraTermino() > this.getHoraInicio()',
+    message: 'La hora de término debe ser posterior a la hora de inicio.',
+)]
 class Turno
 {
     #[ORM\Id]

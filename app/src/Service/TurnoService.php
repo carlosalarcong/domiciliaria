@@ -31,6 +31,14 @@ class TurnoService
     public function crear(Turno $turno, User $creadoPor): Turno
     {
         $turno->setCreadoPor($creadoPor);
+        if ($turno->getHoraInicio() !== null && $turno->getHoraTermino() !== null) {
+            if ($turno->getHoraTermino() <= $turno->getHoraInicio()) {
+                throw new \DomainException(
+                    'La hora de término debe ser posterior a la hora de inicio.'
+                );
+            }
+        }
+
         $paciente = $turno->getPaciente();
         if ($paciente !== null && $paciente->getEstado() !== EstadoPaciente::ACTIVO) {
             $razon = $paciente->getEstado() === EstadoPaciente::SUSPENDIDO
@@ -77,6 +85,13 @@ class TurnoService
             throw new \DomainException(
                 'No se puede modificar un turno completado. Si necesitas corregirlo, contacta al administrador.'
             );
+        }
+        if ($turno->getHoraInicio() !== null && $turno->getHoraTermino() !== null) {
+            if ($turno->getHoraTermino() <= $turno->getHoraInicio()) {
+                throw new \DomainException(
+                    'La hora de término debe ser posterior a la hora de inicio.'
+                );
+            }
         }
 
         $paciente = $turno->getPaciente();
