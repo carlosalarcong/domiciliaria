@@ -91,6 +91,20 @@ class FinanzasService
         $hasta  = (clone $desde)->modify('last day of this month');
         $turnos = $this->turnoRepository->findByTrabajadorYRango($trabajador, $desde, $hasta);
 
+        $turnosParciales = array_filter(
+            $turnos,
+            fn(Turno $t) => $t->getEstado() === EstadoTurno::PARCIAL,
+        );
+
+        if (count($turnosParciales) > 0) {
+            throw new \LogicException(sprintf(
+                'No se puede generar la liquidación: hay %d turno(s) en estado Parcial dentro del período (%s/%s). Espera a que el sistema los cierre automáticamente o fuerza el cierre manualmente antes de liquidar.',
+                count($turnosParciales),
+                str_pad((string) $mes, 2, '0', STR_PAD_LEFT),
+                $anio,
+            ));
+        }
+
         $montoTotal  = 0.0;
         $totalTurnos = 0;
         $totalHoras  = 0.0;
