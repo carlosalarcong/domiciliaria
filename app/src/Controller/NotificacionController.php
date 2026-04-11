@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\Tenant\Notificacion;
-use App\Repository\NotificacionRepository;
+use App\Repository\Tenant\NotificacionRepository;
 use App\Service\NotificacionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;

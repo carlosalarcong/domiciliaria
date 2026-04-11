@@ -6,8 +6,8 @@ namespace App\Service;
 
 use App\Entity\Tenant\Mandante;
 use App\Enum\EstadoPaciente;
-use App\Repository\MandanteRepository;
-use App\Repository\PacienteRepository;
+use App\Repository\Tenant\MandanteRepository;
+use App\Repository\Tenant\PacienteRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class MandanteService

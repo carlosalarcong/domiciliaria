@@ -6,8 +6,8 @@ namespace App\Controller;
 
 use App\Entity\Tenant\Trabajador;
 use App\Entity\Tenant\Turno;
-use App\Repository\TrabajadorRepository;
-use App\Repository\TurnoRepository;
+use App\Repository\Tenant\TrabajadorRepository;
+use App\Repository\Tenant\TurnoRepository;
 use App\Service\TurnoService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;

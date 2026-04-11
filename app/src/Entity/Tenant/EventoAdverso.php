@@ -8,7 +8,7 @@ use App\Entity\Tenant\Log\LogEntry;
 use App\Enum\EstadoEvento;
 use App\Enum\GravedadEvento;
 use App\Enum\TipoEventoAdverso;
-use App\Repository\EventoAdversoRepository;
+use App\Repository\Tenant\EventoAdversoRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;

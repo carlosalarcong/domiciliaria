@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Repository;
+namespace App\Repository\Tenant;
 
 use App\Entity\Tenant\LiquidacionMensual;
 use App\Entity\Tenant\Trabajador;

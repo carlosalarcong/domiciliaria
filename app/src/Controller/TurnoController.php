@@ -7,7 +7,7 @@ namespace App\Controller;
 use App\Entity\Tenant\Turno;
 use App\Form\ReemplazoType;
 use App\Form\TurnoType;
-use App\Repository\TurnoRepository;
+use App\Repository\Tenant\TurnoRepository;
 use App\Service\ExportService;
 use App\Service\TurnoService;
 use Doctrine\ORM\EntityManagerInterface;

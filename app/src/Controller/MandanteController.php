@@ -6,7 +6,7 @@ namespace App\Controller;
 
 use App\Entity\Tenant\Mandante;
 use App\Form\MandanteType;
-use App\Repository\MandanteRepository;
+use App\Repository\Tenant\MandanteRepository;
 use App\Service\MandanteService;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;

@@ -6,7 +6,7 @@ namespace App\Command;
 
 use App\Entity\Main\TenantDb;
 use App\Enum\EstadoTurno;
-use App\Repository\TurnoRepository;
+use App\Repository\Tenant\TurnoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Hakam\MultiTenancyBundle\Event\SwitchDbEvent;
 use Symfony\Component\Console\Attribute\AsCommand;

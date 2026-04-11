@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Entity\Tenant;
 
 use App\Entity\Tenant\Log\LogEntry;
-use App\Repository\UserRepository;
+use App\Repository\Tenant\UserRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Scheb\TwoFactorBundle\Model\BackupCodeInterface;

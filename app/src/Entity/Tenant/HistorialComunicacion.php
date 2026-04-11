@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Entity\Tenant;
 
 use App\Enum\TipoComunicacion;
-use App\Repository\HistorialComunicacionRepository;
+use App\Repository\Tenant\HistorialComunicacionRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 

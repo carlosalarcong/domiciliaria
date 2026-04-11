@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Entity\Tenant;
 
 use App\Enum\TipoBitacora;
-use App\Repository\BitacoraOperativaRepository;
+use App\Repository\Tenant\BitacoraOperativaRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 

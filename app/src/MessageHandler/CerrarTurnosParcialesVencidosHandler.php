@@ -7,7 +7,7 @@ namespace App\MessageHandler;
 use App\Entity\Main\TenantDb;
 use App\Enum\EstadoTurno;
 use App\Message\CerrarTurnosParcialesVencidosMessage;
-use App\Repository\TurnoRepository;
+use App\Repository\Tenant\TurnoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Hakam\MultiTenancyBundle\Event\SwitchDbEvent;
 use Psr\Log\LoggerInterface;
