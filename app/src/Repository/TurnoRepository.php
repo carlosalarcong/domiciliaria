@@ -333,11 +333,11 @@ class TurnoRepository extends ServiceEntityRepository
         $turnos = $this->createQueryBuilder('t')
             ->where('t.trabajador = :trabajador')
             ->andWhere('t.fecha BETWEEN :desde AND :hasta')
-            ->andWhere('t.estado != :desc')
+            ->andWhere('t.estado = :completado')
             ->setParameter('trabajador', $trabajador)
             ->setParameter('desde', $desde)
             ->setParameter('hasta', $hasta)
-            ->setParameter('desc', EstadoTurno::DESCUBIERTO)
+            ->setParameter('completado', EstadoTurno::COMPLETADO)
             ->orderBy('t.fecha', 'DESC')
             ->getQuery()
             ->getResult();
