@@ -350,12 +350,29 @@ class TurnoRepository extends ServiceEntityRepository
                 $resumen[$key] = ['anio_mes' => $key, 'total_turnos' => 0, 'total_horas' => 0];
             }
             $resumen[$key]['total_turnos']++;
-            $resumen[$key]['total_horas'] += $turno->getTipoTurno()->duracionHoras();
+            $resumen[$key]['total_horas'] += $this->calcularHorasEfectivasTurno($turno);
         }
 
         // Ordenar descendente por mes
         krsort($resumen);
 
         return array_values($resumen);
+    }
+
+    private function calcularHorasEfectivasTurno(Turno $turno): float
+    {
+        $inicio  = $turno->getRegistroInicio();
+        $termino = $turno->getRegistroTermino();
+
+        if ($inicio !== null && $termino !== null) {
+            $minutos = ($termino->getTimestamp() - $inicio->getTimestamp()) / 60;
+            if ($minutos < 0) {
+                $minutos += 1440; // turno nocturno
+            }
+
+            return round($minutos / 60, 2);
+        }
+
+        return (float) $turno->getTipoTurno()->duracionHoras();
     }
 }
