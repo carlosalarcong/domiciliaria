@@ -1,7 +1,13 @@
-controllers:
+controllers_default:
     resource:
-        path: ../src/Controller/
-        namespace: App\Controller
+        path: ../src/Controller/Default/
+        namespace: App\Controller\Default
+    type: attribute
+
+controllers_api:
+    resource:
+        path: ../src/Controller/Default/Api/
+        namespace: App\Controller\Default\Api
     type: attribute
 
 # 2FA routes requeridas por scheb/2fa-bundle

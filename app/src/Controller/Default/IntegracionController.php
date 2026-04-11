@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Controller;
+namespace App\Controller\Default;
 
 use App\Entity\Tenant\WebhookDelivery;
 use App\Entity\Tenant\WebhookSuscripcion;

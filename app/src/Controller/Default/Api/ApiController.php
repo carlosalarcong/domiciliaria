@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Controller\Api;
+namespace App\Controller\Default\Api;
 
 use App\Enum\EstadoFactura;
 use App\Repository\Tenant\FacturaRepository;
