@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Command;
 
 use App\Message\DocumentoVencimientoMessage;
-use App\Repository\DocumentoTrabajadorRepository;
+use App\Repository\Tenant\DocumentoTrabajadorRepository;
 use Symfony\Component\Console\Attribute\AsCommand;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;

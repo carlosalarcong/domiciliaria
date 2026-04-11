@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Entity\Tenant;
 
 use App\Enum\TipoConcepto;
-use App\Repository\ItemLiquidacionRepository;
+use App\Repository\Tenant\ItemLiquidacionRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: ItemLiquidacionRepository::class)]

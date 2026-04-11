@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Scheduler;
 
 use App\Message\RevisarTurnosDescubiertosMessage;
-use App\Repository\TurnoRepository;
+use App\Repository\Tenant\TurnoRepository;
 use Symfony\Component\Scheduler\Attribute\AsSchedule;
 use Symfony\Component\Scheduler\RecurringMessage;
 use Symfony\Component\Scheduler\Schedule;

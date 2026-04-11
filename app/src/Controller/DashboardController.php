@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Controller;
 
-use App\Repository\EventoAdversoRepository;
-use App\Repository\FacturaRepository;
-use App\Repository\PacienteRepository;
-use App\Repository\TrabajadorRepository;
-use App\Repository\TurnoRepository;
+use App\Repository\Tenant\EventoAdversoRepository;
+use App\Repository\Tenant\FacturaRepository;
+use App\Repository\Tenant\PacienteRepository;
+use App\Repository\Tenant\TrabajadorRepository;
+use App\Repository\Tenant\TurnoRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Routing\Attribute\Route;

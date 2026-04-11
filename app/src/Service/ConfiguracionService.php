@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Service;
 
 use App\Entity\Tenant\ConfiguracionClinica;
-use App\Repository\ConfiguracionClinicaRepository;
+use App\Repository\Tenant\ConfiguracionClinicaRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\DependencyInjection\Attribute\Autowire;
 

@@ -8,7 +8,7 @@ use App\Entity\Tenant\Log\LogEntry;
 use App\Enum\EstadoTurno;
 use App\Enum\MotivoReemplazo;
 use App\Enum\TipoTurno;
-use App\Repository\TurnoRepository;
+use App\Repository\Tenant\TurnoRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Symfony\Component\Uid\Uuid;

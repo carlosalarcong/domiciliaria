@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Entity\Tenant;
 
 use App\Enum\TipoDocumento;
-use App\Repository\DocumentoTrabajadorRepository;
+use App\Repository\Tenant\DocumentoTrabajadorRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Gedmo\Mapping\Annotation as Gedmo;
 use Symfony\Component\Uid\Uuid;

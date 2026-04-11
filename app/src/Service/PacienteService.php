@@ -15,8 +15,8 @@ use App\Enum\TipoBitacora;
 use App\Enum\TipoComunicacion;
 use App\Message\PacienteEstadoCambioMessage;
 use App\Message\TurnoDescubiertoMessage;
-use App\Repository\PacienteRepository;
-use App\Repository\TurnoRepository;
+use App\Repository\Tenant\PacienteRepository;
+use App\Repository\Tenant\TurnoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 

@@ -11,9 +11,9 @@ use App\Enum\EstadoPaciente;
 use App\Enum\EstadoTrabajador;
 use App\Enum\PerfilTrabajador;
 use App\Enum\TipoServicio;
-use App\Repository\MandanteRepository;
-use App\Repository\PacienteRepository;
-use App\Repository\TrabajadorRepository;
+use App\Repository\Tenant\MandanteRepository;
+use App\Repository\Tenant\PacienteRepository;
+use App\Repository\Tenant\TrabajadorRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class ImportService
