@@ -125,6 +125,11 @@ class TurnoService
                 $turno->getId(),
             );
 
+            if ($turno->isEsReemplazo()) {
+                $turno->setEsReemplazo(false)
+                    ->setMotivoReemplazo(null);
+            }
+
             if ($turno->getEstado() === EstadoTurno::DESCUBIERTO) {
                 $turno->setEstado(EstadoTurno::CUBIERTO);
             }
