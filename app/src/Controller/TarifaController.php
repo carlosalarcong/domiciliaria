@@ -57,6 +57,11 @@ class TarifaController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            if ($tarifa->getVigenciaHasta() !== null && $tarifa->getVigenciaHasta() < $tarifa->getVigenciaDesde()) {
+                $this->addFlash('danger', 'La fecha de fin de vigencia debe ser igual o posterior a la fecha de inicio.');
+                return $this->render('tarifa/new.html.twig', ['form' => $form]);
+            }
+
             $solapada = $this->tarifaRepository->findSolapada(
                 concepto:      $tarifa->getTipoConcepto(),
                 vigenciaDesde: $tarifa->getVigenciaDesde(),
@@ -94,6 +99,14 @@ class TarifaController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            if ($tarifa->getVigenciaHasta() !== null && $tarifa->getVigenciaHasta() < $tarifa->getVigenciaDesde()) {
+                $this->addFlash('danger', 'La fecha de fin de vigencia debe ser igual o posterior a la fecha de inicio.');
+                return $this->render('tarifa/edit.html.twig', [
+                    'form' => $form,
+                    'tarifa' => $tarifa,
+                ]);
+            }
+
             $solapada = $this->tarifaRepository->findSolapada(
                 concepto:      $tarifa->getTipoConcepto(),
                 vigenciaDesde: $tarifa->getVigenciaDesde(),

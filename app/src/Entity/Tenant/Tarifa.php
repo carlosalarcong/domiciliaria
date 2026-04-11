@@ -13,6 +13,10 @@ use Symfony\Component\Validator\Constraints as Assert;
 #[ORM\Entity(repositoryClass: TarifaRepository::class)]
 #[ORM\Table(name: 'tarifas')]
 #[ORM\Index(columns: ['mandante_id', 'tipo_concepto', 'vigencia_desde'], name: 'idx_tarifa_lookup')]
+#[Assert\Expression(
+    expression: 'this.getVigenciaHasta() === null or this.getVigenciaHasta() >= this.getVigenciaDesde()',
+    message: 'La fecha de fin de vigencia debe ser igual o posterior a la fecha de inicio.',
+)]
 class Tarifa
 {
     #[ORM\Id]
