@@ -14,6 +14,7 @@ use App\Enum\EstadoTurno;
 use App\Enum\TipoBitacora;
 use App\Enum\TipoComunicacion;
 use App\Message\PacienteEstadoCambioMessage;
+use App\Message\TurnoDescubiertoMessage;
 use App\Repository\PacienteRepository;
 use App\Repository\TurnoRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -53,7 +54,7 @@ class PacienteService
         $this->em->flush();
     }
 
-    public function actualizarEstado(Paciente $paciente, EstadoPaciente $nuevoEstado): Paciente
+    public function actualizarEstado(Paciente $paciente, EstadoPaciente $nuevoEstado, User $usuario): Paciente
     {
         $estadoAnterior = $paciente->getEstado();
 
@@ -67,6 +68,29 @@ class PacienteService
         }
 
         $paciente->setEstado($nuevoEstado);
+
+        $descripcion = match ($nuevoEstado) {
+            EstadoPaciente::DADO_DE_BAJA => sprintf(
+                'Paciente dado de baja. Estado anterior: %s.',
+                $estadoAnterior->etiqueta(),
+            ),
+            EstadoPaciente::SUSPENDIDO => sprintf(
+                'Paciente suspendido. Estado anterior: %s.',
+                $estadoAnterior->etiqueta(),
+            ),
+            EstadoPaciente::ACTIVO => sprintf(
+                'Paciente reactivado. Estado anterior: %s.',
+                $estadoAnterior->etiqueta(),
+            ),
+        };
+
+        $entrada = new BitacoraOperativa();
+        $entrada->setPaciente($paciente)
+            ->setTipo(TipoBitacora::NOVEDAD)
+            ->setDescripcion($descripcion)
+            ->setCreadoPor($usuario);
+        $this->em->persist($entrada);
+
         $this->em->flush();
 
         if ($nuevoEstado !== EstadoPaciente::ACTIVO) {
@@ -120,11 +144,21 @@ class PacienteService
         $turnos = $this->turnoRepository->findFuturosAsignadosDePaciente($paciente);
 
         foreach ($turnos as $turno) {
+            $turno->setTrabajador(null);
             $turno->setEstado(EstadoTurno::DESCUBIERTO);
         }
 
         if (count($turnos) > 0) {
             $this->em->flush();
+
+            foreach ($turnos as $turno) {
+                $this->bus->dispatch(new TurnoDescubiertoMessage(
+                    turnoId:        (string) $turno->getId(),
+                    pacienteNombre: $paciente->getNombreCompleto(),
+                    fecha:          $turno->getFecha()?->format('d/m/Y') ?? '—',
+                    tipoTurno:      $turno->getTipoTurno()->etiqueta(),
+                ));
+            }
         }
 
         return count($turnos);

@@ -82,8 +82,13 @@ class MandanteController extends AbstractController
             return $this->redirectToRoute('app_mandante_index');
         }
 
-        $this->mandanteService->toggleActivo($mandante);
-        $this->addFlash('success', 'Estado del mandante actualizado.');
+        try {
+            $this->mandanteService->toggleActivo($mandante);
+            $this->addFlash('success', 'Estado del mandante actualizado.');
+        } catch (\DomainException $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
+
         return $this->redirectToRoute('app_mandante_index');
     }
 }

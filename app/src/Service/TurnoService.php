@@ -17,6 +17,7 @@ use App\Repository\DisponibilidadTrabajadorRepository;
 use App\Repository\TurnoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
+use Symfony\Component\Uid\Uuid;
 
 class TurnoService
 {
@@ -106,6 +107,7 @@ class TurnoService
                 $turno->getFecha(),
                 $turno->getHoraInicio(),
                 $turno->getHoraTermino(),
+                $turno->getId(),
             );
 
             if ($turno->getEstado() === EstadoTurno::DESCUBIERTO) {
@@ -128,6 +130,7 @@ class TurnoService
         \DateTimeInterface $fecha,
         \DateTimeInterface $horaInicio,
         \DateTimeInterface $horaTermino,
+        ?Uuid $excludeId = null,
     ): void {
         $disponibilidad = $this->disponibilidadRepository->findByTrabajadorYFecha($trabajador, $fecha);
 
@@ -163,6 +166,10 @@ class TurnoService
         $turnosExistentes = $this->turnoRepository->findByTrabajadorYFecha($trabajador, $fecha);
 
         foreach ($turnosExistentes as $existente) {
+            if ($excludeId !== null && $existente->getId()?->equals($excludeId)) {
+                continue;
+            }
+
             if ($existente->getEstado() === EstadoTurno::DESCUBIERTO) {
                 continue;
             }
@@ -185,6 +192,18 @@ class TurnoService
 
     public function asignarReemplazo(Turno $turno, Trabajador $reemplazo, MotivoReemplazo $motivo): Turno
     {
+        $paciente = $turno->getPaciente();
+        if ($paciente !== null && $paciente->getEstado() !== EstadoPaciente::ACTIVO) {
+            $razon = $paciente->getEstado() === EstadoPaciente::SUSPENDIDO
+                ? 'El paciente está suspendido temporalmente.'
+                : 'El paciente está dado de baja.';
+            throw new \DomainException(sprintf(
+                'No se puede asignar reemplazo: %s (Paciente: %s)',
+                $razon,
+                $paciente->getNombreCompleto(),
+            ));
+        }
+
         if (!in_array($turno->getEstado(), [EstadoTurno::DESCUBIERTO, EstadoTurno::CUBIERTO], true)) {
             throw new \DomainException(sprintf(
                 'No se puede asignar reemplazo a un turno en estado "%s". Solo se permite en turnos Descubiertos o Cubiertos.',
