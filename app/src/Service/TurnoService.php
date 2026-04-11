@@ -258,6 +258,20 @@ class TurnoService
 
     public function registrarAsistencia(Turno $turno, string $tipo): Turno
     {
+        $fechaTurno = $turno->getFecha();
+        if ($fechaTurno !== null) {
+            $hoy    = new \DateTime('today');
+            $ayer   = new \DateTime('yesterday');
+            $manana = new \DateTime('tomorrow');
+
+            if ($fechaTurno < $ayer || $fechaTurno > $manana) {
+                throw new \LogicException(sprintf(
+                    'Solo se puede registrar asistencia en turnos del día actual o adyacentes (turno del %s).',
+                    $fechaTurno->format('d/m/Y'),
+                ));
+            }
+        }
+
         if ($tipo === 'inicio') {
             if ($turno->getEstado() !== EstadoTurno::CUBIERTO) {
                 throw new \LogicException(sprintf(
