@@ -57,6 +57,24 @@ class TarifaController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $solapada = $this->tarifaRepository->findSolapada(
+                concepto:      $tarifa->getTipoConcepto(),
+                vigenciaDesde: $tarifa->getVigenciaDesde(),
+                vigenciaHasta: $tarifa->getVigenciaHasta(),
+                mandante:      $tarifa->getMandante(),
+            );
+
+            if ($solapada !== null) {
+                $this->addFlash('danger', sprintf(
+                    'Ya existe una tarifa activa para "%s"%s que se solapa con el período indicado (desde %s).',
+                    $tarifa->getTipoConcepto()->etiqueta(),
+                    $tarifa->getMandante() !== null ? ' del mandante ' . $tarifa->getMandante()->getNombre() : ' general',
+                    $solapada->getVigenciaDesde()->format('d/m/Y'),
+                ));
+
+                return $this->render('tarifa/new.html.twig', ['form' => $form]);
+            }
+
             $this->em->persist($tarifa);
             $this->em->flush();
 
@@ -76,6 +94,28 @@ class TarifaController extends AbstractController
         $form->handleRequest($request);
 
         if ($form->isSubmitted() && $form->isValid()) {
+            $solapada = $this->tarifaRepository->findSolapada(
+                concepto:      $tarifa->getTipoConcepto(),
+                vigenciaDesde: $tarifa->getVigenciaDesde(),
+                vigenciaHasta: $tarifa->getVigenciaHasta(),
+                mandante:      $tarifa->getMandante(),
+                excludeId:     $tarifa->getId(),
+            );
+
+            if ($solapada !== null) {
+                $this->addFlash('danger', sprintf(
+                    'Ya existe otra tarifa activa para "%s"%s que se solapa con el período indicado (desde %s).',
+                    $tarifa->getTipoConcepto()->etiqueta(),
+                    $tarifa->getMandante() !== null ? ' del mandante ' . $tarifa->getMandante()->getNombre() : ' general',
+                    $solapada->getVigenciaDesde()->format('d/m/Y'),
+                ));
+
+                return $this->render('tarifa/edit.html.twig', [
+                    'form'   => $form,
+                    'tarifa' => $tarifa,
+                ]);
+            }
+
             $this->em->flush();
 
             $this->addFlash('success', 'Tarifa actualizada correctamente.');
