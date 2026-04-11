@@ -66,17 +66,16 @@ final class CerrarTurnosParcialesVencidosHandler
 
         $cerrados = 0;
         foreach ($turnos as $turno) {
-            $terminoDatetime = \DateTime::createFromFormat(
-                'Y-m-d H:i:s',
-                $turno->getFecha()->format('Y-m-d') . ' ' . $turno->getHoraTermino()->format('H:i:s'),
-            );
-
-            if (!$terminoDatetime instanceof \DateTime) {
-                $terminoDatetime = new \DateTime();
+            if ($turno->getRegistroInicio() !== null) {
+                $turno->setRegistroTermino(new \DateTime());
+            } else {
+                $turno->setRegistroTermino(null)
+                    ->setObservaciones(
+                        trim(($turno->getObservaciones() ?? '') . ' [Sin registro de inicio - se uso duracion planificada]')
+                    );
             }
 
-            $turno->setRegistroTermino($terminoDatetime)
-                ->setEstado(EstadoTurno::COMPLETADO)
+            $turno->setEstado(EstadoTurno::COMPLETADO)
                 ->setObservaciones(
                     trim(($turno->getObservaciones() ?? '') .
                         ' [Cierre automático por sistema el ' . (new \DateTime())->format('d/m/Y H:i') . ']')
