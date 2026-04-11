@@ -53,21 +53,26 @@ class FinanzasService
             $liquidacion->setTrabajador($trabajador)->setCreadoPor($creadoPor);
             $this->em->persist($liquidacion);
         } else {
-            if (!in_array($liquidacion->getEstado(), [EstadoLiquidacion::BORRADOR], true)) {
+            if (!in_array($liquidacion->getEstado(), [EstadoLiquidacion::BORRADOR, EstadoLiquidacion::ANULADA], true)) {
                 throw new \LogicException(sprintf(
-                    'Solo se puede regenerar una liquidación en estado Borrador (estado actual: %s). ' .
-                    'Anula la liquidación actual antes de crear una nueva.',
+                    'Solo se puede regenerar una liquidación en estado Borrador o Anulada (estado actual: %s).',
                     $liquidacion->getEstado()->etiqueta(),
                 ));
+            }
+
+            if ($liquidacion->getEstado() === EstadoLiquidacion::ANULADA) {
+                $liquidacion->setEstado(EstadoLiquidacion::BORRADOR)
+                    ->setMotivoAnulacion(null);
             }
 
             $nota = sprintf(
                 '[Regenerada por sistema el %s - items anteriores eliminados]',
                 (new \DateTime())->format('d/m/Y H:i'),
             );
-            $liquidacion->setObservaciones(
-                trim(($liquidacion->getObservaciones() ?? '') . ' ' . $nota)
-            );
+            $liquidacion->setCreadoPor($creadoPor)
+                ->setObservaciones(
+                    trim(($liquidacion->getObservaciones() ?? '') . ' ' . $nota)
+                );
 
             // Limpiar items anteriores
             foreach ($liquidacion->getItems() as $item) {
