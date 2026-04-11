@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Controller\Norte;
+namespace App\Controller\Prueba;
 
 use App\Repository\Tenant\FacturaRepository;
 use App\Repository\Tenant\LiquidacionMensualRepository;
@@ -14,7 +14,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\Security\Http\Attribute\IsGranted;
 
 /**
- * Dashboard ejecutivo para el tenant "norte".
+ * Dashboard ejecutivo para el tenant "prueba".
  * Muestra métricas de gestión mensual/anual en vez del panel operativo diario.
  * No tiene #[Route] — el DynamicControllerSubscriber lo inyecta en runtime.
  */

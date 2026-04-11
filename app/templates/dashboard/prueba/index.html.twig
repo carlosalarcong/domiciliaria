@@ -1,0 +1,166 @@
+{% extends 'base.html.twig' %}
+
+{% block title %}Dashboard Ejecutivo — Atención Domiciliaria{% endblock %}
+{% block help_modulo %}dashboard{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Dashboard Ejecutivo</h4>
+        <small class="text-muted">Resumen {{ "now"|date("F Y")|capitalize }} · {{ anio }}</small>
+    </div>
+    <span class="badge bg-primary fs-6">{{ app.user.rolEtiqueta }}</span>
+</div>
+
+{# ── KPIs ── #}
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-primary bg-opacity-10 p-3">
+                    <i class="bi bi-people-fill text-primary fs-4"></i>
+                </div>
+                <div>
+                    <div class="h3 mb-0 fw-bold">{{ pacientesActivos }}</div>
+                    <small class="text-muted">Pacientes activos</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-info bg-opacity-10 p-3">
+                    <i class="bi bi-person-badge-fill text-info fs-4"></i>
+                </div>
+                <div>
+                    <div class="h3 mb-0 fw-bold">{{ trabajadoresActivos }}</div>
+                    <small class="text-muted">Trabajadores activos</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-3 bg-success bg-opacity-10 p-3">
+                    <i class="bi bi-calendar-check-fill text-success fs-4"></i>
+                </div>
+                <div>
+                    <div class="h3 mb-0 fw-bold">{{ turnosCompletadosMes }}</div>
+                    <small class="text-muted">Turnos completados este mes</small>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+                <div class="rounded-3 p-3 {{ porcentajeCobertura >= 90 ? 'bg-success bg-opacity-10' : (porcentajeCobertura >= 70 ? 'bg-warning bg-opacity-10' : 'bg-danger bg-opacity-10') }}">
+                    <i class="bi bi-pie-chart-fill fs-4 {{ porcentajeCobertura >= 90 ? 'text-success' : (porcentajeCobertura >= 70 ? 'text-warning' : 'text-danger') }}"></i>
+                </div>
+                <div>
+                    <div class="h3 mb-0 fw-bold">{{ porcentajeCobertura }}%</div>
+                    <small class="text-muted">Cobertura del mes
+                        <span class="text-muted">({{ turnosCompletadosMes }}/{{ totalTurnosMes }})</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+
+    {# ── Flujo financiero del año ── #}
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-white border-0 pt-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-bar-chart-fill me-2 text-primary"></i>Flujo financiero {{ anio }}
+                </h6>
+                <a href="{{ path('app_finanzas_reportes') }}" class="btn btn-sm btn-outline-primary">Ver detalle</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0 align-middle small">
+                        <thead class="table-light">
+                            <tr>
+                                <th class="ps-3">Mes</th>
+                                <th class="text-end text-success">Ingresos</th>
+                                <th class="text-end text-danger">Egresos</th>
+                                <th class="text-end pe-3">Saldo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% set totalIngresos = 0 %}
+                            {% set totalEgresos  = 0 %}
+                            {% for i in 1..12 %}
+                                {% set ing   = ingresosPorMes[i] ?? 0 %}
+                                {% set egr   = egresosPorMes[i] ?? 0 %}
+                                {% set saldo = ing - egr %}
+                                {% set totalIngresos = totalIngresos + ing %}
+                                {% set totalEgresos  = totalEgresos  + egr %}
+                                <tr class="{{ ing == 0 and egr == 0 ? 'text-muted opacity-50' : '' }}">
+                                    <td class="ps-3 fw-semibold">{{ meses[i] }}</td>
+                                    <td class="text-end text-success">{{ ing > 0 ? '$' ~ ing|number_format(0, ',', '.') : '—' }}</td>
+                                    <td class="text-end text-danger">{{ egr > 0 ? '$' ~ egr|number_format(0, ',', '.') : '—' }}</td>
+                                    <td class="text-end pe-3 fw-semibold {{ saldo > 0 ? 'text-success' : (saldo < 0 ? 'text-danger' : 'text-muted') }}">
+                                        {{ ing > 0 or egr > 0 ? '$' ~ saldo|number_format(0, ',', '.') : '—' }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot class="table-light fw-semibold">
+                            <tr>
+                                <td class="ps-3">Total</td>
+                                <td class="text-end text-success">${{ totalIngresos|number_format(0, ',', '.') }}</td>
+                                <td class="text-end text-danger">${{ totalEgresos|number_format(0, ',', '.') }}</td>
+                                {% set saldoAnual = totalIngresos - totalEgresos %}
+                                <td class="text-end pe-3 {{ saldoAnual >= 0 ? 'text-success' : 'text-danger' }}">${{ saldoAnual|number_format(0, ',', '.') }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {# ── Top 5 trabajadores por monto liquidado ── #}
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-3 d-flex justify-content-between align-items-center">
+                <h6 class="mb-0 fw-semibold">
+                    <i class="bi bi-trophy-fill me-2 text-warning"></i>Top trabajadores {{ anio }}
+                </h6>
+                <a href="{{ path('app_trabajador_index') }}" class="btn btn-sm btn-outline-secondary">Ver todos</a>
+            </div>
+            <div class="card-body p-0">
+                {% if topTrabajadores is empty %}
+                    <div class="text-center text-muted py-5">
+                        <i class="bi bi-person-x fs-1 opacity-25"></i>
+                        <p class="mt-2 mb-0 small">Sin liquidaciones registradas.</p>
+                    </div>
+                {% else %}
+                    <ul class="list-group list-group-flush">
+                        {% for trab in topTrabajadores %}
+                        <li class="list-group-item d-flex justify-content-between align-items-center px-3 py-2">
+                            <div>
+                                <div class="small fw-semibold">{{ trab.nombre }}</div>
+                                <div class="text-muted" style="font-size:.75rem">
+                                    {{ trab.liquidaciones }} liquidaci{{ trab.liquidaciones == 1 ? 'ón' : 'ones' }}
+                                </div>
+                            </div>
+                            <span class="badge bg-success bg-opacity-10 text-success fw-semibold">
+                                ${{ trab.suma_total|number_format(0, ',', '.') }}
+                            </span>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+</div>
+{% endblock %}
