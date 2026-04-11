@@ -14,6 +14,7 @@ use App\Enum\EstadoTurno;
 use App\Enum\TipoBitacora;
 use App\Enum\TipoComunicacion;
 use App\Message\PacienteEstadoCambioMessage;
+use App\Message\TurnoDescubiertoMessage;
 use App\Repository\PacienteRepository;
 use App\Repository\TurnoRepository;
 use Doctrine\ORM\EntityManagerInterface;
@@ -120,11 +121,21 @@ class PacienteService
         $turnos = $this->turnoRepository->findFuturosAsignadosDePaciente($paciente);
 
         foreach ($turnos as $turno) {
+            $turno->setTrabajador(null);
             $turno->setEstado(EstadoTurno::DESCUBIERTO);
         }
 
         if (count($turnos) > 0) {
             $this->em->flush();
+
+            foreach ($turnos as $turno) {
+                $this->bus->dispatch(new TurnoDescubiertoMessage(
+                    turnoId:        (string) $turno->getId(),
+                    pacienteNombre: $paciente->getNombreCompleto(),
+                    fecha:          $turno->getFecha()?->format('d/m/Y') ?? '—',
+                    tipoTurno:      $turno->getTipoTurno()->etiqueta(),
+                ));
+            }
         }
 
         return count($turnos);
