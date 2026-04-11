@@ -54,7 +54,7 @@ class PacienteService
         $this->em->flush();
     }
 
-    public function actualizarEstado(Paciente $paciente, EstadoPaciente $nuevoEstado, ?User $usuario = null): Paciente
+    public function actualizarEstado(Paciente $paciente, EstadoPaciente $nuevoEstado, User $usuario): Paciente
     {
         $estadoAnterior = $paciente->getEstado();
 
@@ -68,10 +68,6 @@ class PacienteService
         }
 
         $paciente->setEstado($nuevoEstado);
-
-        if ($usuario === null) {
-            throw new \LogicException('Se requiere un usuario para registrar bitácora al cambiar estado del paciente.');
-        }
 
         $descripcion = match ($nuevoEstado) {
             EstadoPaciente::DADO_DE_BAJA => sprintf(
