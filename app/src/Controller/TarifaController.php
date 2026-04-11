@@ -7,7 +7,7 @@ namespace App\Controller;
 use App\Entity\Tenant\Tarifa;
 use App\Enum\TipoConcepto;
 use App\Form\TarifaType;
-use App\Repository\TarifaRepository;
+use App\Repository\Tenant\TarifaRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\Request;

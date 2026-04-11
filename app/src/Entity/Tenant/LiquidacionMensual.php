@@ -6,7 +6,7 @@ namespace App\Entity\Tenant;
 
 use App\Entity\Tenant\Log\LogEntry;
 use App\Enum\EstadoLiquidacion;
-use App\Repository\LiquidacionMensualRepository;
+use App\Repository\Tenant\LiquidacionMensualRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;

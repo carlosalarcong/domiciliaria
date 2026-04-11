@@ -16,9 +16,9 @@ use App\Enum\EstadoLiquidacion;
 use App\Enum\EstadoTurno;
 use App\Enum\TipoConcepto;
 use App\Enum\TipoTurno;
-use App\Repository\LiquidacionMensualRepository;
-use App\Repository\TarifaRepository;
-use App\Repository\TurnoRepository;
+use App\Repository\Tenant\LiquidacionMensualRepository;
+use App\Repository\Tenant\TarifaRepository;
+use App\Repository\Tenant\TurnoRepository;
 use Doctrine\ORM\EntityManagerInterface;
 
 class FinanzasService

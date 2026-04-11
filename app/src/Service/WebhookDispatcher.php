@@ -7,7 +7,7 @@ namespace App\Service;
 use App\Entity\Tenant\WebhookDelivery;
 use App\Enum\WebhookEvento;
 use App\Message\WebhookDeliveryMessage;
-use App\Repository\WebhookSuscripcionRepository;
+use App\Repository\Tenant\WebhookSuscripcionRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\Messenger\MessageBusInterface;
 

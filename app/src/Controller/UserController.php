@@ -7,7 +7,7 @@ namespace App\Controller;
 use App\Entity\Tenant\User;
 use App\Form\ChangePasswordType;
 use App\Form\UserType;
-use App\Repository\UserRepository;
+use App\Repository\Tenant\UserRepository;
 use App\Service\UserService;
 use Knp\Component\Pager\PaginatorInterface;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;

@@ -7,7 +7,7 @@ namespace App\MessageHandler;
 use App\Message\RevisarTurnosDescubiertosMessage;
 use App\Message\TurnoDescubiertoMessage;
 use App\Message\TurnoParcialVencidoMessage;
-use App\Repository\TurnoRepository;
+use App\Repository\Tenant\TurnoRepository;
 use App\Service\ConfiguracionService;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Messenger\Attribute\AsMessageHandler;

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\MessageHandler;
 
 use App\Message\EventoAdversoGraveMessage;
-use App\Repository\UserRepository;
+use App\Repository\Tenant\UserRepository;
 use App\Service\NotificacionService;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\MailerInterface;

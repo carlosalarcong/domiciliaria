@@ -7,7 +7,7 @@ namespace App\MessageHandler;
 use App\Entity\Main\TenantDb;
 use App\Enum\EstadoFactura;
 use App\Message\MarcarFacturasVencidasMessage;
-use App\Repository\FacturaRepository;
+use App\Repository\Tenant\FacturaRepository;
 use Doctrine\ORM\EntityManagerInterface;
 use Hakam\MultiTenancyBundle\Event\SwitchDbEvent;
 use Psr\Log\LoggerInterface;

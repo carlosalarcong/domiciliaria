@@ -5,11 +5,11 @@ declare(strict_types=1);
 namespace App\Controller\Api;
 
 use App\Enum\EstadoFactura;
-use App\Repository\FacturaRepository;
-use App\Repository\LiquidacionMensualRepository;
-use App\Repository\PacienteRepository;
-use App\Repository\TrabajadorRepository;
-use App\Repository\TurnoRepository;
+use App\Repository\Tenant\FacturaRepository;
+use App\Repository\Tenant\LiquidacionMensualRepository;
+use App\Repository\Tenant\PacienteRepository;
+use App\Repository\Tenant\TrabajadorRepository;
+use App\Repository\Tenant\TurnoRepository;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;

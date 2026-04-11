@@ -7,7 +7,7 @@ namespace App\Entity\Tenant;
 use App\Entity\Tenant\Log\LogEntry;
 use App\Enum\EstadoTrabajador;
 use App\Enum\PerfilTrabajador;
-use App\Repository\TrabajadorRepository;
+use App\Repository\Tenant\TrabajadorRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;

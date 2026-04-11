@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity\Tenant;
 
-use App\Repository\NotificacionRepository;
+use App\Repository\Tenant\NotificacionRepository;
 use Doctrine\ORM\Mapping as ORM;
 use Symfony\Component\Uid\Uuid;
 

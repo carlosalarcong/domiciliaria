@@ -165,4 +165,4 @@ services:
 
     App\Security\ApiTokenAuthenticator:
         arguments:
-            $tokenRepository: '@App\Repository\ApiTokenRepository'
+            $tokenRepository: '@App\Repository\Tenant\ApiTokenRepository'

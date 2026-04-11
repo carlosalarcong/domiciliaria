@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Entity\Tenant;
 
-use App\Repository\DisponibilidadTrabajadorRepository;
+use App\Repository\Tenant\DisponibilidadTrabajadorRepository;
 use Doctrine\ORM\Mapping as ORM;
 
 #[ORM\Entity(repositoryClass: DisponibilidadTrabajadorRepository::class)]

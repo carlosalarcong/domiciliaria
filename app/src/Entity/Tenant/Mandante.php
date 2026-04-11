@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Entity\Tenant;
 
 use App\Entity\Tenant\Log\LogEntry;
-use App\Repository\MandanteRepository;
+use App\Repository\Tenant\MandanteRepository;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\Common\Collections\Collection;
 use Doctrine\ORM\Mapping as ORM;
