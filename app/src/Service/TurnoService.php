@@ -246,6 +246,10 @@ class TurnoService
             $turno->getHoraTermino(),
         );
 
+        if ($turno->getTrabajadorOriginal() === null && $turno->getTrabajador() !== null) {
+            $turno->setTrabajadorOriginal($turno->getTrabajador());
+        }
+
         $turno->setTrabajador($reemplazo);
         $turno->setEsReemplazo(true);
         $turno->setMotivoReemplazo($motivo);

@@ -39,6 +39,11 @@ class Turno
     #[Gedmo\Versioned]
     private ?Trabajador $trabajador = null;
 
+    #[ORM\ManyToOne(targetEntity: Trabajador::class)]
+    #[ORM\JoinColumn(nullable: true, onDelete: 'SET NULL')]
+    #[Gedmo\Versioned]
+    private ?Trabajador $trabajadorOriginal = null;
+
     #[ORM\Column(type: 'date')]
     #[Assert\NotNull]
     #[Gedmo\Versioned]
@@ -103,6 +108,8 @@ class Turno
 
     public function getTrabajador(): ?Trabajador { return $this->trabajador; }
     public function setTrabajador(?Trabajador $t): static { $this->trabajador = $t; return $this; }
+    public function getTrabajadorOriginal(): ?Trabajador { return $this->trabajadorOriginal; }
+    public function setTrabajadorOriginal(?Trabajador $t): static { $this->trabajadorOriginal = $t; return $this; }
 
     public function getFecha(): ?\DateTimeInterface { return $this->fecha; }
     public function setFecha(\DateTimeInterface $f): static { $this->fecha = $f; return $this; }
