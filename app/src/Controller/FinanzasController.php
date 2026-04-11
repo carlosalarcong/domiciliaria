@@ -467,4 +467,28 @@ class FinanzasController extends AbstractController
 
         return $this->redirectToRoute('app_finanzas_factura_show', ['id' => $factura->getId()]);
     }
+
+    #[Route('/facturas/{id}/anular', name: 'factura_anular', methods: ['POST'])]
+    #[IsGranted('FINANZAS_EDITAR')]
+    public function facturaAnular(Request $request, Factura $factura): Response
+    {
+        if (!$this->isCsrfTokenValid('fac_' . $factura->getId(), $request->request->get('_token'))) {
+            throw $this->createAccessDeniedException();
+        }
+
+        $motivo = trim($request->request->get('motivo', ''));
+        if ($motivo === '') {
+            $this->addFlash('danger', 'Debe ingresar un motivo para anular la factura.');
+            return $this->redirectToRoute('app_finanzas_factura_show', ['id' => $factura->getId()]);
+        }
+
+        try {
+            $this->finanzasService->anularFactura($factura, $motivo, $this->getUser());
+            $this->addFlash('warning', 'Factura anulada correctamente.');
+        } catch (\LogicException $e) {
+            $this->addFlash('danger', $e->getMessage());
+        }
+
+        return $this->redirectToRoute('app_finanzas_factura_show', ['id' => $factura->getId()]);
+    }
 }

@@ -322,6 +322,33 @@ class FinanzasService
         return $factura;
     }
 
+    public function anularFactura(Factura $factura, string $motivo, User $anuladoPor): Factura
+    {
+        if ($factura->getEstado() === EstadoFactura::ANULADA) {
+            throw new \LogicException('La factura ya está anulada.');
+        }
+
+        if ($factura->getEstado() === EstadoFactura::PAGADA) {
+            throw new \LogicException(
+                'No se puede anular una factura ya pagada. Contacta al administrador para realizar un ajuste manual.'
+            );
+        }
+
+        $registro = sprintf(
+            '[Anulada por %s el %s. Motivo: %s]',
+            $anuladoPor->getNombreCompleto(),
+            (new \DateTime())->format('d/m/Y H:i'),
+            $motivo,
+        );
+
+        $factura->setEstado(EstadoFactura::ANULADA)
+            ->setObservaciones(trim(($factura->getObservaciones() ?? '') . ' ' . $registro));
+
+        $this->em->flush();
+
+        return $factura;
+    }
+
     // ─── Helpers ─────────────────────────────────────────────────────────────
 
     private function tipoTurnoAConcepto(TipoTurno $tipo, bool $esReemplazo): TipoConcepto
