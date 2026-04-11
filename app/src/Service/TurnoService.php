@@ -192,6 +192,18 @@ class TurnoService
 
     public function asignarReemplazo(Turno $turno, Trabajador $reemplazo, MotivoReemplazo $motivo): Turno
     {
+        $paciente = $turno->getPaciente();
+        if ($paciente !== null && $paciente->getEstado() !== EstadoPaciente::ACTIVO) {
+            $razon = $paciente->getEstado() === EstadoPaciente::SUSPENDIDO
+                ? 'El paciente está suspendido temporalmente.'
+                : 'El paciente está dado de baja.';
+            throw new \DomainException(sprintf(
+                'No se puede asignar reemplazo: %s (Paciente: %s)',
+                $razon,
+                $paciente->getNombreCompleto(),
+            ));
+        }
+
         if (!in_array($turno->getEstado(), [EstadoTurno::DESCUBIERTO, EstadoTurno::CUBIERTO], true)) {
             throw new \DomainException(sprintf(
                 'No se puede asignar reemplazo a un turno en estado "%s". Solo se permite en turnos Descubiertos o Cubiertos.',
