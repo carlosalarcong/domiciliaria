@@ -306,13 +306,16 @@ class TurnoService
             throw new \LogicException('Solo se puede forzar el cierre de un turno en estado Parcial.');
         }
 
-        // Combinar la fecha del turno con la hora planificada de término para obtener un datetime completo
-        $terminoDatetime = \DateTime::createFromFormat(
-            'Y-m-d H:i:s',
-            $turno->getFecha()->format('Y-m-d') . ' ' . $turno->getHoraTermino()->format('H:i:s'),
-        );
-        $turno->setRegistroTermino($terminoDatetime)
-            ->setEstado(EstadoTurno::COMPLETADO)
+        if ($turno->getRegistroInicio() !== null) {
+            $turno->setRegistroTermino(new \DateTime());
+        } else {
+            $turno->setRegistroTermino(null)
+                ->setObservaciones(
+                    trim(($turno->getObservaciones() ?? '') . ' [Sin registro de inicio - se uso duracion planificada]')
+                );
+        }
+
+        $turno->setEstado(EstadoTurno::COMPLETADO)
             ->setObservaciones(
                 trim(($turno->getObservaciones() ?? '') . ' [Cierre forzado por ' . $autor->getNombreCompleto() . ' el ' . (new \DateTime())->format('d/m/Y H:i') . ']')
             );
