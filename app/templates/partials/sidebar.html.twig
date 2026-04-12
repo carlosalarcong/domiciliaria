@@ -4,23 +4,23 @@
         <small>Sistema de Atención Domiciliaria</small>
     </div>
     <div class="sidebar-nav">
-        <div class="sidebar-section">Principal</div>
+        <div class="sidebar-section">{{ 'sidebar.seccion.principal'|trans }}</div>
         <a href="{{ path('app_dashboard') }}" class="sidebar-link {{ app.request.attributes.get('_route') == 'app_dashboard' ? 'active' : '' }}">
-            <i class="bi bi-speedometer2"></i> Dashboard
+            <i class="bi bi-speedometer2"></i> {{ 'sidebar.dashboard'|trans }}
         </a>
 
-        <div class="sidebar-section mt-2">Operaciones</div>
+        <div class="sidebar-section mt-2">{{ 'sidebar.seccion.operaciones'|trans }}</div>
         <a href="{{ path('app_paciente_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_paciente' ? 'active' : '' }}">
-            <i class="bi bi-people-fill"></i> Pacientes
+            <i class="bi bi-people-fill"></i> {{ 'sidebar.pacientes'|trans }}
         </a>
         <a href="{{ path('app_mandante_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_mandante' ? 'active' : '' }}">
-            <i class="bi bi-building"></i> Mandantes
+            <i class="bi bi-building"></i> {{ 'sidebar.mandantes'|trans }}
         </a>
         <a href="{{ path('app_turno_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_turno' ? 'active' : '' }}">
-            <i class="bi bi-calendar3"></i> Turnos
+            <i class="bi bi-calendar3"></i> {{ 'sidebar.turnos'|trans }}
         </a>
         <a href="{{ path('app_trabajador_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_trabajador' ? 'active' : '' }}">
-            <i class="bi bi-person-badge"></i> Personal
+            <i class="bi bi-person-badge"></i> {{ 'sidebar.personal'|trans }}
         </a>
 
         {% if is_granted('ROLE_TENS') or is_granted('ROLE_ENFERMERA') %}

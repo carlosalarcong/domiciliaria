@@ -48,12 +48,12 @@ class TenantTranslationListener implements EventSubscriberInterface
         $request->attributes->set('_tenant_translation_path', $this->resolvePath($slug));
     }
 
-    private function resolvePath(string $slug): string
+    private function resolvePath(string $slug): ?string
     {
         $tenantPath = $this->projectDir . '/translations/' . $slug;
 
         return is_dir($tenantPath)
             ? $tenantPath
-            : $this->projectDir . '/translations';
+            : null;
     }
 }

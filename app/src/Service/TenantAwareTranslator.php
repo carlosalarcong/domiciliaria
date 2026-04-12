@@ -105,9 +105,9 @@ final class TenantAwareTranslator implements TranslatorInterface, LocaleAwareInt
             return null;
         }
 
+        // null significa que no hay carpeta de tenant_translations para este slug
         $path = $request->attributes->get('_tenant_translation_path');
-        if (!is_string($path) || $path === $this->projectDir . '/translations') {
-            // Sin path específico de tenant → no hay override
+        if (!is_string($path)) {
             return null;
         }
 
