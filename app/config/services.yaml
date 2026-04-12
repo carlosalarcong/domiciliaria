@@ -60,6 +60,17 @@ services:
         arguments:
             $uploadDir: '%app.upload_dir%'
 
+    # ── Translator con override por tenant ───────────────────────────────────
+
+    App\Service\TenantAwareTranslator:
+        decorates: translator
+        decoration_priority: 1
+        shared: false          # instancia nueva por request → cache de mensajes aislada
+        arguments:
+            $inner:        '@.inner'
+            $requestStack: '@request_stack'
+            $projectDir:   '%kernel.project_dir%'
+
     # ── Multi-tenancy ──────────────────────────────────────────────────────────
 
     App\Service\TenantResolver:
@@ -94,6 +105,13 @@ services:
             $tenantContext:   '@App\Service\TenantContext'
             $eventDispatcher: '@event_dispatcher'
             $logger:          '@logger'
+        tags:
+            - { name: kernel.event_subscriber }
+
+    App\EventListener\TenantTranslationListener:
+        arguments:
+            $tenantContext: '@App\Service\TenantContext'
+            $projectDir:    '%kernel.project_dir%'
         tags:
             - { name: kernel.event_subscriber }
 
