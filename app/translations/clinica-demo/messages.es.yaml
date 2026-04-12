@@ -1,0 +1,7 @@
+# Traducciones específicas para el tenant clinica-demo
+# Sobrescriben las traducciones globales en translations/messages.es.yaml
+#
+# Ejemplo:
+# menu:
+#     pacientes: Pacientes
+#     trabajadores: Personal clínico
