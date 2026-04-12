@@ -1,0 +1,7 @@
+# Override del tenant clinica-demo
+# Solo las claves definidas aquí sobreescriben las globales.
+sidebar:
+    pacientes: Usuarios del programa
+    personal: Personal clínico
+    mandantes: Financiadores
+    dashboard: Dashboard

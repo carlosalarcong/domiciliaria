@@ -1,0 +1,9 @@
+sidebar:
+    seccion:
+        principal: Principal
+        operaciones: Operaciones
+    dashboard: Dashboard
+    pacientes: Pacientes
+    mandantes: Mandantes
+    turnos: Turnos
+    personal: Personal
