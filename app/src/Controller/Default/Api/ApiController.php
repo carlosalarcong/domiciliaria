@@ -10,6 +10,7 @@ use App\Repository\Tenant\LiquidacionMensualRepository;
 use App\Repository\Tenant\PacienteRepository;
 use App\Repository\Tenant\TrabajadorRepository;
 use App\Repository\Tenant\TurnoRepository;
+use App\Service\ConfiguracionService;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\HttpFoundation\JsonResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -22,12 +23,23 @@ use Symfony\Component\Security\Http\Attribute\IsGranted;
 class ApiController extends AbstractController
 {
     public function __construct(
-        private readonly PacienteRepository          $pacienteRepository,
-        private readonly TurnoRepository             $turnoRepository,
-        private readonly TrabajadorRepository        $trabajadorRepository,
+        private readonly PacienteRepository           $pacienteRepository,
+        private readonly TurnoRepository              $turnoRepository,
+        private readonly TrabajadorRepository         $trabajadorRepository,
         private readonly LiquidacionMensualRepository $liquidacionRepository,
-        private readonly FacturaRepository           $facturaRepository,
+        private readonly FacturaRepository            $facturaRepository,
+        private readonly ConfiguracionService         $configuracionService,
     ) {}
+
+    private function checkApiActiva(): ?JsonResponse
+    {
+        $config = $this->configuracionService->get();
+        if (!$config->isIntegracionApiActiva()) {
+            return $this->json(['error' => 'API deshabilitada.'], Response::HTTP_SERVICE_UNAVAILABLE);
+        }
+
+        return null;
+    }
 
     // ─── Pacientes ────────────────────────────────────────────────────────────
 
@@ -35,6 +47,8 @@ class ApiController extends AbstractController
     #[IsGranted('ROLE_API_PACIENTES')]
     public function pacientes(Request $request): JsonResponse
     {
+        if ($error = $this->checkApiActiva()) { return $error; }
+
         $estado   = $request->query->getString('estado', '');
         $mandante = $request->query->getString('mandante', '');
         $tipo     = $request->query->getString('tipo', '');
@@ -77,6 +91,8 @@ class ApiController extends AbstractController
     #[IsGranted('ROLE_API_PACIENTES')]
     public function pacienteShow(string $id): JsonResponse
     {
+        if ($error = $this->checkApiActiva()) { return $error; }
+
         $p = $this->pacienteRepository->find($id);
 
         if ($p === null) {
@@ -111,6 +127,8 @@ class ApiController extends AbstractController
     #[IsGranted('ROLE_API_TURNOS')]
     public function turnos(Request $request): JsonResponse
     {
+        if ($error = $this->checkApiActiva()) { return $error; }
+
         $desde = new \DateTime($request->query->getString('desde', 'first day of this month'));
         $hasta = new \DateTime($request->query->getString('hasta', 'last day of this month'));
 
@@ -148,6 +166,8 @@ class ApiController extends AbstractController
     #[IsGranted('ROLE_API_TRABAJADORES')]
     public function trabajadores(Request $request): JsonResponse
     {
+        if ($error = $this->checkApiActiva()) { return $error; }
+
         $soloActivos = $request->query->getBoolean('activos', true);
 
         $trabajadores = $soloActivos
@@ -176,6 +196,8 @@ class ApiController extends AbstractController
     #[IsGranted('ROLE_API_TRABAJADORES')]
     public function trabajadorShow(string $id): JsonResponse
     {
+        if ($error = $this->checkApiActiva()) { return $error; }
+
         $t = $this->trabajadorRepository->find($id);
 
         if ($t === null) {
@@ -203,6 +225,8 @@ class ApiController extends AbstractController
     #[IsGranted('ROLE_API_LIQUIDACIONES')]
     public function liquidaciones(Request $request): JsonResponse
     {
+        if ($error = $this->checkApiActiva()) { return $error; }
+
         $anio = $request->query->getInt('anio', (int) date('Y'));
         $mes  = $request->query->getInt('mes', 0);
 
@@ -246,6 +270,8 @@ class ApiController extends AbstractController
     #[IsGranted('ROLE_API_FACTURAS')]
     public function facturas(Request $request): JsonResponse
     {
+        if ($error = $this->checkApiActiva()) { return $error; }
+
         $anio         = $request->query->getInt('anio', (int) date('Y'));
         $estadoValue  = $request->query->getString('estado', '');
         $estadoEnum   = $estadoValue !== '' ? EstadoFactura::tryFrom($estadoValue) : null;

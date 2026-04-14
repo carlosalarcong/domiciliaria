@@ -80,6 +80,17 @@ class ConfiguracionClinica
     #[ORM\Column(type: 'boolean', options: ['default' => true])]
     private bool $moduloEventosActivo = true;
 
+    // ── Integraciones ─────────────────────────────────────────────────────────
+
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $integracionApiActiva = true;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => true])]
+    private bool $integracionWebhooksActiva = true;
+
+    #[ORM\Column(type: 'boolean', options: ['default' => false])]
+    private bool $integracionSincronizacionActiva = false;
+
     #[ORM\Column(type: 'json', options: ['default' => '{}'])]
     private array $extras = [];
 
@@ -300,6 +311,42 @@ class ConfiguracionClinica
     public function setModuloEventosActivo(bool $moduloEventosActivo): static
     {
         $this->moduloEventosActivo = $moduloEventosActivo;
+
+        return $this;
+    }
+
+    public function isIntegracionApiActiva(): bool
+    {
+        return $this->integracionApiActiva;
+    }
+
+    public function setIntegracionApiActiva(bool $value): static
+    {
+        $this->integracionApiActiva = $value;
+
+        return $this;
+    }
+
+    public function isIntegracionWebhooksActiva(): bool
+    {
+        return $this->integracionWebhooksActiva;
+    }
+
+    public function setIntegracionWebhooksActiva(bool $value): static
+    {
+        $this->integracionWebhooksActiva = $value;
+
+        return $this;
+    }
+
+    public function isIntegracionSincronizacionActiva(): bool
+    {
+        return $this->integracionSincronizacionActiva;
+    }
+
+    public function setIntegracionSincronizacionActiva(bool $value): static
+    {
+        $this->integracionSincronizacionActiva = $value;
 
         return $this;
     }

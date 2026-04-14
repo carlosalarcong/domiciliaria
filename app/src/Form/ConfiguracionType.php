@@ -105,6 +105,21 @@ class ConfiguracionType extends AbstractType
                 'required' => false,
                 'label'    => 'Módulo Eventos Adversos activo',
                 'help'     => 'Controla la visibilidad de Eventos Adversos en el menú.',
+            ])
+            ->add('integracionApiActiva', CheckboxType::class, [
+                'required' => false,
+                'label'    => 'API REST activa',
+                'help'     => 'Permite que sistemas externos consulten datos vía /api/v1.',
+            ])
+            ->add('integracionWebhooksActiva', CheckboxType::class, [
+                'required' => false,
+                'label'    => 'Webhooks salientes activos',
+                'help'     => 'El sistema enviará avisos automáticos a las URLs suscritas.',
+            ])
+            ->add('integracionSincronizacionActiva', CheckboxType::class, [
+                'required' => false,
+                'label'    => 'Sincronizaciones externas activas',
+                'help'     => 'Habilita las consultas programadas a APIs externas (pull).',
             ]);
     }
 
