@@ -12,32 +12,32 @@
 </div>
 
 <div class="card border-0 shadow-sm" style="max-width:750px;">
-    <div class="card-body p-4">
+    <div class="card-body p-4" data-controller="disponibilidad" data-disponibilidad-url-value="{{ path('app_turno_api_disponibilidad') }}">
         {{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
 
         <div class="row g-3">
             <div class="col-12">{{ form_row(form.paciente) }}</div>
             <div class="col-md-6">
                 {{ form_label(form.fecha) }}
-                {{ form_widget(form.fecha, {attr: {'data-avail': 'fecha'}}) }}
+                {{ form_widget(form.fecha, {attr: {'data-disponibilidad-target': 'fecha', 'data-action': 'change->disponibilidad#verificar'}}) }}
                 {{ form_errors(form.fecha) }}
             </div>
             <div class="col-md-3">
                 {{ form_label(form.horaInicio) }}
-                {{ form_widget(form.horaInicio, {attr: {'data-avail': 'inicio'}}) }}
+                {{ form_widget(form.horaInicio, {attr: {'data-disponibilidad-target': 'inicio', 'data-action': 'change->disponibilidad#verificar'}}) }}
                 {{ form_errors(form.horaInicio) }}
             </div>
             <div class="col-md-3">
                 {{ form_label(form.horaTermino) }}
-                {{ form_widget(form.horaTermino, {attr: {'data-avail': 'termino'}}) }}
+                {{ form_widget(form.horaTermino, {attr: {'data-disponibilidad-target': 'termino', 'data-action': 'change->disponibilidad#verificar'}}) }}
                 {{ form_errors(form.horaTermino) }}
             </div>
             <div class="col-md-6">{{ form_row(form.tipoTurno) }}</div>
             <div class="col-md-6">
                 {{ form_label(form.trabajador) }}
-                {{ form_widget(form.trabajador, {attr: {'data-avail': 'trabajador'}}) }}
+                {{ form_widget(form.trabajador, {attr: {'data-disponibilidad-target': 'trabajador', 'data-action': 'change->disponibilidad#verificar'}}) }}
                 {{ form_errors(form.trabajador) }}
-                <div id="avail-alert" class="mt-1"></div>
+                <div id="avail-alert" class="mt-1" data-disponibilidad-target="alerta"></div>
             </div>
             <div class="col-12">{{ form_row(form.observaciones) }}</div>
         </div>
@@ -49,38 +49,4 @@
         {{ form_end(form) }}
     </div>
 </div>
-{% endblock %}
-
-{% block javascripts %}
-{{ parent() }}
-<script>
-(function () {
-    const sel   = document.querySelector('[data-avail="trabajador"]');
-    const fecha = document.querySelector('[data-avail="fecha"]');
-    const ini   = document.querySelector('[data-avail="inicio"]');
-    const ter   = document.querySelector('[data-avail="termino"]');
-    const alert = document.getElementById('avail-alert');
-    if (!sel || !fecha || !ini || !ter || !alert) return;
-
-    function verificar() {
-        const tid = sel.value;
-        const f   = fecha.value;
-        const hi  = ini.value;
-        const ht  = ter.value;
-        alert.innerHTML = '';
-        if (!tid || !f || !hi || !ht) return;
-        fetch(`{{ path('app_turno_api_disponibilidad') }}?trabajador=${encodeURIComponent(tid)}&fecha=${f}&horaInicio=${hi}&horaTermino=${ht}`)
-            .then(r => r.json())
-            .then(data => {
-                if (!data.disponible) {
-                    alert.innerHTML = `<div class="alert alert-warning py-2 mb-0 small"><i class="bi bi-exclamation-triangle me-1"></i>${data.mensaje}</div>`;
-                } else {
-                    alert.innerHTML = `<div class="text-success small"><i class="bi bi-check-circle me-1"></i>Trabajador disponible en ese horario.</div>`;
-                }
-            });
-    }
-
-    [sel, fecha, ini, ter].forEach(el => el.addEventListener('change', verificar));
-})();
-</script>
 {% endblock %}
