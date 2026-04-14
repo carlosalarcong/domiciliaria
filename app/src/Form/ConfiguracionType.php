@@ -64,18 +64,20 @@ class ConfiguracionType extends AbstractType
                 'help'  => 'Días corridos desde emisión hasta vencimiento',
             ])
             ->add('prefijoFactura', TextType::class, [
-                'label'    => 'Prefijo N° factura',
-                'required' => false,
-                'help'     => 'Ej: F-, FAC-. Dejar vacío si no aplica.',
+                'label'      => 'Prefijo N° factura',
+                'required'   => false,
+                'empty_data' => '',
+                'help'       => 'Ej: F-, FAC-. Dejar vacío si no aplica.',
             ])
             ->add('diasAnticipacionAlertas', IntegerType::class, [
                 'label' => 'Días anticipación alertas',
                 'help'  => 'Días antes de un turno para detectar cobertura',
             ])
             ->add('horaRevisionTurnos', TextType::class, [
-                'label' => 'Hora revisión diaria',
-                'attr'  => ['placeholder' => 'HH:MM'],
-                'help'  => 'Hora referencial de la revisión automática',
+                'label'      => 'Hora revisión diaria',
+                'empty_data' => '08:00',
+                'attr'       => ['placeholder' => 'HH:MM'],
+                'help'       => 'Hora referencial de la revisión automática',
             ])
             ->add('limiteDocumentosMB', IntegerType::class, [
                 'label' => 'Límite archivos (MB)',
