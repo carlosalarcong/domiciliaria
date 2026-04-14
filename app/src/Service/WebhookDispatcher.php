@@ -17,6 +17,7 @@ class WebhookDispatcher
         private readonly WebhookSuscripcionRepository $suscripcionRepository,
         private readonly EntityManagerInterface $em,
         private readonly MessageBusInterface $bus,
+        private readonly ConfiguracionService $configuracionService,
     ) {}
 
     /**
@@ -26,6 +27,10 @@ class WebhookDispatcher
      */
     public function dispatch(WebhookEvento $evento, array $datos, string $tenant = ''): void
     {
+        if (!$this->configuracionService->get()->isIntegracionWebhooksActiva()) {
+            return;
+        }
+
         $suscripciones = $this->suscripcionRepository->findActivasPorEvento($evento);
         if (empty($suscripciones)) {
             return;

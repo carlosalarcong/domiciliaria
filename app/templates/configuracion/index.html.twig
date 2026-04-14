@@ -118,6 +118,43 @@
   </div>
 </div>
 
+<div class="card border-0 shadow-sm mb-4" id="config-card-integraciones">
+  <div class="card-header bg-white border-0 fw-semibold py-3">
+    <i class="bi bi-plug me-2 text-primary"></i>Integraciones
+  </div>
+  <div class="card-body">
+    <div class="row g-3">
+      <div class="col-md-4">
+        <div class="form-check form-switch mt-1">
+          {{ form_widget(form.integracionApiActiva, {'attr': {'class': 'form-check-input'}}) }}
+          {{ form_label(form.integracionApiActiva, null, {'label_attr': {'class': 'form-check-label fw-semibold'}}) }}
+        </div>
+        {{ form_help(form.integracionApiActiva) }}
+        {{ form_errors(form.integracionApiActiva) }}
+      </div>
+      <div class="col-md-4">
+        <div class="form-check form-switch mt-1">
+          {{ form_widget(form.integracionWebhooksActiva, {'attr': {'class': 'form-check-input'}}) }}
+          {{ form_label(form.integracionWebhooksActiva, null, {'label_attr': {'class': 'form-check-label fw-semibold'}}) }}
+        </div>
+        {{ form_help(form.integracionWebhooksActiva) }}
+        {{ form_errors(form.integracionWebhooksActiva) }}
+      </div>
+      <div class="col-md-4">
+        <div class="form-check form-switch mt-1">
+          {{ form_widget(form.integracionSincronizacionActiva, {'attr': {'class': 'form-check-input'}}) }}
+          {{ form_label(form.integracionSincronizacionActiva, null, {'label_attr': {'class': 'form-check-label fw-semibold'}}) }}
+        </div>
+        {{ form_help(form.integracionSincronizacionActiva) }}
+        {{ form_errors(form.integracionSincronizacionActiva) }}
+      </div>
+    </div>
+    <small class="text-muted mt-2 d-block">
+      Desactivar una integración la deshabilita completamente — el menú se oculta y las peticiones son rechazadas.
+    </small>
+  </div>
+</div>
+
 <div class="d-flex justify-content-end mb-5">
   <button type="submit" class="btn btn-primary px-5" id="btn-guardar-config">
     <i class="bi bi-check-lg me-2"></i>Guardar configuración

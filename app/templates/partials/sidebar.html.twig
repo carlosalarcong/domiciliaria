@@ -53,12 +53,16 @@
         <a href="{{ path('app_auditoria_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_auditoria' ? 'active' : '' }}">
             <i class="bi bi-journal-text"></i> Auditoría
         </a>
+        {% if clinicaConfig is null or clinicaConfig.isIntegracionApiActiva() or clinicaConfig.isIntegracionWebhooksActiva() or clinicaConfig.isIntegracionSincronizacionActiva() %}
         <a href="{{ path('app_integracion_index') }}" class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_integracion' ? 'active' : '' }}">
             <i class="bi bi-plug"></i> Integraciones
         </a>
+        {% if clinicaConfig is null or clinicaConfig.isIntegracionSincronizacionActiva() %}
         <a href="{{ path('app_sincronizacion_index') }}" class="sidebar-link ps-4 {{ app.request.attributes.get('_route') starts with 'app_sincronizacion' ? 'active' : '' }}" style="font-size: 0.9em;">
             <i class="bi bi-arrow-repeat"></i> Sincronizaciones
         </a>
+        {% endif %}
+        {% endif %}
         <a href="{{ path('app_configuracion_index') }}"
            class="sidebar-link {{ app.request.attributes.get('_route') starts with 'app_configuracion' ? 'active' : '' }}">
             <i class="bi bi-gear-fill"></i> Configuración
