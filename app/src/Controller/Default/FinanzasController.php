@@ -57,6 +57,10 @@ class FinanzasController extends AbstractController
         $reportePaciente  = [];
         $flujoIngresos    = array_fill(1, 12, 0.0);
         $flujoEgresos     = array_fill(1, 12, 0.0);
+        $chartData = [
+            'labels' => [],
+            'datasets' => [],
+        ];
 
         if ($tipo === 'mandante') {
             $rows = $this->facturaRepository->reportePorMandante($anio);
@@ -84,6 +88,12 @@ class FinanzasController extends AbstractController
                 }
             }
             usort($reporteMandante, fn($a, $b) => $b['suma_total'] <=> $a['suma_total']);
+            $chartData = [
+                'labels' => array_map(static fn(array $r): string => (string) $r['nombre'], $reporteMandante),
+                'datasets' => [
+                    array_map(static fn(array $r): int => (int) round((float) $r['suma_total']), $reporteMandante),
+                ],
+            ];
         }
 
         if ($tipo === 'trabajador') {
@@ -108,6 +118,14 @@ class FinanzasController extends AbstractController
                 }
             }
             usort($reporteTrabajador, fn($a, $b) => $b['suma_total'] <=> $a['suma_total']);
+            $topTrab = array_slice($reporteTrabajador, 0, 8);
+            $chartData = [
+                'labels' => array_map(static fn(array $r): string => (string) $r['nombre'], $topTrab),
+                'datasets' => [
+                    array_map(static fn(array $r): int => (int) round((float) $r['suma_total']), $topTrab),
+                    array_map(static fn(array $r): int => (int) round((float) $r['suma_pagado']), $topTrab),
+                ],
+            ];
         }
 
         if ($tipo === 'flujo') {
@@ -117,6 +135,13 @@ class FinanzasController extends AbstractController
             foreach ($this->liquidacionRepository->reporteFlujoEgresos($anio) as $row) {
                 $flujoEgresos[(int) $row['mes']] = (float) $row['suma_total'];
             }
+            $chartData = [
+                'labels' => ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+                'datasets' => [
+                    array_map(static fn(int $i): float => (float) ($flujoIngresos[$i] ?? 0), range(1, 12)),
+                    array_map(static fn(int $i): float => (float) ($flujoEgresos[$i] ?? 0), range(1, 12)),
+                ],
+            ];
         }
 
         if ($tipo === 'paciente') {
@@ -145,6 +170,14 @@ class FinanzasController extends AbstractController
                 $reportePaciente[$id]['por_estado'][$estado]   = ($reportePaciente[$id]['por_estado'][$estado] ?? 0) + $count;
             }
             usort($reportePaciente, fn($a, $b) => $b['total'] <=> $a['total']);
+            $topPac = array_slice($reportePaciente, 0, 8);
+            $chartData = [
+                'labels' => array_map(static fn(array $r): string => (string) $r['nombre'], $topPac),
+                'datasets' => [
+                    array_map(static fn(array $r): int => (int) $r['total'], $topPac),
+                    array_map(static fn(array $r): int => (int) ($r['por_estado']['DESCUBIERTO'] ?? 0), $topPac),
+                ],
+            ];
         }
 
         return $this->render('finanzas/reportes.html.twig', [
@@ -157,6 +190,7 @@ class FinanzasController extends AbstractController
             'tiposTurno'        => TipoTurno::cases(),
             'flujoIngresos'     => $flujoIngresos,
             'flujoEgresos'      => $flujoEgresos,
+            'chartData'         => $chartData,
             'aniosDisponibles'  => range((int) date('Y'), (int) date('Y') - 3),
         ]);
     }

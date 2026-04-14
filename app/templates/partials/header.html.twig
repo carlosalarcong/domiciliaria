@@ -1,5 +1,5 @@
 <header class="top-header">
-    <button class="btn btn-sm btn-light me-2 d-lg-none" id="sidebarToggle" aria-label="Menú">
+    <button class="btn btn-sm btn-light me-2 d-lg-none" id="sidebarToggle" aria-label="Menú" data-sidebar-target="toggle" data-action="click->sidebar#toggle">
         <i class="bi bi-list fs-5"></i>
     </button>
     <div class="flex-grow-1">
@@ -9,19 +9,25 @@
     </div>
     <div class="d-flex align-items-center gap-3">
         {# ── Bell de notificaciones ── #}
-        <div class="dropdown">
+        <div
+            class="dropdown"
+            data-controller="notificaciones"
+            data-notificaciones-count-url-value="{{ path('app_notificacion_count') }}"
+            data-notificaciones-recientes-url-value="{{ path('app_notificacion_recientes') }}"
+            data-notificaciones-csrf-value="{{ csrf_token('notif_leer') }}"
+        >
             <button class="btn btn-sm btn-light position-relative" type="button"
-                    data-bs-toggle="dropdown" data-bs-auto-close="outside" id="bellDropdown">
+                    data-bs-toggle="dropdown" data-bs-auto-close="outside" id="bellDropdown" data-notificaciones-target="bell">
                 <i class="bi bi-bell fs-5"></i>
                 <span id="notif-badge" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger"
-                      style="font-size:.6rem;display:none">0</span>
+                      style="font-size:.6rem;display:none" data-notificaciones-target="badge">0</span>
             </button>
             <div class="dropdown-menu dropdown-menu-end shadow p-0" style="width:340px;max-height:420px;overflow-y:auto">
                 <div class="d-flex justify-content-between align-items-center px-3 py-2 border-bottom">
                     <span class="fw-semibold small">Notificaciones</span>
                     <a href="{{ path('app_notificacion_index') }}" class="small text-primary text-decoration-none">Ver todas</a>
                 </div>
-                <ul id="notif-list" class="list-group list-group-flush mb-0">
+                <ul id="notif-list" class="list-group list-group-flush mb-0" data-notificaciones-target="list">
                     <li class="list-group-item text-center text-muted small py-3">Cargando...</li>
                 </ul>
             </div>

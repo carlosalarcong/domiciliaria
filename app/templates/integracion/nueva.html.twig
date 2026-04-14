@@ -16,7 +16,7 @@
 <div class="row g-4">
     <div class="col-lg-8">
         <div class="card border-0 shadow-sm">
-            <div class="card-body p-4">
+            <div class="card-body p-4" data-controller="webhook">
                 {{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
 
                 <div class="mb-3">
@@ -35,8 +35,8 @@
                 <div class="mb-4">
                     {{ form_label(form.secret, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
                     <div class="input-group">
-                        {{ form_widget(form.secret, {attr: {class: 'form-control font-monospace', id: 'secretInput'}}) }}
-                        <button type="button" class="btn btn-outline-secondary" onclick="generarSecret()">
+                        {{ form_widget(form.secret, {attr: {class: 'form-control font-monospace', 'data-webhook-target': 'secret'}}) }}
+                        <button type="button" class="btn btn-outline-secondary" data-action="click->webhook#generar">
                             <i class="bi bi-arrow-repeat"></i> Regenerar
                         </button>
                     </div>
@@ -111,14 +111,4 @@
         </div>
     </div>
 </div>
-
-{% block javascripts %}{{ parent() }}
-<script>
-function generarSecret() {
-    const arr = new Uint8Array(16);
-    crypto.getRandomValues(arr);
-    document.getElementById('secretInput').value = Array.from(arr).map(b => b.toString(16).padStart(2,'0')).join('');
-}
-</script>
-{% endblock %}
 {% endblock %}
