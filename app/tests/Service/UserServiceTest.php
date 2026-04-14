@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests\Service;
 
-use App\Entity\User;
-use App\Repository\UserRepository;
+use App\Entity\Tenant\User;
+use App\Repository\Tenant\UserRepository;
 use App\Service\UserService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;

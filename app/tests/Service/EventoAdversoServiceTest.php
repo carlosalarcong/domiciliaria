@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Tests\Service;
 
-use App\Entity\EventoAdverso;
-use App\Entity\Paciente;
-use App\Entity\User;
+use App\Entity\Tenant\EventoAdverso;
+use App\Entity\Tenant\Paciente;
+use App\Entity\Tenant\User;
 use App\Enum\EstadoEvento;
 use App\Enum\GravedadEvento;
 use App\Enum\TipoEventoAdverso;
@@ -87,7 +87,7 @@ class EventoAdversoServiceTest extends TestCase
 
     // ─── agregarSeguimiento ───────────────────────────────────────────────────
 
-    public function testAgregarSeguimientoCambiaEstadoAEnProceso(): void
+    public function testAgregarSeguimientoPersisteSeguimiento(): void
     {
         $evento = $this->buildEvento(GravedadEvento::LEVE);
         $evento->setEstado(EstadoEvento::ABIERTO);
@@ -98,20 +98,16 @@ class EventoAdversoServiceTest extends TestCase
         $seg = $this->service->agregarSeguimiento($evento, 'Se tomaron medidas.', new User());
 
         $this->assertSame('Se tomaron medidas.', $seg->getNota());
-        $this->assertSame(EstadoEvento::EN_PROCESO, $evento->getEstado());
     }
 
-    public function testAgregarSeguimientoNoModificaEventoCerrado(): void
+    public function testAgregarSeguimientoEventoCerradoLanzaExcepcion(): void
     {
         $evento = $this->buildEvento(GravedadEvento::LEVE);
         $evento->setEstado(EstadoEvento::CERRADO);
 
-        $this->em->method('persist');
-        $this->em->method('flush');
+        $this->expectException(\LogicException::class);
 
         $this->service->agregarSeguimiento($evento, 'Nota post-cierre.', new User());
-
-        $this->assertSame(EstadoEvento::CERRADO, $evento->getEstado());
     }
 
     // ─── cerrar ───────────────────────────────────────────────────────────────

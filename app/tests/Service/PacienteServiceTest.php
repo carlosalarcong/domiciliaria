@@ -4,11 +4,12 @@ declare(strict_types=1);
 
 namespace App\Tests\Service;
 
-use App\Entity\Paciente;
-use App\Entity\User;
+use App\Entity\Tenant\Paciente;
+use App\Entity\Tenant\User;
 use App\Enum\EstadoPaciente;
 use App\Enum\TipoBitacora;
-use App\Repository\PacienteRepository;
+use App\Repository\Tenant\PacienteRepository;
+use App\Repository\Tenant\TurnoRepository;
 use App\Service\PacienteService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
@@ -19,12 +20,17 @@ class PacienteServiceTest extends TestCase
     private PacienteService $service;
     private EntityManagerInterface $em;
 
+    private MessageBusInterface $bus;
+
     protected function setUp(): void
     {
         $this->em      = $this->createMock(EntityManagerInterface::class);
         $repo          = $this->createMock(PacienteRepository::class);
-        $bus           = $this->createMock(MessageBusInterface::class);
-        $this->service = new PacienteService($this->em, $repo, $bus);
+        $turnoRepo     = $this->createMock(TurnoRepository::class);
+        $this->bus     = $this->createMock(MessageBusInterface::class);
+        $this->bus->method('dispatch')
+            ->willReturnCallback(fn($m) => new \Symfony\Component\Messenger\Envelope($m));
+        $this->service = new PacienteService($this->em, $repo, $turnoRepo, $this->bus);
     }
 
     public function testRegistrarPersistePaciente(): void
@@ -45,10 +51,12 @@ class PacienteServiceTest extends TestCase
     {
         $paciente = new Paciente();
         $paciente->setEstado(EstadoPaciente::ACTIVO);
+        $user = new User();
+        $user->setEmail('a@b.cl')->setNombre('A')->setApellido('B');
 
         $this->em->expects($this->once())->method('flush');
 
-        $this->service->actualizarEstado($paciente, EstadoPaciente::DADO_DE_BAJA);
+        $this->service->actualizarEstado($paciente, EstadoPaciente::DADO_DE_BAJA, $user);
 
         $this->assertSame(EstadoPaciente::DADO_DE_BAJA, $paciente->getEstado());
         $this->assertNotNull($paciente->getFechaTermino(), 'Debe registrar fecha de término automáticamente');
@@ -58,10 +66,12 @@ class PacienteServiceTest extends TestCase
     {
         $paciente = new Paciente();
         $paciente->setEstado(EstadoPaciente::ACTIVO);
+        $user = new User();
+        $user->setEmail('a@b.cl')->setNombre('A')->setApellido('B');
 
         $this->em->expects($this->never())->method('flush');
 
-        $this->service->actualizarEstado($paciente, EstadoPaciente::ACTIVO);
+        $this->service->actualizarEstado($paciente, EstadoPaciente::ACTIVO, $user);
 
         $this->assertSame(EstadoPaciente::ACTIVO, $paciente->getEstado());
     }
