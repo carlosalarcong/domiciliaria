@@ -4,16 +4,19 @@ declare(strict_types=1);
 
 namespace App\Tests\Service;
 
-use App\Entity\DisponibilidadTrabajador;
-use App\Entity\Trabajador;
-use App\Entity\Turno;
-use App\Entity\User;
+use App\Entity\Tenant\DisponibilidadTrabajador;
+use App\Entity\Tenant\Paciente;
+use App\Entity\Tenant\Trabajador;
+use App\Entity\Tenant\Turno;
+use App\Entity\Tenant\User;
 use App\Enum\EstadoTurno;
 use App\Enum\TipoTurno;
-use App\Repository\TurnoRepository;
+use App\Repository\Tenant\LiquidacionMensualRepository;
+use App\Repository\Tenant\TurnoRepository;
 use App\Service\TrabajadorService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
+use Symfony\Component\Messenger\MessageBusInterface;
 
 class TrabajadorServiceTest extends TestCase
 {
@@ -24,12 +27,18 @@ class TrabajadorServiceTest extends TestCase
 
     protected function setUp(): void
     {
-        $this->em       = $this->createMock(EntityManagerInterface::class);
+        $this->em        = $this->createMock(EntityManagerInterface::class);
         $this->turnoRepo = $this->createMock(TurnoRepository::class);
-        $this->tmpDir   = sys_get_temp_dir() . '/test_uploads_' . uniqid();
+        $this->tmpDir    = sys_get_temp_dir() . '/test_uploads_' . uniqid();
         mkdir($this->tmpDir, 0777, true);
 
-        $this->service = new TrabajadorService($this->em, $this->turnoRepo, $this->tmpDir);
+        $this->service = new TrabajadorService(
+            $this->em,
+            $this->turnoRepo,
+            $this->createMock(LiquidacionMensualRepository::class),
+            $this->createMock(MessageBusInterface::class),
+            $this->tmpDir,
+        );
     }
 
     protected function tearDown(): void
@@ -162,7 +171,7 @@ class TrabajadorServiceTest extends TestCase
 
     private function buildTurnoBase(): Turno
     {
-        $paciente = new \App\Entity\Paciente();
+        $paciente = new Paciente();
         $r = new \ReflectionClass($paciente);
         foreach (['nombres' => 'Test', 'apellidos' => 'Paciente'] as $prop => $val) {
             if ($r->hasProperty($prop)) {

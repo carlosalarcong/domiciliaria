@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace App\Tests\Service;
 
-use App\Entity\Paciente;
-use App\Entity\Trabajador;
-use App\Entity\Turno;
-use App\Entity\User;
+use App\Entity\Tenant\Paciente;
+use App\Entity\Tenant\Trabajador;
+use App\Entity\Tenant\Turno;
+use App\Entity\Tenant\User;
 use App\Enum\EstadoTurno;
 use App\Enum\MotivoReemplazo;
 use App\Enum\TipoTurno;
 use App\Message\TurnoDescubiertoMessage;
-use App\Repository\TurnoRepository;
+use App\Repository\Tenant\DisponibilidadTrabajadorRepository;
+use App\Repository\Tenant\TurnoRepository;
 use App\Service\TurnoService;
 use Doctrine\ORM\EntityManagerInterface;
 use PHPUnit\Framework\TestCase;
@@ -32,7 +33,12 @@ class TurnoServiceTest extends TestCase
         $this->repo = $this->createMock(TurnoRepository::class);
         $this->bus  = $this->createMock(MessageBusInterface::class);
 
-        $this->service = new TurnoService($this->em, $this->repo, $this->bus);
+        $this->service = new TurnoService(
+            $this->em,
+            $this->repo,
+            $this->createMock(DisponibilidadTrabajadorRepository::class),
+            $this->bus,
+        );
     }
 
     // ─── crear() ─────────────────────────────────────────────────────────────
@@ -149,6 +155,7 @@ class TurnoServiceTest extends TestCase
     public function testRegistrarAsistenciaInicio(): void
     {
         $turno = $this->buildTurno(new Trabajador());
+        $turno->setFecha(new \DateTime('today'));
         $turno->setEstado(EstadoTurno::CUBIERTO);
 
         $this->em->expects($this->once())->method('flush');
@@ -162,6 +169,7 @@ class TurnoServiceTest extends TestCase
     public function testRegistrarAsistenciaTermino(): void
     {
         $turno = $this->buildTurno(new Trabajador());
+        $turno->setFecha(new \DateTime('today'));
         $turno->setEstado(EstadoTurno::PARCIAL);
         $turno->setRegistroInicio(new \DateTime());
 
