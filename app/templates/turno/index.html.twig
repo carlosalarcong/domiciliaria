@@ -4,6 +4,7 @@
 
 {% block stylesheets %}
 {{ parent() }}
+<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
 <style>
 /* ── KPI strip ── */
 .kpi-turno {
@@ -54,11 +55,17 @@
 {% endblock %}
 
 {% block content %}
+<div
+    data-controller="calendario"
+    data-calendario-eventos-url-value="{{ path('app_turno_api_eventos') }}"
+    data-calendario-kpis-url-value="{{ path('app_turno_api_kpis') }}"
+    data-calendario-detalle-url-value="/turnos"
+>
 {# ── Encabezado ── #}
 <div class="d-flex justify-content-between align-items-center mb-3">
     <div>
         <h4 class="mb-0 fw-bold">Calendario de Turnos</h4>
-        <small class="text-muted">Vista mensual · <span id="kpi-periodo"></span></small>
+        <small class="text-muted">Vista mensual · <span id="kpi-periodo" data-calendario-target="periodo"></span></small>
     </div>
     <div class="d-flex gap-2">
         {% if is_granted('ROLE_COORDINADOR') %}
@@ -75,37 +82,37 @@
 {# ── KPI strip ── #}
 <div class="row g-2 mb-3" id="kpi-strip">
     <div class="col-6 col-md-3">
-        <div class="kpi-turno" id="kpi-hoy" style="--kpi-color:#3182ce" data-filtro="hoy" title="Ver solo turnos de hoy">
+        <div class="kpi-turno" id="kpi-hoy" style="--kpi-color:#3182ce" data-filtro="hoy" data-action="click->calendario#kpiClick" title="Ver solo turnos de hoy">
             <div class="kpi-icon"><i class="bi bi-calendar-day"></i></div>
             <div>
-                <div class="kpi-val" id="kv-hoy">–</div>
+                <div class="kpi-val" id="kv-hoy" data-calendario-target="kvHoy">–</div>
                 <div class="kpi-lbl">Turnos hoy</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="kpi-turno" id="kpi-descubiertos" style="--kpi-color:#e53e3e" data-filtro="DESCUBIERTO" title="Filtrar turnos descubiertos">
+        <div class="kpi-turno" id="kpi-descubiertos" style="--kpi-color:#e53e3e" data-filtro="DESCUBIERTO" data-action="click->calendario#kpiClick" title="Filtrar turnos descubiertos">
             <div class="kpi-icon"><i class="bi bi-calendar-x"></i></div>
             <div>
-                <div class="kpi-val" id="kv-desc">–</div>
+                <div class="kpi-val" id="kv-desc" data-calendario-target="kvDesc">–</div>
                 <div class="kpi-lbl">Descubiertos 7d</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="kpi-turno" id="kpi-completados" style="--kpi-color:#38a169" data-filtro="COMPLETADO" title="Filtrar turnos completados">
+        <div class="kpi-turno" id="kpi-completados" style="--kpi-color:#38a169" data-filtro="COMPLETADO" data-action="click->calendario#kpiClick" title="Filtrar turnos completados">
             <div class="kpi-icon"><i class="bi bi-calendar-check"></i></div>
             <div>
-                <div class="kpi-val" id="kv-comp">–</div>
+                <div class="kpi-val" id="kv-comp" data-calendario-target="kvComp">–</div>
                 <div class="kpi-lbl">Completados mes</div>
             </div>
         </div>
     </div>
     <div class="col-6 col-md-3">
-        <div class="kpi-turno" id="kpi-hoy-completados" style="--kpi-color:#d69e2e" data-filtro="" title="Limpiar filtros">
+        <div class="kpi-turno" id="kpi-hoy-completados" style="--kpi-color:#d69e2e" data-filtro="" data-action="click->calendario#kpiClick" title="Limpiar filtros">
             <div class="kpi-icon"><i class="bi bi-calendar2-check"></i></div>
             <div>
-                <div class="kpi-val" id="kv-hoy-comp">–</div>
+                <div class="kpi-val" id="kv-hoy-comp" data-calendario-target="kvHoyComp">–</div>
                 <div class="kpi-lbl">Completados hoy</div>
             </div>
         </div>
@@ -114,27 +121,27 @@
 
 {# ── Filtros ── #}
 <div class="filtros-calendario d-flex flex-wrap gap-2 align-items-center">
-    <select id="filtro-trabajador" class="form-select form-select-sm" style="max-width:220px">
+    <select id="filtro-trabajador" class="form-select form-select-sm" style="max-width:220px" data-calendario-target="trabajador" data-action="change->calendario#aplicarFiltros">
         <option value="">Todos los trabajadores</option>
         {% for t in trabajadores %}
         <option value="{{ t.id }}">{{ t.apellidos }}, {{ t.nombres }}</option>
         {% endfor %}
     </select>
-    <select id="filtro-tipo" class="form-select form-select-sm" style="max-width:160px">
+    <select id="filtro-tipo" class="form-select form-select-sm" style="max-width:160px" data-calendario-target="tipo" data-action="change->calendario#aplicarFiltros">
         <option value="">Todos los tipos</option>
         <option value="TURNO_DIA">Turno día</option>
         <option value="TURNO_NOCHE">Turno noche</option>
         <option value="TURNO_24H">Turno 24h</option>
         <option value="VISITA">Visita</option>
     </select>
-    <select id="filtro-estado" class="form-select form-select-sm" style="max-width:160px">
+    <select id="filtro-estado" class="form-select form-select-sm" style="max-width:160px" data-calendario-target="estado" data-action="change->calendario#aplicarFiltros">
         <option value="">Todos los estados</option>
         <option value="CUBIERTO">Cubierto</option>
         <option value="PARCIAL">Parcial</option>
         <option value="DESCUBIERTO">Descubierto</option>
         <option value="COMPLETADO">Completado</option>
     </select>
-    <button id="btn-limpiar-filtros" class="btn btn-outline-secondary btn-sm d-none">
+    <button id="btn-limpiar-filtros" class="btn btn-outline-secondary btn-sm d-none" data-calendario-target="limpiar" data-action="click->calendario#limpiar">
         <i class="bi bi-x-lg me-1"></i>Limpiar
     </button>
 </div>
@@ -153,7 +160,7 @@
 {# ── Calendario ── #}
 <div class="card border-0 shadow-sm">
     <div class="card-body p-2 p-md-3">
-        <div id="calendario-turnos"></div>
+        <div id="calendario-turnos" data-calendario-target="el"></div>
     </div>
 </div>
 
@@ -165,191 +172,17 @@
                 <h5 class="modal-title fw-bold">Detalle del turno</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body" id="turnoModalBody">
+            <div class="modal-body" id="turnoModalBody" data-calendario-target="modalBody">
                 <div class="text-center py-3"><div class="spinner-border text-primary"></div></div>
             </div>
-            <div class="modal-footer border-0 pt-0" id="turnoModalFooter"></div>
+            <div class="modal-footer border-0 pt-0" id="turnoModalFooter" data-calendario-target="modalFooter"></div>
         </div>
     </div>
+</div>
 </div>
 {% endblock %}
 
 {% block javascripts %}
 {{ parent() }}
-<link href="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.css" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.11/index.global.min.js"></script>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    const calendarEl  = document.getElementById('calendario-turnos');
-    const modal       = new bootstrap.Modal(document.getElementById('turnoModal'));
-    const modalBody   = document.getElementById('turnoModalBody');
-    const modalFooter = document.getElementById('turnoModalFooter');
-
-    const isMobile = () => window.innerWidth < 768;
-
-    // ── Filtros activos ──
-    let filtros = { trabajadorId: '', estado: '', tipo: '' };
-
-    const selectTrabajador = document.getElementById('filtro-trabajador');
-    const selectTipo       = document.getElementById('filtro-tipo');
-    const selectEstado     = document.getElementById('filtro-estado');
-    const btnLimpiar       = document.getElementById('btn-limpiar-filtros');
-
-    function abreviarNombre(nombreCompleto) {
-        const partes = (nombreCompleto || '').trim().split(/\s+/).filter(Boolean);
-        if (partes.length === 0) return '';
-        if (partes.length === 1) return partes[0];
-        return `${partes[0]} ${partes[1].charAt(0)}.`;
-    }
-
-    function escapeHtml(texto) {
-        return String(texto)
-            .replaceAll('&', '&amp;')
-            .replaceAll('<', '&lt;')
-            .replaceAll('>', '&gt;')
-            .replaceAll('"', '&quot;')
-            .replaceAll("'", '&#039;');
-    }
-
-    function aplicarFiltros() {
-        filtros.trabajadorId = selectTrabajador.value;
-        filtros.tipo         = selectTipo.value;
-        filtros.estado       = selectEstado.value;
-        const hayFiltro = filtros.trabajadorId || filtros.estado || filtros.tipo;
-        btnLimpiar.classList.toggle('d-none', !hayFiltro);
-        calendar.refetchEvents();
-    }
-
-    selectTrabajador.addEventListener('change', aplicarFiltros);
-    selectTipo.addEventListener('change', aplicarFiltros);
-    selectEstado.addEventListener('change', aplicarFiltros);
-    btnLimpiar.addEventListener('click', () => {
-        selectTrabajador.value = '';
-        selectTipo.value       = '';
-        selectEstado.value     = '';
-        filtros = { trabajadorId: '', estado: '', tipo: '' };
-        btnLimpiar.classList.add('d-none');
-        // limpiar KPIs activos
-        document.querySelectorAll('.kpi-turno').forEach(k => k.classList.remove('active'));
-        calendar.refetchEvents();
-    });
-
-    // ── KPI cards como filtro rápido ──
-    document.querySelectorAll('.kpi-turno[data-filtro]').forEach(card => {
-        card.addEventListener('click', () => {
-            const f = card.dataset.filtro;
-            if (!f) {
-                // limpiar todo
-                selectEstado.value     = '';
-                selectTrabajador.value = '';
-                selectTipo.value       = '';
-                filtros = { trabajadorId: '', estado: '', tipo: '' };
-                btnLimpiar.classList.add('d-none');
-                document.querySelectorAll('.kpi-turno').forEach(k => k.classList.remove('active'));
-            } else if (f === 'hoy') {
-                calendar.gotoDate(new Date());
-                calendar.changeView('timeGridDay');
-                document.querySelectorAll('.kpi-turno').forEach(k => k.classList.remove('active'));
-                card.classList.add('active');
-                return;
-            } else {
-                selectEstado.value = f;
-                filtros.estado     = f;
-                btnLimpiar.classList.remove('d-none');
-                document.querySelectorAll('.kpi-turno').forEach(k => k.classList.remove('active'));
-                card.classList.add('active');
-            }
-            calendar.refetchEvents();
-        });
-    });
-
-    // ── FullCalendar ──
-    const toolbarDesktop = {
-        left:   'prev,next today',
-        center: 'title',
-        right:  'dayGridMonth,timeGridWeek,listWeek',
-    };
-    const toolbarMobile = {
-        left:   'prev,next',
-        center: 'title',
-        right:  'today listWeek',
-    };
-
-    const calendar = new FullCalendar.Calendar(calendarEl, {
-        locale: 'es',
-        initialView: isMobile() ? 'listWeek' : 'dayGridMonth',
-        headerToolbar: isMobile() ? toolbarMobile : toolbarDesktop,
-        buttonText: { today: 'Hoy', month: 'Mes', week: 'Semana', day: 'Día', list: 'Lista' },
-        windowResize() {
-            calendar.changeView(isMobile() ? 'listWeek' : 'dayGridMonth');
-            calendar.setOption('headerToolbar', isMobile() ? toolbarMobile : toolbarDesktop);
-        },
-        events(fetchInfo, successCallback, failureCallback) {
-            const url = new URL('{{ path('app_turno_api_eventos') }}', location.origin);
-            url.searchParams.set('start', fetchInfo.startStr);
-            url.searchParams.set('end', fetchInfo.endStr);
-            if (filtros.trabajadorId) url.searchParams.set('trabajadorId', filtros.trabajadorId);
-            if (filtros.estado) url.searchParams.set('estado', filtros.estado);
-            if (filtros.tipo) url.searchParams.set('tipo', filtros.tipo);
-            fetch(url)
-                .then(r => r.json())
-                .then(successCallback)
-                .catch(failureCallback);
-        },
-        // ── Chip de evento mejorado ──
-        eventContent(arg) {
-            const p = arg.event.extendedProps;
-            const tipoIcon = { TURNO_DIA: '☀', TURNO_NOCHE: '🌙', TURNO_24H: '⏳', VISITA: '🏠' };
-            const icon = tipoIcon[p.tipoTurno] ?? '';
-            const reemplazo = p.esReemplazo ? '<span class="chip-reemplazo">↺</span>' : '';
-            const paciente = (p.paciente ?? 'Sin paciente').split(' ').slice(0, 2).join(' ');
-            const trabajadorNombre = p.trabajador ?? 'Sin asignar';
-            const trabajadorChip = p.trabajadorId
-                ? `<span class="chip-iniciales chip-trabajador" title="Trabajador: ${escapeHtml(trabajadorNombre)}">👤 ${escapeHtml(abreviarNombre(trabajadorNombre))}</span>`
-                : '<span class="chip-iniciales chip-sin-asignar" title="Sin trabajador asignado">Sin asignar</span>';
-            return {
-                html: `<div class="fc-event-chip">
-                    ${trabajadorChip}
-                    <span class="chip-texto">${icon} ${paciente}</span>
-                    ${reemplazo}
-                </div>`,
-            };
-        },
-        eventClick(info) {
-            const turnoId = info.event.id;
-            modalBody.innerHTML = '<div class="text-center py-3"><div class="spinner-border text-primary"></div></div>';
-            modalFooter.innerHTML = '';
-            modal.show();
-            fetch(`/turnos/${turnoId}/detalle`)
-                .then(r => r.text())
-                .then(html => {
-                    modalBody.innerHTML = html;
-                    modalFooter.innerHTML = `<a href="/turnos/${turnoId}" class="btn btn-primary btn-sm">Ver detalle completo</a>`;
-                });
-        },
-        eventDidMount(info) {
-            info.el.title = info.event.title;
-        },
-        datesSet(info) {
-            // Actualizar período en el subtítulo
-            const opts = { month: 'long', year: 'numeric' };
-            document.getElementById('kpi-periodo').textContent =
-                info.start.toLocaleDateString('es-CL', opts);
-        },
-    });
-
-    calendar.render();
-
-    // ── Cargar KPIs ──
-    fetch('{{ path('app_turno_api_kpis') }}')
-        .then(r => r.json())
-        .then(d => {
-            document.getElementById('kv-hoy').textContent = d.hoy_total;
-            document.getElementById('kv-desc').textContent = d.descubiertos_7d;
-            document.getElementById('kv-comp').textContent = d.completados_mes;
-            document.getElementById('kv-hoy-comp').textContent = d.hoy_completados;
-        })
-        .catch(() => {});
-});
-</script>
 {% endblock %}
