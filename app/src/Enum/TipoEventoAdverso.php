@@ -13,6 +13,7 @@ enum TipoEventoAdverso: string
     case DETERIORO_CLINICO = 'DETERIORO_CLINICO';
     case ACCIDENTE_LABORAL = 'ACCIDENTE_LABORAL';
     case CONDUCTA          = 'CONDUCTA';
+    case RECLAMO           = 'RECLAMO';
     case OTRO              = 'OTRO';
 
     public function etiqueta(): string
@@ -25,6 +26,7 @@ enum TipoEventoAdverso: string
             self::DETERIORO_CLINICO => 'Deterioro clínico',
             self::ACCIDENTE_LABORAL => 'Accidente laboral',
             self::CONDUCTA          => 'Problema de conducta',
+            self::RECLAMO           => 'Reclamo',
             self::OTRO              => 'Otro',
         };
     }
@@ -39,6 +41,7 @@ enum TipoEventoAdverso: string
             self::DETERIORO_CLINICO => 'bi-heart-pulse',
             self::ACCIDENTE_LABORAL => 'bi-cone-striped',
             self::CONDUCTA          => 'bi-exclamation-circle',
+            self::RECLAMO           => 'bi-megaphone',
             self::OTRO              => 'bi-question-circle',
         };
     }

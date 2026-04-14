@@ -15,6 +15,8 @@ use App\Repository\Tenant\DisponibilidadTrabajadorRepository;
 use App\Repository\Tenant\DocumentoTrabajadorRepository;
 use App\Repository\Tenant\TrabajadorRepository;
 use App\Repository\Tenant\TurnoRepository;
+use App\Service\ExcelExportService;
+use App\Service\ExportService;
 use App\Service\TrabajadorService;
 use Doctrine\ORM\EntityManagerInterface;
 use Knp\Component\Pager\PaginatorInterface;
@@ -36,6 +38,8 @@ class TrabajadorController extends AbstractController
         private readonly EntityManagerInterface $em,
         private readonly PaginatorInterface $paginator,
         private readonly TrabajadorService $trabajadorService,
+        private readonly ExportService $exportService,
+        private readonly ExcelExportService $excelExportService,
         private readonly DocumentoTrabajadorRepository $documentoRepository,
         private readonly DisponibilidadTrabajadorRepository $disponibilidadRepository,
         private readonly TurnoRepository $turnoRepository,
@@ -50,6 +54,38 @@ class TrabajadorController extends AbstractController
         return $this->render('trabajador/index.html.twig', [
             'pagination' => $pagination,
         ]);
+    }
+
+    #[Route('/exportar-excel', name: 'exportar_excel', methods: ['GET'])]
+    public function exportarExcel(): Response
+    {
+        $trabajadores = $this->repository
+            ->findQueryBuilder()
+            ->getQuery()
+            ->getResult();
+
+        return $this->excelExportService->exportarTrabajadoresExcel($trabajadores);
+    }
+
+    #[Route('/exportar', name: 'exportar', methods: ['GET'])]
+    public function exportar(): Response
+    {
+        $trabajadores = $this->repository
+            ->findQueryBuilder()
+            ->getQuery()
+            ->getResult();
+
+        $csv      = $this->exportService->exportarTrabajadoresCsv($trabajadores);
+        $filename = 'trabajadores_' . date('Ymd') . '.csv';
+
+        $response = new StreamedResponse(fn() => print($csv));
+        $response->headers->set('Content-Type', 'text/csv; charset=UTF-8');
+        $response->headers->set('Content-Disposition', HeaderUtils::makeDisposition(
+            HeaderUtils::DISPOSITION_ATTACHMENT,
+            $filename,
+        ));
+
+        return $response;
     }
 
     #[Route('/nuevo', name: 'new', methods: ['GET', 'POST'])]

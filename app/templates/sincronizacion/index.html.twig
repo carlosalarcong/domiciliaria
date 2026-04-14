@@ -1,0 +1,96 @@
+{% extends 'base.html.twig' %}
+{% block title %}Sincronizaciones externas{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 fw-bold">Sincronizaciones externas</h4>
+        <small class="text-muted">Consumo programado de APIs de terceros</small>
+    </div>
+    <a href="{{ path('app_sincronizacion_nueva') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-2"></i>Nueva sincronización
+    </a>
+</div>
+
+<div class="card border-0 shadow-sm">
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-4">Nombre</th>
+                        <th>URL</th>
+                        <th>Cron</th>
+                        <th>Estado</th>
+                        <th>Última ejecución</th>
+                        <th>Último resultado</th>
+                        <th class="pe-4 text-end">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                {% for sync in pagination %}
+                    <tr>
+                        <td class="ps-4">
+                            <div class="fw-semibold">{{ sync.nombre }}</div>
+                            <small class="text-muted">{{ sync.metodo }}</small>
+                        </td>
+                        <td class="text-muted small font-monospace">{{ sync.urlEndpoint }}</td>
+                        <td><code>{{ sync.expresionCron }}</code></td>
+                        <td>
+                            {% if sync.ultimoEstado == 'ok' %}
+                                <span class="badge bg-success">OK</span>
+                            {% elseif sync.ultimoEstado == 'error' %}
+                                <span class="badge bg-danger">Error</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Sin ejecución</span>
+                            {% endif %}
+                            {% if sync.activa %}
+                                <span class="badge bg-info text-dark">Activa</span>
+                            {% else %}
+                                <span class="badge bg-secondary">Inactiva</span>
+                            {% endif %}
+                        </td>
+                        <td class="small text-muted">
+                            {{ sync.ultimaEjecucion ? sync.ultimaEjecucion|date('d/m/Y H:i') : '—' }}
+                        </td>
+                        <td class="small text-muted" style="max-width:280px; white-space:normal;">
+                            {{ sync.ultimoResultado ?: '—' }}
+                        </td>
+                        <td class="pe-4 text-end">
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ path('app_sincronizacion_editar', {id: sync.id}) }}" class="btn btn-outline-primary" title="Editar">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <form method="post" action="{{ path('app_sincronizacion_ejecutar_manual', {id: sync.id}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('sync_ejecutar_' ~ sync.id) }}">
+                                    <button type="submit" class="btn btn-outline-success" title="Ejecutar ahora">
+                                        <i class="bi bi-play-fill"></i>
+                                    </button>
+                                </form>
+                                <form method="post" action="{{ path('app_sincronizacion_toggle', {id: sync.id}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('sync_toggle_' ~ sync.id) }}">
+                                    <button type="submit" class="btn btn-outline-secondary" title="{{ sync.activa ? 'Desactivar' : 'Activar' }}">
+                                        <i class="bi {{ sync.activa ? 'bi-pause-fill' : 'bi-play-fill' }}"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr>
+                        <td colspan="7" class="text-center text-muted py-5">
+                            No hay sincronizaciones configuradas.
+                        </td>
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% if pagination.pageCount > 1 %}
+    <div class="card-footer bg-white border-0 d-flex justify-content-center">
+        {{ knp_pagination_render(pagination) }}
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

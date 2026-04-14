@@ -15,6 +15,7 @@ use App\Form\LiquidacionType;
 use App\Repository\Tenant\FacturaRepository;
 use App\Repository\Tenant\LiquidacionMensualRepository;
 use App\Repository\Tenant\TurnoRepository;
+use App\Service\ExcelExportService;
 use App\Service\ExportService;
 use App\Service\FinanzasService;
 use Knp\Component\Pager\PaginatorInterface;
@@ -37,6 +38,7 @@ class FinanzasController extends AbstractController
         private readonly TurnoRepository $turnoRepository,
         private readonly PaginatorInterface $paginator,
         private readonly ExportService $exportService,
+        private readonly ExcelExportService $excelExportService,
     ) {}
 
     // ─── Reportes ─────────────────────────────────────────────────────────────
@@ -336,6 +338,23 @@ class FinanzasController extends AbstractController
         return $response;
     }
 
+    #[Route('/liquidaciones/exportar-excel', name: 'liquidaciones_exportar_excel', methods: ['GET'])]
+    #[IsGranted('FINANZAS_EDITAR')]
+    public function liquidacionesExportarExcel(Request $request): Response
+    {
+        $anio = $request->query->getInt('anio', (int) date('Y'));
+        $mes  = $request->query->getInt('mes', (int) date('n'));
+
+        $liquidaciones = $this->liquidacionRepository->findAprobadasPorPeriodo($anio, $mes);
+
+        if ($liquidaciones === []) {
+            $this->addFlash('warning', 'No hay liquidaciones aprobadas para ese período.');
+            return $this->redirectToRoute('app_finanzas_liquidaciones');
+        }
+
+        return $this->excelExportService->exportarLiquidacionesExcel($liquidaciones);
+    }
+
     private function toAsciiFilename(string $value): string
     {
         $normalized = iconv('UTF-8', 'ASCII//TRANSLIT//IGNORE', $value);
@@ -390,6 +409,20 @@ class FinanzasController extends AbstractController
         ));
 
         return $response;
+    }
+
+    #[Route('/facturas/exportar-excel', name: 'facturas_exportar_excel', methods: ['GET'])]
+    public function facturasExportarExcel(Request $request): Response
+    {
+        $anio   = $request->query->getInt('anio', (int) date('Y'));
+        $estado = EstadoFactura::tryFrom($request->query->get('estado', ''));
+
+        $facturas = $this->facturaRepository
+            ->findQueryBuilder($anio, $estado ?: null)
+            ->getQuery()
+            ->getResult();
+
+        return $this->excelExportService->exportarFacturasExcel($facturas);
     }
 
     #[Route('/facturas/nueva', name: 'factura_nueva', methods: ['GET', 'POST'])]

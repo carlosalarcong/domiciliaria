@@ -15,6 +15,13 @@
            class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-download me-1"></i>Exportar Buk
         </a>
+        <a href="{{ path('app_finanzas_liquidaciones_exportar_excel', {
+                anio: anio,
+                mes: app.request.query.getInt('mes', 0) ?: 'now'|date('n')
+            }) }}"
+           class="btn btn-success btn-sm">
+            <i class="bi bi-file-earmark-excel me-1"></i>Exportar Excel
+        </a>
         <a href="{{ path('app_finanzas_liquidacion_nueva') }}" class="btn btn-primary">
             <i class="bi bi-plus-lg me-2"></i>Nueva liquidación
         </a>
