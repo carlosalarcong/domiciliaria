@@ -7,6 +7,7 @@ namespace App\Service;
 use App\Entity\Tenant\Factura;
 use App\Entity\Tenant\LiquidacionMensual;
 use App\Entity\Tenant\Paciente;
+use App\Entity\Tenant\Trabajador;
 use App\Entity\Tenant\Turno;
 use App\Enum\TipoConcepto;
 use Psr\Log\LoggerInterface;
@@ -111,6 +112,45 @@ class ExportService
                 $t->getRegistroInicio()?->format('d/m/Y H:i') ?? '',
                 $t->getRegistroTermino()?->format('d/m/Y H:i') ?? '',
                 $this->esc($t->getObservaciones()),
+            ]);
+        }
+
+        return self::BOM . implode("\r\n", $lines);
+    }
+
+    // ─── Trabajadores ────────────────────────────────────────────────────────
+
+    /**
+     * @param Trabajador[] $trabajadores
+     */
+    public function exportarTrabajadoresCsv(array $trabajadores): string
+    {
+        $lines = [];
+        $lines[] = implode(';', [
+            'Apellidos',
+            'Nombres',
+            'RUT',
+            'Perfil',
+            'Estado',
+            'Teléfono',
+            'Email',
+            'Dirección',
+            'Fecha ingreso',
+            'Fecha salida',
+        ]);
+
+        foreach ($trabajadores as $t) {
+            $lines[] = implode(';', [
+                $this->esc($t->getApellidos()),
+                $this->esc($t->getNombres()),
+                $this->esc($t->getRut()),
+                $this->esc($t->getPerfil()->etiqueta()),
+                $this->esc($t->getEstado()->etiqueta()),
+                $this->esc($t->getTelefono()),
+                $this->esc($t->getEmail()),
+                $this->esc($t->getDireccion()),
+                $t->getFechaIngreso()?->format('d/m/Y') ?? '',
+                $t->getFechaSalida()?->format('d/m/Y') ?? '',
             ]);
         }
 

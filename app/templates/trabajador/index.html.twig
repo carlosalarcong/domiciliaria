@@ -7,11 +7,19 @@
         <h4 class="mb-0 fw-bold">Personal</h4>
         <small class="text-muted">Trabajadores registrados</small>
     </div>
-    {% if is_granted('ROLE_ADMIN') %}
-    <a href="{{ path('app_trabajador_new') }}" class="btn btn-primary" id="btn-nuevo-trabajador">
-        <i class="bi bi-plus-lg me-2"></i>Nuevo trabajador
-    </a>
-    {% endif %}
+    <div class="d-flex gap-2">
+        <a href="{{ path('app_trabajador_exportar') }}" class="btn btn-outline-secondary btn-sm">
+            <i class="bi bi-download me-1"></i>Exportar CSV
+        </a>
+        <a href="{{ path('app_trabajador_exportar_excel') }}" class="btn btn-success btn-sm">
+            <i class="bi bi-file-earmark-excel me-1"></i>Exportar Excel
+        </a>
+        {% if is_granted('ROLE_ADMIN') %}
+        <a href="{{ path('app_trabajador_new') }}" class="btn btn-primary" id="btn-nuevo-trabajador">
+            <i class="bi bi-plus-lg me-2"></i>Nuevo trabajador
+        </a>
+        {% endif %}
+    </div>
 </div>
 
 <div class="card border-0 shadow-sm" id="tabla-personal">

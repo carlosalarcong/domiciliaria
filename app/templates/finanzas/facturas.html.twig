@@ -15,6 +15,13 @@
            class="btn btn-outline-secondary btn-sm">
             <i class="bi bi-download me-1"></i>Exportar CSV
         </a>
+        <a href="{{ path('app_finanzas_facturas_exportar_excel', {
+                anio:   anio,
+                estado: filtroEstado ?? ''
+            }) }}"
+           class="btn btn-success btn-sm">
+            <i class="bi bi-file-earmark-excel me-1"></i>Exportar Excel
+        </a>
         {% endif %}
         {% if is_granted('FINANZAS_EDITAR') %}
         <a href="{{ path('app_finanzas_factura_nueva') }}" class="btn btn-success">

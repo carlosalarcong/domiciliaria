@@ -1,0 +1,46 @@
+{{ form_start(form, {attr: {novalidate: 'novalidate'}}) }}
+<div class="mb-3">
+    {{ form_label(form.nombre, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+    {{ form_widget(form.nombre, {attr: {class: 'form-control'}}) }}
+    {{ form_errors(form.nombre) }}
+</div>
+
+<div class="mb-3">
+    {{ form_label(form.urlEndpoint, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+    {{ form_widget(form.urlEndpoint, {attr: {class: 'form-control font-monospace'}}) }}
+    {{ form_errors(form.urlEndpoint) }}
+</div>
+
+<div class="row g-3">
+    <div class="col-md-4">
+        {{ form_label(form.metodo, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+        {{ form_widget(form.metodo, {attr: {class: 'form-select'}}) }}
+        {{ form_errors(form.metodo) }}
+    </div>
+    <div class="col-md-8">
+        {{ form_label(form.expresionCron, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+        {{ form_widget(form.expresionCron, {attr: {class: 'form-control font-monospace', placeholder: '0 6 * * *'}}) }}
+        {{ form_errors(form.expresionCron) }}
+        <div class="form-text">{{ form.expresionCron.vars.help }}</div>
+    </div>
+</div>
+
+<div class="mt-3">
+    {{ form_label(form.headers, null, {label_attr: {class: 'form-label fw-semibold'}}) }}
+    {{ form_widget(form.headers, {attr: {class: 'form-control font-monospace'}}) }}
+    {{ form_errors(form.headers) }}
+    <div class="form-text">{{ form.headers.vars.help }}</div>
+</div>
+
+<div class="mt-4 form-check form-switch">
+    {{ form_widget(form.activa, {attr: {class: 'form-check-input', role: 'switch'}}) }}
+    {{ form_label(form.activa, null, {label_attr: {class: 'form-check-label fw-semibold'}}) }}
+</div>
+
+<div class="d-flex gap-2 mt-4">
+    <button type="submit" class="btn btn-primary">
+        <i class="bi bi-check-lg me-2"></i>{{ submit_label|default('Guardar') }}
+    </button>
+    <a href="{{ path('app_sincronizacion_index') }}" class="btn btn-outline-secondary">Cancelar</a>
+</div>
+{{ form_end(form) }}

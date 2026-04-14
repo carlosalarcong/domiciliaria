@@ -11,6 +11,8 @@ enum TipoDocumento: string
     case CERTIFICADO    = 'CERTIFICADO';
     case TITULO         = 'TITULO';
     case LICENCIA       = 'LICENCIA';
+    case VACUNA         = 'VACUNA';
+    case REGISTRO_SIS   = 'REGISTRO_SIS';
     case OTRO           = 'OTRO';
 
     public function etiqueta(): string
@@ -21,6 +23,8 @@ enum TipoDocumento: string
             self::CERTIFICADO => 'Certificado',
             self::TITULO      => 'Título profesional',
             self::LICENCIA    => 'Licencia médica',
+            self::VACUNA      => 'Registro de vacunas',
+            self::REGISTRO_SIS => 'Registro SIS',
             self::OTRO        => 'Otro',
         };
     }
@@ -33,6 +37,8 @@ enum TipoDocumento: string
             self::CERTIFICADO => 'bg-success',
             self::TITULO      => 'bg-warning text-dark',
             self::LICENCIA    => 'bg-danger',
+            self::VACUNA      => 'bg-warning text-dark',
+            self::REGISTRO_SIS => 'bg-info text-dark',
             self::OTRO        => 'bg-secondary',
         };
     }
