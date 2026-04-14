@@ -14,6 +14,7 @@ use App\Form\ComunicacionType;
 use App\Form\PacienteType;
 use App\Repository\Tenant\MandanteRepository;
 use App\Repository\Tenant\PacienteRepository;
+use App\Service\ExcelExportService;
 use App\Service\ExportService;
 use App\Service\PacienteService;
 use Knp\Component\Pager\PaginatorInterface;
@@ -35,6 +36,7 @@ class PacienteController extends AbstractController
         private readonly MandanteRepository $mandanteRepository,
         private readonly PaginatorInterface $paginator,
         private readonly ExportService $exportService,
+        private readonly ExcelExportService $excelExportService,
     ) {}
 
     #[Route('', name: 'app_paciente_index', methods: ['GET'])]
@@ -82,6 +84,22 @@ class PacienteController extends AbstractController
         ));
 
         return $response;
+    }
+
+    #[Route('/exportar-excel', name: 'app_paciente_exportar_excel', methods: ['GET'])]
+    #[IsGranted('ROLE_COORDINADOR')]
+    public function exportarExcel(Request $request): Response
+    {
+        $estado       = $request->query->getString('estado', '');
+        $mandanteId   = $request->query->getString('mandante', '');
+        $tipoServicio = $request->query->getString('tipo', '');
+
+        $pacientes = $this->pacienteRepository
+            ->findQueryBuilder($estado ?: null, $mandanteId ?: null, $tipoServicio ?: null)
+            ->getQuery()
+            ->getResult();
+
+        return $this->excelExportService->exportarPacientesExcel($pacientes);
     }
 
     #[Route('/nuevo', name: 'app_paciente_new', methods: ['GET', 'POST'])]
