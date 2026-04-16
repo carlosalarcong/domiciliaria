@@ -54,14 +54,17 @@ sudo sh -c 'echo "127.0.0.1  norte.localhost" >> /etc/hosts'
 docker compose up -d --build
 ```
 
-Esto construye la imagen PHP y levanta los 4 servicios:
+Esto construye la imagen PHP y levanta los 7 servicios:
 
-| Servicio | Imagen | Puerto expuesto |
-|----------|--------|-----------------|
-| `php` | PHP 8.3-FPM + extensiones | interno |
-| `nginx` | nginx:alpine | `8090 → 80` |
-| `postgres` | postgres:16 | `5432` |
-| `redis` | redis:alpine | `6379` |
+| Servicio | Imagen | Puerto expuesto | Rol |
+|----------|--------|-----------------|-----|
+| `php` | PHP 8.3-FPM + extensiones | interno | Aplicación principal |
+| `nginx` | nginx:alpine | `8090 → 80` | Reverse proxy |
+| `postgres` | postgres:16 | `5432` | Base de datos |
+| `redis` | redis:alpine | `6379` | Cola de mensajes |
+| `php-worker` | PHP 8.3-FPM | interno | Consumidor de mensajes async |
+| `php-scheduler` | PHP 8.3-FPM | interno | Tareas programadas (cron interno) |
+| `mailpit` | axllent/mailpit:latest | `8025` (UI) | Captura de emails en desarrollo |
 
 Verificar que todos los contenedores estén en estado `Up`:
 
@@ -74,7 +77,7 @@ docker compose ps
 ## 4. Instalar dependencias PHP
 
 ```bash
-docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && composer install --no-plugins"
+docker exec domiciliaria-php-1 bash -c "cd /var/www/html/app && composer install --no-plugins"
 ```
 
 > El flag `--no-plugins` evita problemas si el entorno tiene inspección SSL corporativa. En entornos sin proxy SSL se puede omitir.
@@ -86,52 +89,20 @@ docker exec domicialiaria-php-1 bash -c "cd /var/www/html/app && composer instal
 La BD central (`domiciliaria`) almacena el registro de clínicas (tabla `tenant_db`).
 
 ```bash
-docker exec domicialiaria-php-1 bash -c \
+docker exec domiciliaria-php-1 bash -c \
   "cd /var/www/html/app && php bin/console doctrine:migrations:migrate --no-interaction"
 ```
 
 ---
 
-## 6. Crear las clínicas de demo
+## 6. Configurar la clave de cifrado
 
-El comando `app:tenant:crear` realiza tres acciones en una sola operación:
-1. Registra la clínica en la BD central
-2. Crea la base de datos PostgreSQL de la clínica
-3. Aplica el schema completo (16 tablas) via migración
-
-```bash
-# Clínica Demo — Región Metropolitana
-docker exec domicialiaria-php-1 bash -c \
-  "cd /var/www/html/app && php bin/console app:tenant:crear 'Clínica Demo' demo"
-
-# Clínica Norte — Antofagasta
-docker exec domicialiaria-php-1 bash -c \
-  "cd /var/www/html/app && php bin/console app:tenant:crear 'Clínica Norte' norte"
-```
-
-Resultado esperado para cada clínica:
-
-```
- [OK] Tenant creado correctamente.
-
- Campo        Valor
- ID           1
- Nombre       Clínica Demo
- Subdominio   demo
- BD           clinica_demo
- URL local    http://demo.localhost:8090
-```
-
----
-
-## 7. Configurar la clave de cifrado
-
-El sistema cifra datos sensibles (RUTs, diagnósticos, medicamentos, observaciones, datos bancarios) usando AES-256-GCM. La clave se debe generar y configurar antes de cargar datos.
+El sistema cifra datos sensibles (RUTs, diagnósticos, medicamentos, observaciones, datos bancarios) usando AES-256-GCM. **La clave debe generarse antes de crear tenants o cargar datos.**
 
 ### Generar la clave
 
 ```bash
-docker exec domicialiaria-php-1 bash -c \
+docker exec domiciliaria-php-1 bash -c \
   "cd /var/www/html/app && php bin/console app:security:generate-key"
 ```
 
@@ -150,32 +121,65 @@ APP_ENCRYPTION_KEY=def0000...  ← pegar la clave generada
 
 ---
 
-## 7b. Cargar datos de prueba
+## 7. Crear las clínicas de demo
+
+El comando `app:tenant:crear` realiza tres acciones en una sola operación:
+1. Registra la clínica en la BD central
+2. Crea la base de datos PostgreSQL de la clínica
+3. Aplica el schema completo via migración
+
+```bash
+# Clínica Demo — Región Metropolitana
+docker exec domiciliaria-php-1 bash -c \
+  "cd /var/www/html/app && php bin/console app:tenant:crear 'Clínica Demo' demo"
+
+# Clínica Norte — Antofagasta
+docker exec domiciliaria-php-1 bash -c \
+  "cd /var/www/html/app && php bin/console app:tenant:crear 'Clínica Norte' norte"
+```
+
+Resultado esperado para cada clínica:
+
+```
+ [OK] Tenant creado correctamente.
+
+ Campo        Valor
+ ID           1
+ Nombre       Clínica Demo
+ Subdominio   demo
+ BD           clinica_demo
+ URL local    http://demo.localhost:8090
+```
+
+---
+
+## 8. Cargar datos de prueba
 
 Carga usuarios, pacientes, mandantes, trabajadores, turnos, liquidaciones y facturas de ejemplo en cada clínica. **Purga los datos existentes antes de insertar.**
 
 ```bash
 # Clínica Demo (ID=1)
-docker exec domicialiaria-php-1 bash -c \
+docker exec domiciliaria-php-1 bash -c \
   "cd /var/www/html/app && php bin/console tenant:fixtures:load 1 --no-interaction"
 
 # Clínica Norte (ID=2)
-docker exec domicialiaria-php-1 bash -c \
+docker exec domiciliaria-php-1 bash -c \
   "cd /var/www/html/app && php bin/console tenant:fixtures:load 2 --no-interaction"
 ```
 
 ---
 
-## 8. Acceder al sistema
+## 9. Acceder al sistema
 
 | Clínica | URL de ingreso |
 |---------|---------------|
 | Clínica Demo | http://demo.localhost:8090/login |
 | Clínica Norte | http://norte.localhost:8090/login |
+| Bandeja de emails (Mailpit) | http://localhost:8025 |
 
 ---
 
-## 9. Usuarios de prueba
+## 10. Usuarios de prueba
 
 Cada clínica tiene sus propios usuarios, completamente aislados.
 
@@ -212,7 +216,7 @@ Cada clínica tiene sus propios usuarios, completamente aislados.
 
 ---
 
-## 10. Datos de prueba incluidos
+## 11. Datos de prueba incluidos
 
 Después de cargar los fixtures cada clínica contiene:
 
@@ -228,7 +232,7 @@ Después de cargar los fixtures cada clínica contiene:
 
 ---
 
-## 11. Agregar una nueva clínica
+## 12. Agregar una nueva clínica
 
 ### Paso 1 — Registrar en el archivo hosts
 
@@ -246,7 +250,7 @@ sudo sh -c 'echo "127.0.0.1  misubdominio.localhost" >> /etc/hosts'
 ### Paso 2 — Crear el tenant
 
 ```bash
-docker exec domicialiaria-php-1 bash -c \
+docker exec domiciliaria-php-1 bash -c \
   "cd /var/www/html/app && php bin/console app:tenant:crear 'Nombre de la Clínica' misubdominio"
 ```
 
@@ -257,7 +261,7 @@ El comando crea la BD `clinica_misubdominio` y aplica el schema automáticamente
 Obtener el ID asignado (se muestra en la salida del paso anterior) y ejecutar:
 
 ```bash
-docker exec domicialiaria-php-1 bash -c \
+docker exec domiciliaria-php-1 bash -c \
   "cd /var/www/html/app && php bin/console tenant:fixtures:load <ID> --no-interaction"
 ```
 
@@ -267,40 +271,51 @@ docker exec domicialiaria-php-1 bash -c \
 http://misubdominio.localhost:8090/login
 ```
 
-> Los datos de prueba del nuevo tenant usarán el set genérico (mismo que Clínica Demo). Para personalizar los datos de fixtures por clínica, agregar un caso en el `match` de `UserFixtures`, `PacienteFixtures` y `TurnoFixtures` usando `str_contains($db, 'misubdominio')`.
-
 ---
 
 ## Comandos de mantenimiento
 
 ```bash
 # Aplicar migraciones pendientes a TODOS los tenants activos
-docker exec domicialiaria-php-1 bash -c \
+docker exec domiciliaria-php-1 bash -c \
   "cd /var/www/html/app && php bin/console app:tenant:migrate-all"
 
 # Listar tenants sin ejecutar (dry-run)
-docker exec domicialiaria-php-1 bash -c \
+docker exec domiciliaria-php-1 bash -c \
   "cd /var/www/html/app && php bin/console app:tenant:migrate-all --dry-run"
 
 # Recargar fixtures de un tenant específico (borra y recarga)
-docker exec domicialiaria-php-1 bash -c \
+docker exec domiciliaria-php-1 bash -c \
   "cd /var/www/html/app && php bin/console tenant:fixtures:load <ID> --no-interaction"
 
 # Limpiar caché
-docker exec domicialiaria-php-1 bash -c \
+docker exec domiciliaria-php-1 bash -c \
   "cd /var/www/html/app && php bin/console cache:clear"
 
 # Ver todas las rutas registradas
-docker exec domicialiaria-php-1 bash -c \
+docker exec domiciliaria-php-1 bash -c \
   "cd /var/www/html/app && php bin/console debug:router"
 
-# Procesar cola de mensajes (notificaciones email)
-docker exec domicialiaria-php-1 bash -c \
+# Procesar cola de mensajes manualmente (normalmente lo hace php-worker)
+docker exec domiciliaria-php-1 bash -c \
   "cd /var/www/html/app && php bin/console messenger:consume async -vv"
 
+# Revisar documentos próximos a vencer y despachar alertas
+docker exec domiciliaria-php-1 bash -c \
+  "cd /var/www/html/app && php bin/console app:revisar-documentos-vencimiento"
+
+# Generar token de API para un tenant
+docker exec domiciliaria-php-1 bash -c \
+  "cd /var/www/html/app && php bin/console app:api:generar-token demo 'Sistema ERP' --permisos=pacientes,turnos"
+
 # Ejecutar tests
-docker exec domicialiaria-php-1 bash -c \
+docker exec domiciliaria-php-1 bash -c \
   "cd /var/www/html/app && ./vendor/bin/phpunit --testdox"
+
+# Ver logs en tiempo real
+docker compose logs -f php
+docker compose logs -f php-worker
+docker compose logs -f php-scheduler
 ```
 
 ---
@@ -315,7 +330,7 @@ Verificar que el archivo `hosts` esté guardado correctamente y que no haya conf
 
 Limpiar la caché del contenedor:
 ```bash
-docker exec domicialiaria-php-1 bash -c \
+docker exec domiciliaria-php-1 bash -c \
   "cd /var/www/html/app && rm -rf var/cache/dev && php bin/console cache:warmup"
 ```
 
@@ -323,9 +338,13 @@ docker exec domicialiaria-php-1 bash -c \
 
 Usar el flag `--no-plugins`:
 ```bash
-docker exec domicialiaria-php-1 bash -c \
+docker exec domiciliaria-php-1 bash -c \
   "cd /var/www/html/app && composer install --no-plugins && composer dump-autoload"
 ```
+
+### La app no arranca (error de clave de cifrado)
+
+Verificar que el archivo `app/.env.local` existe y contiene `APP_ENCRYPTION_KEY`. Si no, ejecutar el paso 6 nuevamente.
 
 ### El sistema se siente lento en Windows
 
@@ -342,3 +361,7 @@ Docker en Windows accede a los archivos a través de WSL2, lo que añade latenci
 ### El tenant muestra datos del tenant incorrecto
 
 La sesión puede tener un tenant anterior cacheado. Cerrar sesión y volver a ingresar desde el subdominio correcto.
+
+### Los emails no llegan
+
+En desarrollo los emails se capturan en Mailpit: http://localhost:8025. Verificar que el contenedor `mailpit` esté activo con `docker compose ps`.
