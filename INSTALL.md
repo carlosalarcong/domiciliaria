@@ -15,6 +15,31 @@ No se requiere PHP, Composer ni PostgreSQL instalados localmente. Todo corre den
 
 ---
 
+## Instalación rápida (recomendado)
+
+Los pasos 3 a 6 están automatizados en `setup.sh`. Es seguro re-ejecutarlo — detecta qué ya está hecho y lo omite.
+
+```bash
+# 1. Clonar
+git clone https://github.com/carlosalarcong/domiciliaria.git
+cd domiciliaria
+
+# 2. Editar /etc/hosts (ver sección más abajo)
+
+# 3–6. Automatizado
+./setup.sh
+```
+
+Al terminar, el script indica los comandos exactos para crear clínicas y cargar datos (pasos 7 y 8).
+
+> **Windows:** ejecutar desde Git Bash o WSL2. En PowerShell usar `bash setup.sh`.
+
+---
+
+## Instalación paso a paso
+
+---
+
 ## 1. Clonar el repositorio
 
 ```bash
