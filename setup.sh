@@ -54,6 +54,8 @@ if docker compose exec -T php echo ok &>/dev/null; then
 else
     info "Construyendo imágenes y levantando servicios..."
     docker compose up -d --build
+    info "Reiniciando nginx para re-resolver IPs..."
+    docker compose restart nginx
     ok "Contenedores levantados"
 fi
 
