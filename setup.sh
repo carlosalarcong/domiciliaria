@@ -49,18 +49,7 @@ echo -e "${BOLD}═════════════════════�
 # =============================================================================
 header "Paso 3 · Contenedores Docker"
 
-SERVICIOS_REQUERIDOS=(php nginx postgres redis php-worker php-scheduler mailpit)
-TODOS_CORRIENDO=true
-
-for svc in "${SERVICIOS_REQUERIDOS[@]}"; do
-    estado=$(docker compose ps --status running --services 2>/dev/null | grep -x "$svc" || true)
-    if [[ -z "$estado" ]]; then
-        TODOS_CORRIENDO=false
-        break
-    fi
-done
-
-if $TODOS_CORRIENDO; then
+if docker compose exec -T php echo ok &>/dev/null; then
     skip "Todos los contenedores ya están corriendo"
 else
     info "Construyendo imágenes y levantando servicios..."
@@ -85,11 +74,12 @@ ok "PostgreSQL listo"
 # =============================================================================
 header "Paso 4 · Dependencias PHP (composer install)"
 
-if [[ -f "app/vendor/autoload.php" ]]; then
+if [[ -f "app/vendor/autoload_runtime.php" ]]; then
     skip "vendor/ ya existe"
 else
     info "Instalando dependencias (puede tardar un minuto)..."
-    docker compose exec -T php bash -c "cd /var/www/html/app && composer install --no-plugins --no-interaction"
+    docker compose exec -T php bash -c \
+        "cd /var/www/html/app && composer install --no-plugins --no-interaction && composer dump-autoload"
     ok "Dependencias instaladas"
 fi
 
@@ -123,7 +113,7 @@ else
     info "Generando clave AES-256..."
     CLAVE=$(docker compose exec -T php bash -c \
         "cd /var/www/html/app && php bin/console app:security:generate-key --no-interaction 2>/dev/null" \
-        | grep -oP 'def[0-9a-f]+' | head -1)
+        | grep -oE 'def[0-9a-f]+' | head -1)
 
     if [[ -z "$CLAVE" ]]; then
         fail "No se pudo generar la clave. Revisa que el contenedor php esté sano."
