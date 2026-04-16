@@ -273,6 +273,45 @@ http://misubdominio.localhost:8090/login
 
 ---
 
+## Cargar datos de prueba custom (seeder interactivo)
+
+Además de los fixtures predefinidos del paso 8, existe un comando interactivo que permite agregar datos a medida a cualquier tenant, eligiendo qué entidades crear y con qué parámetros.
+
+```bash
+docker exec domiciliaria-php-1 bash -c \
+  "cd /var/www/html/app && php bin/console app:seeder:interactivo"
+```
+
+El comando guía paso a paso:
+
+1. **Selecciona la clínica** — lista todos los tenants activos
+2. **Muestra el estado actual** — cuántos registros hay de cada entidad en esa BD
+3. **Multi-select de entidades** — elige qué agregar (separa con coma, ej: `0,2,3`):
+
+   | # | Entidad | Dependencias |
+   |---|---------|--------------|
+   | 0 | Usuarios | — |
+   | 1 | Mandantes | — |
+   | 2 | Pacientes | mandantes en la BD |
+   | 3 | Trabajadores | — |
+   | 4 | Turnos | pacientes activos + trabajadores activos |
+   | 5 | Tarifas | — |
+   | 6 | Eventos adversos | pacientes + trabajadores |
+   | 7 | Liquidaciones mensuales | trabajadores |
+   | 8 | Facturas a mandantes | mandantes |
+
+4. **Valida dependencias** antes de ejecutar — si falta alguna, muestra el error y sale sin hacer cambios
+5. **Pregunta parámetros** para cada entidad (cantidad, tipo, estado, año/mes, % descubiertos, etc.)
+6. **Resumen final** con los registros creados
+
+**Notas:**
+- Los turnos pasados se crean como `COMPLETADO` automáticamente; los futuros como `CUBIERTO` o `DESCUBIERTO` según el porcentaje configurado
+- Las liquidaciones se generan desde turnos `COMPLETADO` reales del período; si no hay, crea ítems de ejemplo
+- Detecta duplicados (por email, nombre, período) y los omite sin fallar
+- Se puede ejecutar múltiples veces de forma segura — es aditivo, no borra datos
+
+---
+
 ## Comandos de mantenimiento
 
 ```bash
@@ -287,6 +326,10 @@ docker exec domiciliaria-php-1 bash -c \
 # Recargar fixtures de un tenant específico (borra y recarga)
 docker exec domiciliaria-php-1 bash -c \
   "cd /var/www/html/app && php bin/console tenant:fixtures:load <ID> --no-interaction"
+
+# Agregar datos custom de forma interactiva a un tenant
+docker exec domiciliaria-php-1 bash -c \
+  "cd /var/www/html/app && php bin/console app:seeder:interactivo"
 
 # Limpiar caché
 docker exec domiciliaria-php-1 bash -c \
