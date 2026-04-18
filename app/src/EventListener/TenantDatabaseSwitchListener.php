@@ -10,6 +10,7 @@ use Hakam\MultiTenancyBundle\Event\SwitchDbEvent;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Event\RequestEvent;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Contracts\EventDispatcher\EventDispatcherInterface;
@@ -69,6 +70,11 @@ class TenantDatabaseSwitchListener implements EventSubscriberInterface
             $this->logger->warning('Tenant no encontrado para subdominio: {subdomain}', [
                 'subdomain' => $subdomain,
             ]);
+            $event->setResponse(new Response(
+                sprintf('El subdominio "%s" no corresponde a ninguna organización registrada.', htmlspecialchars($subdomain)),
+                Response::HTTP_NOT_FOUND,
+                ['Content-Type' => 'text/plain; charset=utf-8']
+            ));
             return;
         }
 
