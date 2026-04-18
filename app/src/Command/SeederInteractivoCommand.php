@@ -27,6 +27,7 @@ use App\Enum\TipoConcepto;
 use App\Enum\TipoEventoAdverso;
 use App\Enum\TipoServicio;
 use App\Enum\TipoTurno;
+use App\Service\EncryptionService;
 use Doctrine\ORM\EntityManagerInterface;
 use Hakam\MultiTenancyBundle\Event\SwitchDbEvent;
 use Symfony\Component\Console\Attribute\AsCommand;
@@ -86,6 +87,7 @@ class SeederInteractivoCommand extends Command
         private readonly EntityManagerInterface   $tenantEm,
         private readonly EventDispatcherInterface $eventDispatcher,
         private readonly UserPasswordHasherInterface $passwordHasher,
+        private readonly EncryptionService        $encryption,
     ) {
         parent::__construct();
     }
@@ -413,8 +415,8 @@ class SeederInteractivoCommand extends Command
             $nombre = $pool[$i % count($pool)] . ($i >= count($pool) ? ' ' . ($i + 1) : '');
             $rut    = $this->generarRutEmpresa($i);
 
-            $existente = $this->tenantEm->getRepository(Mandante::class)
-                ->findOneBy(['nombre' => $nombre]);
+            $existente = $this->tenantEm->getRepository(Mandante::class)->findOneBy(['nombre' => $nombre])
+                ?? $this->tenantEm->getRepository(Mandante::class)->findOneBy(['rut' => $rut]);
             if ($existente !== null) {
                 $io->writeln(sprintf('  <comment>Omitiendo</comment> "%s" (ya existe)', $nombre));
                 continue;
@@ -471,6 +473,11 @@ class SeederInteractivoCommand extends Command
             $apellido2   = $this->apellidoAleatorio();
             $rut         = $this->generarRutPersona($i + 100);
             $mandante    = $mandantes[$i % count($mandantes)];
+
+            if ($this->tenantEm->getRepository(Paciente::class)->findOneBy(['rutHash' => $this->encryption->hmac($rut)]) !== null) {
+                $io->writeln(sprintf('  <comment>Omitiendo</comment> RUT %s (ya existe)', $rut));
+                continue;
+            }
 
             $p = new Paciente();
             $p->setNombres($nombre)
@@ -551,8 +558,9 @@ class SeederInteractivoCommand extends Command
 
             $existente = $this->tenantEm->getRepository(Trabajador::class)
                 ->createQueryBuilder('t')
-                ->where('t.email = :email')
+                ->where('t.email = :email OR t.rutHash = :rutHash')
                 ->setParameter('email', $email)
+                ->setParameter('rutHash', $this->encryption->hmac($rut))
                 ->getQuery()
                 ->getOneOrNullResult();
 
@@ -706,17 +714,18 @@ class SeederInteractivoCommand extends Command
         $io->writeln('  Ingresa el valor por hora para cada concepto (en pesos CLP):');
 
         $conceptos = [
-            TipoConcepto::TURNO_DIA   => ['label' => 'Turno día (12h)',   'default' => '8000'],
-            TipoConcepto::TURNO_NOCHE => ['label' => 'Turno noche (12h)', 'default' => '10000'],
-            TipoConcepto::TURNO_24H   => ['label' => 'Turno 24h',        'default' => '18000'],
-            TipoConcepto::VISITA      => ['label' => 'Visita (2h)',       'default' => '4500'],
-            TipoConcepto::REEMPLAZO   => ['label' => 'Reemplazo',        'default' => '9000'],
+            ['enum' => TipoConcepto::TURNO_DIA,   'label' => 'Turno día (12h)',   'default' => '8000'],
+            ['enum' => TipoConcepto::TURNO_NOCHE, 'label' => 'Turno noche (12h)', 'default' => '10000'],
+            ['enum' => TipoConcepto::TURNO_24H,   'label' => 'Turno 24h',        'default' => '18000'],
+            ['enum' => TipoConcepto::VISITA,       'label' => 'Visita (2h)',       'default' => '4500'],
+            ['enum' => TipoConcepto::REEMPLAZO,    'label' => 'Reemplazo',        'default' => '9000'],
         ];
 
         $vigencia = new \DateTimeImmutable('first day of January this year');
         $creados  = 0;
 
-        foreach ($conceptos as $concepto => $cfg) {
+        foreach ($conceptos as $cfg) {
+            $concepto = $cfg['enum'];
             // Si ya existe tarifa activa para este concepto, omitir
             $existente = $this->tenantEm->getRepository(Tarifa::class)
                 ->findOneBy(['tipoConcepto' => $concepto, 'activa' => true, 'mandante' => null]);
