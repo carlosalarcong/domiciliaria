@@ -729,6 +729,8 @@ Los nombres de archivo CSV se normalizan con `iconv()` para eliminar tildes y ca
 
 ## Apéndice B — Comandos útiles
 
+> Para la guía completa de instalación desde cero, ver [INSTALACION.md](INSTALACION.md).
+
 ```bash
 # Lanzar entorno de desarrollo
 docker compose up -d
